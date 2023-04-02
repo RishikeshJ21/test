@@ -47,15 +47,31 @@
         button2.addEventListener('mouseover', function () {
             if (left == 40) {
                 left = 44;
-            } else {
+
+            }
+            else if (left == 44) {
+                left = 23;
+
+            }
+            else if (left == 23) {
+                left = 82;
+            }
+            else if (left == 82) {
+                left = 67;
+            }
+            else if (left == 67) {
+                left = 54;
+            }
+            else {
                 left = 40;
             }
             this.style.left = left + '%';
+            this.style.top = top + '%';
         });
 
     </script>
     <script>document.getElementById('botao1').addEventListener('click', function () {
-            alert('So here 🤗🫂❤️💓');
+            alert('YAYY THANK U 😍❤️');
         });
     </script>
 </body>
