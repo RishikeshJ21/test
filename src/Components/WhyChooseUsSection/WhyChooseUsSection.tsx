@@ -26,9 +26,9 @@ export const WhyChooseUsSection = () => {
   return (
     <section className="flex mt-10 flex-col w-full max-w-[1800px] items-center justify-center gap-[60px] mx-auto py-1 sm:py-6 md:py-2 px-2 sm:px-6 lg:px-2">
       {/* Title and Description */}
-      <div className="flex flex-col sm:flex-col justify-between  items-start w-full gap-6"></div>
+ 
       <div className="flex flex-col sm:flex-col justify-between  items-start w-full gap-6">
-        <h2 className="w-full  [font-family:'Instrument_Sans',Helvetica] font-semibold text-black text-[36px] sm:text-[48px] md:text-[56px] tracking-[0] leading-[1.2]">
+        {/* <h2 className="w-full  [font-family:'Instrument_Sans',Helvetica] font-semibold text-black text-[36px] sm:text-[48px] md:text-[56px] tracking-[0] leading-[1.2]">
           Why Choose Us?
         </h2>
 
@@ -36,7 +36,21 @@ export const WhyChooseUsSection = () => {
           At Createathon, we redefine content creation by empowering creators with the right tools, mentorship, and
           community support—completely free of cost. We&apos;re not just a platform; we&apos;re your creative partner in
           growth and success.
-        </p>
+        </p> */}
+              <div className="mb-1 md:mb-1">
+          {/* <div className="inline-block px-4 py-1 bg-purple-100 rounded-full text-purple-600 text-sm font-medium mb-4">
+            FAQ
+          </div> */}
+          <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
+          Why Choose  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Us?</span>
+            <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
+          </h2>
+          <p className="mt-4 text-gray-600 max-w-full text-lg">
+          At Createathon, we redefine content creation by empowering creators with the right tools, mentorship, and
+          community support—completely free of cost. We&apos;re not just a platform; we&apos;re your creative partner in
+          growth and success.
+          </p>
+        </div>
       </div>
 
       {/* Benefit Cards */}

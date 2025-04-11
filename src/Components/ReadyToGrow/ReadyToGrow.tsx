@@ -146,3 +146,153 @@ export const ReadyToGrow = (): JSX.Element => {
     </motion.section>
   );
 };
+
+
+
+
+
+
+
+
+
+// import { JSX } from "react";
+// import { motion } from "framer-motion";
+// import { Button } from "../../SubComponents/button";
+
+// export const ReadyToGrow = (): JSX.Element => {
+//   const features = [
+//     {
+//       id: 1,
+//       icon: "/frame-4.svg",
+//       title: "5,000+ Creators",
+//       description: "Join our thriving community",
+//     },
+//     {
+//       id: 2,
+//       icon: "/frame-2.svg",
+//       title: "Free Support",
+//       description: "24/7 dedicated assistance",
+//     },
+//   ];
+
+//   const containerVariants = {
+//     hidden: { opacity: 0 },
+//     visible: {
+//       opacity: 1,
+//       transition: {
+//         staggerChildren: 0.2,
+//       },
+//     },
+//   };
+
+//   const itemVariants = {
+//     hidden: { opacity: 0, y: 20 },
+//     visible: {
+//       opacity: 1,
+//       y: 0,
+//       transition: {
+//         duration: 0.6,
+//       },
+//     },
+//   };
+
+//   return (
+//     <section className="relative w-full bg-gradient-to-b from-[#1a1d21] to-[#2a2d35] py-20 overflow-hidden">
+//       {/* Background Elements */}
+//       <div className="absolute inset-0 overflow-hidden">
+//         <div className="absolute w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] -top-48 -left-24 animate-pulse" />
+//         <div className="absolute w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[100px] -bottom-24 -right-24 animate-pulse" />
+//         <div className="absolute w-full h-full bg-[url('/grid-pattern.png')] opacity-10" />
+//       </div>
+
+//       {/* Main Content */}
+//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+//         <motion.div
+//           variants={containerVariants}
+//           initial="hidden"
+//           animate="visible"
+//           className="flex flex-col lg:flex-row items-center justify-between gap-16"
+//         >
+//           {/* Left Content */}
+//           <motion.div
+//             variants={itemVariants}
+//             className="flex-1 text-center lg:text-left"
+//           >
+//             <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent">
+//               Ready to Grow
+//               <br />
+//               Your Channel?
+//             </h2>
+//             <p className="text-gray-300 text-lg md:text-xl lg:text-2xl mb-8 max-w-2xl">
+//               Join thousands of creators who have transformed their journey with
+//               Createathon. Start your success story today.
+//             </p>
+
+//             <motion.div
+//               whileHover={{ scale: 1.05 }}
+//               whileTap={{ scale: 0.95 }}
+//               className="inline-block"
+//             >
+//               <Button
+//                 onClick={() => window.location.href = "https://t.me/+dKB7kUlsbFFkMDM1"}
+//                 className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+//               >
+//                 Join Now for Free
+//               </Button>
+//             </motion.div>
+//           </motion.div>
+
+//           {/* Right Content */}
+//           <motion.div
+//             variants={itemVariants}
+//             className="flex-1 relative"
+//           >
+//             {/* Main Image */}
+//             <motion.div
+//               whileHover={{ scale: 1.02 }}
+//               className="relative z-10"
+//             >
+//               <div className="relative">
+//                 <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/30 to-blue-500/30 rounded-2xl blur-lg" />
+//                 <img
+//                   src="/rectangle-10.png"
+//                   alt="Creator"
+//                   className="relative rounded-2xl w-full max-w-lg mx-auto shadow-2xl"
+//                 />
+//               </div>
+//             </motion.div>
+
+//             {/* Feature Cards */}
+//             <div className="absolute w-full h-full top-0 left-0 z-20">
+//               {features.map((feature, index) => (
+//                 <motion.div
+//                   key={feature.id}
+//                   initial={{ opacity: 0, x: index === 0 ? -50 : 50 }}
+//                   animate={{ opacity: 1, x: 0 }}
+//                   transition={{ duration: 0.6, delay: 0.3 + index * 0.2 }}
+//                   className={`absolute ${index === 0 ? 'top-4 -left-4' : 'bottom-4 -right-4'
+//                     } bg-white/90 backdrop-blur-lg rounded-xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 max-w-[240px]`}
+//                 >
+//                   <div className="flex items-center gap-3">
+//                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-gradient-to-r from-orange-400 to-pink-500' : 'bg-gradient-to-r from-green-400 to-emerald-500'
+//                       }`}>
+//                       <img
+//                         src={feature.icon}
+//                         alt={feature.title}
+//                         className="w-6 h-6"
+//                       />
+//                     </div>
+//                     <div>
+//                       <h3 className="font-semibold text-gray-900">{feature.title}</h3>
+//                       <p className="text-sm text-gray-600">{feature.description}</p>
+//                     </div>
+//                   </div>
+//                 </motion.div>
+//               ))}
+//             </div>
+//           </motion.div>
+//         </motion.div>
+//       </div>
+//     </section>
+//   );
+// };

@@ -92,27 +92,20 @@ export default function Hero({ title, description, buttonText }: { title: { t1: 
 </div>
  
         {/* Headline */}
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-tight mb-8 max-w-5xl">
-  <div
-
-  className="whitespace-nowrap">
-    <span
-    className="text-black">{title.t1} </span>
-    <span
-    className="text-[#4e1f88]">{title.t2}</span>
+        <h1 className="font-['Instrument_Sans',Helvetica] text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-semibold tracking-tight leading-tight mb-8 max-w-5xl">
+  <div className="whitespace-nowrap">
+    <span className="text-black">{title.t1} </span>
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">{title.t2}</span>
   </div>
 
-  <div
-  className="whitespace-nowrap">
-    <span
-    className="text-black">{title.t3} </span>
-    <span
-    className="text-[#4e1f88]">{title.t4}</span>
+  <div className="whitespace-nowrap">
+    <span className="text-black">{title.t3} </span>
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">{title.t4}</span>
   </div>
 </h1>
 
         {/* Subheading */}
-        <p className="max-w-2xl text-[#222222] text-base sm:text-lg md:text-xl mt-3 font-medium leading-relaxed mb-10">
+        <p className="max-w-2xl text-[#222222] text-base sm:text-lg md:text-xl mt-3 font-medium leading-relaxed mb-10 font-['Instrument_Sans',Helvetica]">
   {description}
 </p>
 

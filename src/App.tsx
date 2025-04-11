@@ -68,7 +68,7 @@ export default function Home() {
           <ImageCollage />
         </div>
 
-        <section className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-18 lg:px-23 lg:py-29">
+        <section className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-15 lg:px-23 lg:pt-10">
           <HowItWorkSection3 />
         </section>
 
@@ -78,13 +78,13 @@ export default function Home() {
 
         {/* Why Choose Us Section with Card Hover Effect */}
         <section
-          className="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-8 mb-16"
+          className="w-full  max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-12 mb-16"
           id="why-choose-us"
         >
           <WhyChooseUsSection />
         </section>
 
-        <section className="w-full max-w-8xl overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1">
+        <section className="w-full  max-w-8xl overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1">
           <TrustByCreatorSection />
         </section>
 

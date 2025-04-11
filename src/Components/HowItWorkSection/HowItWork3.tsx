@@ -30,12 +30,12 @@ export const HowItWorkSection3 = (): JSX.Element => {
         sectionRef.current.classList.add('card-changing');
         setTimeout(() => {
           sectionRef.current?.classList.remove('card-changing');
-        }, 300);
+        }, 100);
       }
 
       setTimeout(() => {
         setIsAnimating(false);
-      }, 600);
+      }, 300);
     }
   }, [activeCard, isAnimating]);
 
@@ -97,11 +97,18 @@ export const HowItWorkSection3 = (): JSX.Element => {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="[font-family:'Instrument_Sans',Helvetica] font-semibold text-black text-[36px] sm:text-[48px] md:text-[56px] tracking-[0] leading-[1.2]">
+          {/* <h2 className="[font-family:'Instrument_Sans',Helvetica] font-semibold text-black text-[36px] sm:text-[48px] md:text-[56px] tracking-[0] leading-[1.2]">
             How It Works
           </h2>
           <p className="w-full leading-7 sm:leading-9 [font-family:'Instrument_Sans',Helvetica] font-medium text-[#222222] text-lg sm:text-xl md:text-2xl tracking-[0]">
             Your Path to Creative Success: Discover the tools, resources, and community support you need to elevate your creative journey. Whether you&apos;re just starting out or looking to take your craft to the next level, we&apos;re here to help you achieve your goals and turn your passion into a thriving career.
+          </p> */}
+             <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
+             How It  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Works</span>
+            <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
+          </h2>
+          <p className="mt-4 text-gray-600 max-w-full text-lg">
+          Your Path to Creative Success: Discover the tools, resources, and community support you need to elevate your creative journey. Whether you&apos;re just starting out or looking to take your craft to the next level, we&apos;re here to help you achieve your goals and turn your passion into a thriving career.
           </p>
         </motion.div>
 
@@ -128,7 +135,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
                     }`}
                 >
                   <motion.div
-                    className={`w-12 h-12 rounded-lg flex items-center justify-center ${activeCard === index ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-500"
+                    className={`w-12 h-10 rounded-lg flex items-center justify-center ${activeCard === index ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-500"
                       }`}
                     animate={activeCard === index ? {
                       scale: [1, 1.1, 1],
@@ -166,7 +173,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
               ))}
             </div>
 
-            <motion.div
+            {/* <motion.div
               className="mt-8 flex items-center justify-center gap-4 w-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -197,12 +204,12 @@ export const HowItWorkSection3 = (): JSX.Element => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </motion.button>
-            </motion.div>
+            </motion.div> */}
           </motion.div>
 
           <div 
             className="w-full lg:w-2/3 relative" 
-            style={{ height: "450px" }}
+            style={{ height: "400px" }}
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
@@ -276,7 +283,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
                         </motion.h3>
 
                         <motion.p
-                          className="text-base sm:text-lg text-gray-800 leading-relaxed"
+                          className="text-base sm:text-lg overflow-y-auto text-gray-800 leading-relaxed"
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ delay: 0.4 }}
@@ -284,7 +291,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
                           {card.description}
                         </motion.p>
 
-                        <motion.div
+                        {/* <motion.div
                           className="mt-auto pt-5 flex justify-between items-center"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -312,7 +319,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                           </motion.button>
-                        </motion.div>
+                        </motion.div> */}
                       </div>
                     </motion.div>
                   )

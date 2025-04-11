@@ -129,14 +129,21 @@ export const TrustByCreatorSection = (): JSX.Element => {
 
   return (
     <section id="#Testimonials" className="flex flex-col w-full items-start gap-1 md:gap-12 py-0 md:py-10 overflow-hidden">
-      <div className="max-w-8xl mx-auto md:px-29 px-6 w-full">
-        <div className="flex flex-col gap-0 items-start w-full">
-          <h2 className="w-full md:w-full font-['Instrument_Sans',Helvetica] font-semibold text-black text-[40px] md:text-[56px] leading-[1.2]">
-            Trusted by Creators
-          </h2>
 
-          <p className="flex-1 font-['Instrument_Sans',Helvetica] font-medium text-[#222222] text-xl md:text-2xl leading-[1.5]">
-            At Createathon, our creators&apos; success is our greatest
+   {/* Header with animated underline on hover */}
+  
+
+      <div className="max-w-8xl mx-auto md:px-29 px-6 w-full">
+      <div className="mb-1 md:mb-1">
+          {/* <div className="inline-block px-4 py-1 bg-purple-100 rounded-full text-purple-600 text-sm font-medium mb-4">
+            FAQ
+          </div> */}
+          <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
+          Trusted by  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Creators</span>
+            <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
+          </h2>
+          <p className="mt-4 text-gray-600 max-w-full text-lg">
+          At Createathon, our creators&apos; success is our greatest
             achievement. We take pride in empowering talent and transforming
             passion into lasting careers. Hear what our community has to say!
           </p>
