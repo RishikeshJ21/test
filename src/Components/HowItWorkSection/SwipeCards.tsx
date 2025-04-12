@@ -1,8 +1,7 @@
 "use client";
 
-import  { useState } from "react";
+import { useState } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
- 
 
 interface StepCard {
   id: number;
@@ -47,6 +46,54 @@ const stepCardData: StepCard[] = [
   },
 ];
 
+// Card component for swipe interactions
+const Card: React.FC<{
+  id: number;
+  icon: string;
+  title: string;
+  description: string;
+  bgColor: string;
+  cards: StepCard[];
+  onSwiped: (id: number) => void;
+}> = ({ id, icon, title, description, bgColor, onSwiped }) => {
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 200], [-10, 10]);
+  const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
+
+  const handleDragEnd = (_: any, info: any) => {
+    if (Math.abs(info.offset.x) > 100) {
+      onSwiped(id);
+    }
+  };
+
+  return (
+    <motion.div
+      className="absolute w-full"
+      style={{ x, rotate, opacity }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      onDragEnd={handleDragEnd}
+    >
+      <div className={`${bgColor} rounded-3xl p-6 shadow-md w-full border border-white/30 font-['Instrument_Sans',Helvetica]`}>
+        <div className="flex flex-col">
+          <div className="flex items-start justify-start gap-4 mb-5">
+            <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg shadow-sm">
+              <img className="w-6 h-6" alt={title} src={icon} width={24} height={24} />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent pt-1">
+              {title}
+            </h3>
+          </div>
+
+          <p className="text-black text-base leading-snug">
+            {description}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 export const SwipeCards = () => {
   const [cards, setCards] = useState<StepCard[]>(stepCardData);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,7 +112,7 @@ export const SwipeCards = () => {
   };
 
   return (
-    <div className="relative w-full h-[300px] overflow-hidden rounded-2xl">
+    <div className="relative w-full md:w-[90%] mx-auto h-[380px] overflow-hidden rounded-2xl">
       {cards.map((card) => (
         <Card
           key={card.id}
@@ -89,96 +136,4 @@ export const SwipeCards = () => {
   );
 };
 
-const Card = ({
-  id,
-  icon,
-  title,
-  description,
-  bgColor,
-  cards,
-  onSwiped,
-}: StepCard & {
-  cards: StepCard[];
-  onSwiped: (id: number) => void;
-}) => {
-  const y = useMotionValue(0);
-  const x = useMotionValue(0);
-  const rotate = useTransform(y, [-200, 200], [-5, 5]);
-  const opacity = useTransform(y, [-100, 0, 100], [0, 1, 0]);
-
-  const isFront = id === cards[cards.length - 1].id;
-
-  const handleDragEnd = () => {
-    if (y.get() < -100) {
-      onSwiped(id);
-    } else {
-      // If not swiped far enough, animate back to center
-      y.set(0);
-      x.set(0);
-    }
-  };
-
-  return (
-    <motion.div
-      className={`absolute top-0 left-0 w-full h-full ${bgColor} rounded-3xl shadow-lg border border-white/30`}
-      style={{
-        y,
-        x,
-        rotate,
-        opacity,
-        zIndex: isFront ? 10 : 5 - id,
-      }}
-      animate={{
-        scale: isFront ? 1 : 0.95 - (cards.length - 1 - cards.findIndex(c => c.id === id)) * 0.03,
-        top: isFront ? 0 : `${(cards.length - 1 - cards.findIndex(c => c.id === id)) * 15}px`,
-      }}
-      transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      drag={isFront ? true : false}
-      dragConstraints={{
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0
-      }}
-      dragElastic={0.7}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="p-6 md:p-8 flex flex-col h-full">
-        <div className={`flex w-12 ${id === 4 ? "h-10" : "h-12"} items-center justify-center bg-white rounded-lg shadow-sm mb-5`}>
-          <img className="w-6 h-6" alt={title} src={icon} width={24} height={24} />
-        </div>
-
-        <h3 className="text-2xl md:text-3xl font-bold text-black mb-3">
-          {title}
-        </h3>
-
-        <p className={`text-black text-base  md:text-lg leading-snug`}>
-          {description}
-        </p>
-
-        {isFront && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: id === 4 ? 15 :4 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 flex items-center"
-          >
-            <motion.svg
-              animate={{ y: [0, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-4 h-4 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-            </motion.svg>
-            <span>Swipe to see more</span>
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-export default SwipeCards; 
+export default SwipeCards;

@@ -205,7 +205,7 @@ export const NavigationSection = () => {
               boxShadow: "0px 8px 20px rgba(147, 117, 224, 0.9)"
               }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.location.href = "https://t.me/+dKB7kUlsbFFkMDM1"}
+              onClick={() => window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank")}
             >
               Get Started
             </MotionButton>
