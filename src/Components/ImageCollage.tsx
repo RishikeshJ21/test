@@ -76,7 +76,7 @@ export default function ImageCollage() {
         opacity: 1,
       }));
     }
-    
+
     // 5-card display for desktop/laptop
     if (screenWidth >= 768) {
       const scale = Math.min(1, screenWidth / 1400);
@@ -156,7 +156,7 @@ export default function ImageCollage() {
   const getImagesInOrder = useCallback(() => {
     const boxSizes = getResponsiveBoxSizes();
     let visibleCount;
-    
+
     if (screenWidth >= 1400) {
       visibleCount = 7; // 7 cards for extra large screens
     } else if (screenWidth >= 768) {
@@ -164,7 +164,7 @@ export default function ImageCollage() {
     } else {
       visibleCount = screenWidth < 480 ? 3 : 5; // 3 cards for mobile
     }
-    
+
     const orderedImages = [];
 
     for (let i = 0; i < visibleCount; i++) {
@@ -251,7 +251,7 @@ export default function ImageCollage() {
     // Center position calculation
     const visibleCount = screenWidth >= 1400 ? 7 : (screenWidth >= 768 ? 5 : (screenWidth < 480 ? 3 : 5));
     const centerPosition = Math.floor(visibleCount / 2);
-    
+
     if (position < centerPosition) {
       // Left side images
       return {
@@ -373,7 +373,7 @@ export default function ImageCollage() {
         delay: 0.2
       }}
     >
-    
+
       <div
         ref={containerRef}
         className="flex justify-center pt-1 relative w-full"

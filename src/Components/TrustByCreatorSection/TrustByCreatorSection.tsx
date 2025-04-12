@@ -128,22 +128,22 @@ export const TrustByCreatorSection = (): JSX.Element => {
   };
 
   return (
-    <section id="#Testimonials" className="flex flex-col w-full items-start gap-1 md:gap-12 py-0 md:py-10 overflow-hidden">
+    <section id="Testimonials" className="flex flex-col w-full items-start gap-1 md:gap-12 py-0 md:py-10 overflow-hidden">
 
-   {/* Header with animated underline on hover */}
-  
+      {/* Header with animated underline on hover */}
 
-      <div className="max-w-8xl mx-auto md:px-29 px-6 w-full">
-      <div className="mb-1 md:mb-1">
+
+      <div className="max-w-8xl mx-auto lg:px-29 px-8 w-full">
+        <div className="mb-1 md:mb-1">
           {/* <div className="inline-block px-4 py-1 bg-purple-100 rounded-full text-purple-600 text-sm font-medium mb-4">
             FAQ
           </div> */}
           <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
-          Trusted by  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Creators</span>
+            Trusted by  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Creators</span>
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
           </h2>
           <p className="mt-4 text-gray-600 max-w-full text-lg">
-          At Createathon, our creators&apos; success is our greatest
+            At Createathon, our creators&apos; success is our greatest
             achievement. We take pride in empowering talent and transforming
             passion into lasting careers. Hear what our community has to say!
           </p>
@@ -151,7 +151,7 @@ export const TrustByCreatorSection = (): JSX.Element => {
       </div>
 
       {/* Mobile view - AnimatedTestimonials */}
-      <div className="md:hidden w-full">
+      <div className="lg:hidden w-full">
         <AnimatedTestimonials
           testimonials={animatedTestimonialsData}
           autoplay={true}
@@ -160,7 +160,7 @@ export const TrustByCreatorSection = (): JSX.Element => {
 
       {/* Desktop view - Custom carousel */}
       <div
-        className="hidden md:block w-full relative"
+        className="hidden lg:block w-full relative"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -226,8 +226,8 @@ export const TrustByCreatorSection = (): JSX.Element => {
                     >
                       <div
                         className={`bg-white rounded-[6px] shadow-md overflow-hidden ${position === 0
-                            ? "border-2 border-gray-200"
-                            : "border border-gray-100"
+                          ? "border-2 border-gray-200"
+                          : "border border-gray-100"
                           } transition-all duration-300 ease-in-out`}
                       >
                         <div className="flex p-4 flex-row h-full">

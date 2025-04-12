@@ -1,21 +1,25 @@
+import { useEffect, useState,useRef } from 'react';
  
-
-import { useEffect, useState } from 'react';
 import Hero from './Components/Hero';
 
 import { FAQSection } from './Components/FAQSection/FAQSection';
 import ImageCollage from './Components/ImageCollage';
 import { HowItWorkSection3 } from './Components/HowItWorkSection/HowItWork3';
 import HowItWorks from './Components/HowItWorkSection/HowItWorks';
-import { ReadyToGrow } from './Components/ReadyToGrow/ReadyToGrow';
+ 
 import { Footer } from './Components/Footer/Footer';
 import { NavigationSection } from './Components/NavigationSection/NavigationSection';
 import { WhyChooseUsSection } from './Components/WhyChooseUsSection/WhyChooseUsSection';
 import { TrustByCreatorSection } from './Components/TrustByCreatorSection/TrustByCreatorSection';
+import { ReadyToGrow2 } from './Components/ReadyToGrow/RTG2';
+import { motion } from 'framer-motion';
+
 
 export default function Home() {
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [howItWorksVisible, setHowItWorksVisible] = useState(false);
+  const howItWorksRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,10 +33,21 @@ export default function Home() {
         }
       }
 
+      // Check if how-it-works section is in viewport for large devices
+      if (window.innerWidth >= 1024 && howItWorksRef.current) {
+        const rect = howItWorksRef.current.getBoundingClientRect();
+        if (rect.top <= window.innerHeight * 0.75 && rect.bottom >= 0) {
+          setHowItWorksVisible(true);
+        }
+      }
+
       setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll);
+
+    // Setup smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -43,9 +58,8 @@ export default function Home() {
     <main className="overflow-x-hidden">
       {/* Navigation */}
       <div
-        className={`fixed top-0 left-0 right-0 z-50 md:bg-gray-50/100 backdrop-blur-md transition-transform duration-300 ${
-          showNavbar ? 'translate-y-0' : '-translate-y-full'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 md:bg-gray-50/100 md:backdrop-blur-md transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'
+          }`}
       >
         <NavigationSection />
       </div>
@@ -64,34 +78,47 @@ export default function Home() {
         />
 
         {/* Image Collage with explicit height */}
-        <div className="w-full mx-auto px-1 max-h-[320px] md:max-h-[360px] sm:px-3 lg:px-23">
+        <div className="w-full mx-auto px-1 max-h-[320px] md:max-h-[450px] sm:px-3 lg:px-23">
           <ImageCollage />
         </div>
 
-        <section className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-15 lg:px-23 lg:pt-10">
-          <HowItWorkSection3 />
-        </section>
+        <div 
+          ref={howItWorksRef}
+          id="how-it-works" 
+          className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-1 lg:px-23 scroll-mt-24"
+        >
+          <motion.section
+            initial={{ x: 100, y: 20, opacity: 0 }}
+            animate={howItWorksVisible ? { x: 0, y: 0, opacity: 1 } : { x: 100, y: 40, opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <HowItWorkSection3 />
+          </motion.section>
+        </div>
 
-        <section className="w-full lg:hidden max-w-8xl mx-auto px-1 max-h-[480px] sm:px-2 md:mt-18 lg:px-23 lg:py-29">
+        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 max-h-[480px] mb-20 sm:px-2 md:mt-18 lg:px-23 lg:py-29 scroll-mt-16">
           <HowItWorks />
         </section>
 
         {/* Why Choose Us Section with Card Hover Effect */}
         <section
-          className="w-full  max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-12 mb-16"
+          className="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-12 mb-16 scroll-mt-24"
           id="why-choose-us"
         >
           <WhyChooseUsSection />
         </section>
 
-        <section className="w-full  max-w-8xl overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1">
+        <section id="Testimonials" className="w-full max-w-8xl overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1 scroll-mt-20">
           <TrustByCreatorSection />
         </section>
 
-        <ReadyToGrow />
+        {/* Ready to Grow Section */}
+        <div id="ready-to-grow" className="scroll-mt-16">
+          <ReadyToGrow2 />
+        </div>
 
-        {/* FAQ Section with debug styling */}
-        <div className="w-full">
+        {/* FAQ Section */}
+        <div id="FAQs" className="w-full mt-10 md:mt-0 scroll-mt-28">
           <FAQSection />
         </div>
 

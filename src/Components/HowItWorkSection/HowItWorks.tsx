@@ -167,18 +167,36 @@ export const HowItWorkSection = (): JSX.Element => {
       <div className="max-w-[1384px] mx-auto px-4 md:px-8">
         <div className="flex flex-col md:flex-row items-start justify-between" >
           <motion.div
-            className="w-full md:w-[40%] mb-10 md:mb-0"
+            className="w-full md:w-[40%] mb-5 md:mb-0"
             initial={{ opacity: 0, x: -100 }}
             whileInView={{ opacity: 1, x: 0, y: 20 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <h1 className="text-[42px] px-1 md:text-[56px]  md:text-left font-bold leading-[1.1] bg-black bg-clip-text text-transparent mb-3">
+            {/* <h1 className="text-[42px] px-1 md:text-[56px]  md:text-left font-bold leading-[1.1] bg-black bg-clip-text text-transparent mb-3">
               How It Works
             </h1>
             <p className="text-lg px-2 text-start md:text-left text-gray-700 font-medium">
               {isMobileView ? "Unlock the tools and support that will elevate your creative journey!" : "Embark on Your Path to Creative Success!"}
-            </p>
+            </p> */}
+                 <div className="mb-1 md:mb-1">
+          {/* <div className="inline-block px-4 py-1 bg-purple-100 rounded-full text-purple-600 text-sm font-medium mb-4">
+            FAQ
+          </div> */}
+               <div className="mb-1 md:mb-1">
+          {/* <div className="inline-block px-4 py-1 bg-purple-100 rounded-full text-purple-600 text-sm font-medium mb-4">
+            FAQ
+          </div> */}
+          <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
+          How It   <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Work</span>
+            <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
+          </h2>
+          <p className="mt-3 md:mt-4 text-gray-600 max-w-full text-lg">
+          {isMobileView ? "Unlock the tools and support that will elevate your creative journey!" : "Embark on Your Path to Creative Success!"}
+          </p>
+        </div>
+ 
+        </div>
             <div className="hidden md:flex mt-8 gap-2">
               {stepCards.map((_, index) => (
                 <button
@@ -207,7 +225,7 @@ export const HowItWorkSection = (): JSX.Element => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {isMobileView ? (
-              <div className="px-1">
+              <div className="px-1 relative">
                 <SwipeCards />
               </div>
             ) : (

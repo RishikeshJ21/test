@@ -20,11 +20,65 @@ export const NavigationSection = () => {
 
   // Navigation menu items data
   const navItems = [
-    { title: "Home", href: "#", active: true },
-    { title: "How it Works", href: "#how-it-works", active: false },
-    { title: "Collaborations", href: "#collaborations", active: false },
-    { title: "Testimonials", href: "#testimonials", active: false },
+    { title: "Home", href: "#", active: true, offset: 0 },
+    { title: "How it Works", href: "#how-it-works", active: false, offset: 50 },
+    { title: "Why Choose Us", href: "#why-choose-us", active: false, offset: 20 },
+    { title: "Testimonials", href: "#Testimonials", active: false, offset: 40 },
+    { title: "FAQs", href: "#FAQs", active: false, offset: -40 },
+    { title: "Join Us", href: "#ready-to-grow", active: false, offset: -10 },
   ];
+
+  // Add smooth scrolling for anchor links
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, offset: number = 0) => {
+    // Only prevent default for hash links
+    if (href.startsWith('#') && href !== '#') {
+      e.preventDefault();
+      const targetId = href.substring(1); // Remove the # character
+      const targetElement = document.getElementById(targetId);
+      
+      if (targetElement) {
+        // Close mobile menu if open
+        if (isMenuOpen) {
+          setIsMenuOpen(false);
+        }
+        
+        // Get header height to offset scrolling
+        const headerHeight = headerRef.current ? headerRef.current.offsetHeight : 80;
+        
+        // Get window width to adjust scroll behavior
+        const isLargeScreen = window.innerWidth >= 1024; // lg breakpoint
+        
+        // Calculate the element's position adjusting for header height and custom offset
+        const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+        
+        // Apply different offset based on screen size and component
+        const additionalOffset = isLargeScreen ? offset : 0;
+        const offsetPosition = elementPosition - headerHeight + additionalOffset;
+        
+        // Scroll to element with adjusted position and smooth behavior
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+        
+        // Optional: After scrolling is complete, check if the section is fully visible
+        setTimeout(() => {
+          const elementRect = targetElement.getBoundingClientRect();
+          const isPartiallyVisible = 
+            elementRect.top < window.innerHeight && 
+            elementRect.bottom > 0;
+            
+          // If the element is not fully visible, adjust scroll position
+          if (!isPartiallyVisible) {
+            window.scrollBy({
+              top: elementRect.top < 0 ? elementRect.top - 50 : 0,
+              behavior: 'smooth'
+            });
+          }
+        }, 1000); // Wait for initial scroll to complete
+      }
+    }
+  };
 
   return (
     <header 
@@ -131,6 +185,7 @@ export const NavigationSection = () => {
                   color: "#9275E0",
                   transition: { duration: 0.2 }
                 }}
+                onClick={(e) => handleNavClick(e, item.href, item.offset)}
               >
                 {item.title}
               </motion.a>
@@ -178,6 +233,7 @@ export const NavigationSection = () => {
                     x: 5,
                     transition: { duration: 0.2 }
                   }}
+                  onClick={(e) => handleNavClick(e, item.href, item.offset)}
                 >
                   {item.title}
                 </motion.a>

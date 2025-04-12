@@ -30,24 +30,24 @@ export const HowItWorkSection3 = (): JSX.Element => {
         sectionRef.current.classList.add('card-changing');
         setTimeout(() => {
           sectionRef.current?.classList.remove('card-changing');
-        }, 100);
+        }, 10);
       }
 
       setTimeout(() => {
         setIsAnimating(false);
-      }, 300);
+      }, 100);
     }
   }, [activeCard, isAnimating]);
 
   // Skip to next card
-  const nextCard = useCallback(() => {
-    changeCard((activeCard + 1) % stepCards.length);
-  }, [activeCard, changeCard]);
+  // const nextCard = useCallback(() => {
+  //   changeCard((activeCard + 1) % stepCards.length);
+  // }, [activeCard, changeCard]);
 
-  // Go to previous card
-  const prevCard = useCallback(() => {
-    changeCard((activeCard - 1 + stepCards.length) % stepCards.length);
-  }, [activeCard, changeCard]);
+  // // Go to previous card
+  // const prevCard = useCallback(() => {
+  //   changeCard((activeCard - 1 + stepCards.length) % stepCards.length);
+  // }, [activeCard, changeCard]);
 
   // Handle mouse enter for the whole component
   const handleMouseEnter = useCallback(() => {
@@ -83,7 +83,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
   return (
     // Only display on large screens (lg:block)
     <section
-      className="hidden lg:block w-full py-16 bg-gradient-to-b from-gray-50 to-gray-50 relative overflow-hidden transition-all duration-500"
+      className="hidden lg:block w-full py-10 bg-gradient-to-b from-gray-50 to-gray-50 relative overflow-hidden transition-all duration-500"
       id="how-it-works"
       ref={sectionRef}
       onMouseEnter={handleMouseEnter}
@@ -94,15 +94,10 @@ export const HowItWorkSection3 = (): JSX.Element => {
           className="text-start mb-6"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.1 }}
           viewport={{ once: true }}
         >
-          {/* <h2 className="[font-family:'Instrument_Sans',Helvetica] font-semibold text-black text-[36px] sm:text-[48px] md:text-[56px] tracking-[0] leading-[1.2]">
-            How It Works
-          </h2>
-          <p className="w-full leading-7 sm:leading-9 [font-family:'Instrument_Sans',Helvetica] font-medium text-[#222222] text-lg sm:text-xl md:text-2xl tracking-[0]">
-            Your Path to Creative Success: Discover the tools, resources, and community support you need to elevate your creative journey. Whether you&apos;re just starting out or looking to take your craft to the next level, we&apos;re here to help you achieve your goals and turn your passion into a thriving career.
-          </p> */}
+ 
              <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
              How It  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Works</span>
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
@@ -112,12 +107,13 @@ export const HowItWorkSection3 = (): JSX.Element => {
           </p>
         </motion.div>
 
+
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-center flex-grow">
           <motion.div
             className="w-full lg:w-1/3 flex flex-col items-center lg:items-start"
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.2, delay: 0.2 }}
             viewport={{ once: true }}
           >
             <div className="space-y-6 w-full max-w-sm">
@@ -140,7 +136,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
                     animate={activeCard === index ? {
                       scale: [1, 1.1, 1],
                       rotate: [0, 5, 0, -5, 0],
-                      transition: { duration: 0.5 }
+                      transition: { duration: 0.2 }
                     } : {}}
                   >
                     <img
@@ -173,38 +169,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
               ))}
             </div>
 
-            {/* <motion.div
-              className="mt-8 flex items-center justify-center gap-4 w-full"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <motion.button
-                onClick={prevCard}
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => setIsHovering(false)}
-                className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-purple-600"
-                whileHover={{ scale: 1.1, backgroundColor: "#f9f9f9" }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </motion.button>
-
-              <motion.button
-                onClick={nextCard}
-                onMouseEnter={() => setIsHovering(true)}
-                onMouseLeave={() => setIsHovering(false)}
-                className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-purple-600"
-                whileHover={{ scale: 1.1, backgroundColor: "#f9f9f9" }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </motion.button>
-            </motion.div> */}
+      
           </motion.div>
 
           <div 
@@ -291,35 +256,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
                           {card.description}
                         </motion.p>
 
-                        {/* <motion.div
-                          className="mt-auto pt-5 flex justify-between items-center"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.6 }}
-                        >
-                          <div className="flex space-x-2">
-                            {stepCards.map((_, i) => (
-                              <motion.div
-                                key={i}
-                                className={`h-2 rounded-full cursor-pointer ${i === activeCard ? "bg-purple-600" : "bg-gray-300"}`}
-                                style={{ width: i === activeCard ? 24 : 8 }}
-                                whileHover={{ scale: 1.2 }}
-                                onClick={() => changeCard(i)}
-                              />
-                            ))}
-                          </div>
-
-                          <motion.button
-                            className="bg-purple-600 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2"
-                            whileHover={{ scale: 1.05, backgroundColor: "#7c3aed" }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span>Learn More</span>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                          </motion.button>
-                        </motion.div> */}
+                   
                       </div>
                     </motion.div>
                   )
