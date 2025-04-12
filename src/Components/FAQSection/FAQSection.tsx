@@ -63,20 +63,30 @@ export const FAQSection = (): JSX.Element => {
             <motion.div 
               key={index}
               variants={itemVariants}
-              className={`bg-white rounded-xl ${
-                openItem === `faq-${index}`
-                  ? 'ring-2 ring-purple-300 border border-purple-300 shadow-md'
-                  : 'border border-gray-200 hover:border-gray-300'
-              } transition-all duration-200`}
-              style={{ height: "fit-content" }} 
+              className="bg-white overflow-hidden rounded-xl"
             >
-              <div className="w-full overflow-hidden rounded-xl">
+              <div 
+                className={`w-full transition-all duration-200 ${
+                  openItem === `faq-${index}`
+                    ? 'ring-1 ring-purple-300 shadow-md'
+                    : 'ring-1 ring-gray-200 hover:ring-gray-300'
+                }`}
+                style={{ borderRadius: "0.75rem" }}
+              >
                 <div className="border-none">
                   <button 
                     onClick={() => handleAccordionChange(`faq-${index}`)}
                     className={`px-6 py-5 hover:no-underline focus:outline-none focus:ring-2 focus:ring-purple-300 focus:ring-inset w-full text-left transition-colors duration-200 ${
-                      openItem === `faq-${index}` ? 'bg-purple-50/30 rounded-t-xl' : 'hover:bg-gray-50 rounded-xl'
+                      openItem === `faq-${index}` 
+                        ? 'bg-purple-50/30' 
+                        : 'hover:bg-gray-50'
                     }`}
+                    style={{ 
+                      borderTopLeftRadius: "0.75rem", 
+                      borderTopRightRadius: "0.75rem",
+                      borderBottomLeftRadius: openItem === `faq-${index}` ? "0" : "0.75rem",
+                      borderBottomRightRadius: openItem === `faq-${index}` ? "0" : "0.75rem"
+                    }}
                   >
                     <div className="flex items-center gap-4 w-full">
                       <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-purple-100 text-purple-600 font-medium">
@@ -161,8 +171,6 @@ export const FAQSection = (): JSX.Element => {
             </a>
           </motion.div>
         </div>
-
-       
       </div>
     </section>
   );

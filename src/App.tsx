@@ -65,7 +65,7 @@ export default function Home() {
       </div>
 
       {/* Main content with proper spacing for fixed header */}
-      <div className="pt-10 md:pt-12">
+      <div className={`pt-10 lg:pt-12 ${typeof window !== 'undefined' && window.innerWidth > 710 && window.innerWidth < 900 ? "pt-0" : ""}`}>
         <Hero
           title={{
             t1: "Unleash Your",
