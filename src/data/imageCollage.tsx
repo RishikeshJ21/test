@@ -2,13 +2,13 @@ export const creators = [
   {
     id: 1,
     name: 'Emma Rodriguez',
-    image: 'https://randomuser.me/api/portraits/women/23.jpg',
+    image: 'https://images.unsplash.com/photo-1551180452-aea351b23949?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     description: 'Digital artist creating stunning concept art and illustrations for gaming industry.',
     followers: '1.2M',
     subscribers: '450K',
     likes: '12.5M',
     category: 'Digital Art',
-    background: 'https://images.unsplash.com/photo-1579547945413-497e1b99dac0'
+    background: 'https://images.unsplash.com/photo-1551180452-aea351b23949?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   },
   {
     id: 2,

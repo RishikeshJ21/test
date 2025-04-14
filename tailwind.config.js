@@ -2,6 +2,9 @@ module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1600px', // Add custom breakpoint for 3xl
+      },
       animation: {
         "gradient-shift": "gradient-shift 8s ease infinite",
         float: "float 6s ease-in-out infinite",

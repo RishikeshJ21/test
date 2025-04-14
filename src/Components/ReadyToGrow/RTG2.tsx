@@ -115,7 +115,7 @@ export const ReadyToGrow2 = (): JSX.Element => {
             />
 
             {/* Floating icons */}
-            <motion.img
+            {/* <motion.img
               src="/lightning.svg"
               alt="Lightning decoration"
               className="absolute -top-[50px] right-[35%] w-10 h-10 hidden 2xl:block opacity-80"
@@ -128,9 +128,9 @@ export const ReadyToGrow2 = (): JSX.Element => {
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-            />
+            /> */}
 
-            <motion.img
+            {/* <motion.img
               src="/sparkle.svg"
               alt="Sparkle decoration"
               className="absolute -bottom-[30px] left-[25%] w-8 h-8 hidden 2xl:block opacity-80"
@@ -143,7 +143,7 @@ export const ReadyToGrow2 = (): JSX.Element => {
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
-            />
+            /> */}
 
             {/* Additional decorative elements */}
             <motion.div
@@ -171,7 +171,7 @@ export const ReadyToGrow2 = (): JSX.Element => {
             <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] bg-center bg-repeat-x opacity-5 hidden 2xl:block pointer-events-none" />
 
             {/* Additional sparkle */}
-            <motion.img
+            {/* <motion.img
               src="/sparkle.svg"
               alt="Sparkle decoration"
               className="absolute top-[10%] right-[5%] w-6 h-6 hidden 2xl:block opacity-60"
@@ -186,10 +186,10 @@ export const ReadyToGrow2 = (): JSX.Element => {
                 ease: "easeInOut",
                 delay: 3
               }}
-            />
+            /> */}
 
             {/* Additional lightning */}
-            <motion.img
+            {/* <motion.img
               src="/lightning.svg"
               alt="Lightning decoration"
               className="absolute bottom-[15%] left-[8%] w-7 h-7 hidden 2xl:block opacity-70"
@@ -204,7 +204,7 @@ export const ReadyToGrow2 = (): JSX.Element => {
                 ease: "easeInOut",
                 delay: 2
               }}
-            />
+            /> */}
           </>
         )}
 
@@ -274,15 +274,15 @@ export const ReadyToGrow2 = (): JSX.Element => {
                 boxShadow: "0 0 30px rgba(255, 255, 255, 0.6)",
                 transition: { type: "spring", stiffness: 400, damping: 10 }
               }}
-              whileTap={{ scale: 0.95 }}
-              className="relative group"
+              whileTap={{ scale: 1.5 }}
+              className="relative group rounded-xl"
             >
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-500 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse"></div>
+              <div className="absolute  -inset-1 bg-gradient-to-r from-purple-600 to-blue-500 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse"></div>
               <Button
-                onClick={() => window.location.href = "https://t.me/+dKB7kUlsbFFkMDM1"}
-                className="relative px-8 sm:px-[35px] py-4 sm:py-[18px] bg-white rounded-xl hover:bg-white mb-0 md:mb-0 transition-all duration-300 group-hover:text-[#6e2db8] overflow-hidden"
+                onClick={() => window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank")}
+                className="relative  px-10 sm:px-[40px] py-4 sm:py-[22px] bg-white rounded-xl hover:bg-white mb-0 md:mb-0 transition-all duration-300 group-hover:text-[#6e2db8] overflow-hidden"
               >
-                <span className="font-['Instrument_Sans',Helvetica] font-semibold text-[#4e1f88] text-base sm:text-[17px] tracking-[-0.34px] leading-[23.8px] group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-700 group-hover:to-blue-600 relative z-10">
+                <span className="font-['Instrument_Sans',Helvetica] font-semibold text-[#4e1f88] text-base sm:text-[20px] tracking-[-0.34px] leading-[23.8px] group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-700 group-hover:to-blue-600 relative z-10">
                   Join Now for Free
                 </span>
                 <motion.span

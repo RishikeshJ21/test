@@ -1,20 +1,54 @@
-import { JSX, useState } from "react";
+import { JSX, useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify"; // Make sure you have react-toastify installed
 import "react-toastify/dist/ReactToastify.css"; // Import CSS for react-toastify
+import { motion } from "framer-motion";
+import { Mail, X } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 
-// Define the Terms and Conditions text
+// Add type declaration at the top of the file
+declare global {
+  interface Window {
+    grecaptcha: {
+      reset: () => void;
+    };
+  }
+}
 
- 
-
+// Get environment variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const SUBSCRIBE_ENDPOINT = import.meta.env.VITE_NEWSLETTER_SUBSCRIBE_ENDPOINT;
+const UNSUBSCRIBE_ENDPOINT = import.meta.env.VITE_NEWSLETTER_UNSUBSCRIBE_ENDPOINT;
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim() || "6LcdGRgrAAAAAIU-zzCAQN2GrwPnqS6mrVtjUb6v";
 
 export const Footer = (): JSX.Element => {
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // Updated notify function to show the Terms and Conditions
-  const notifyTerms = () => toast.info("🚀 Privacy Policy coming soon!", {position: "top-right", autoClose: 5000, theme: "light" });
+  const notifyTerms = () => toast.info("🚀 Privacy Policy coming soon!", { position: "top-right", autoClose: 5000, theme: "light" });
+
+  // Check local storage for subscription status on component mount
+  useEffect(() => {
+    const storedSubscription = localStorage.getItem('newsletter_subscription');
+    if (storedSubscription) {
+      try {
+        const data = JSON.parse(storedSubscription);
+        setIsSubscribed(true);
+        setEmail(data.email);
+        setUsername(data.username);
+      } catch (e) {
+        // Handle potential JSON parse error
+        localStorage.removeItem('newsletter_subscription');
+      }
+    }
+  }, []);
 
   const navigationLinks = {
     company: [
@@ -36,23 +70,124 @@ export const Footer = (): JSX.Element => {
     ],
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    if (!username) {
+      setError("Please enter your name");
+      return;
+    }
+
+    if (!captchaToken) {
+      setError("Please complete the captcha verification");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Here you would typically send the email to your backend
-    // For now, we'll just simulate a successful submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      setEmail("");
+    try {
+      const payload = {
+        email: email.trim(),
+        username: username.trim(),
+        captcha_response: captchaToken
+      };
 
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setShowSuccess(false);
-        setShowForm(false);
-      }, 3000);
-    }, 1000);
+      const response = await fetch(`${API_BASE_URL}${SUBSCRIBE_ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.message) {
+          throw new Error(data.message);
+        } else if (response.status === 422) {
+          throw new Error("Invalid input or captcha verification failed. Please try again.");
+        } else {
+          throw new Error("Failed to subscribe. Please try again.");
+        }
+      }
+
+      setSuccess("Successfully subscribed to newsletter!");
+      setEmail("");
+      setUsername("");
+      setCaptchaToken(null);
+      localStorage.setItem('newsletter_subscription', JSON.stringify({ email, username }));
+      setIsSubscribed(true);
+      setTimeout(() => setShowForm(false), 2000);
+
+    } catch (error) {
+      console.error('Subscription error:', error);
+      setError(error instanceof Error ? error.message : "Failed to subscribe. Please try again.");
+
+      // Reset reCAPTCHA on error
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
+      setCaptchaToken(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    if (!confirm("Are you sure you want to unsubscribe from our newsletter?")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${UNSUBSCRIBE_ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email
+        }),
+      });
+
+      if (response.ok) {
+        // Remove subscription data from local storage
+        localStorage.removeItem('newsletter_subscription');
+
+        toast.success('You have successfully unsubscribed from our newsletter.', {
+          position: "top-right",
+          autoClose: 5000,
+        });
+
+        setIsSubscribed(false);
+        setEmail("");
+        setUsername("");
+        setIsSubmitting(false);
+      } else {
+        const errorData = await response.json();
+        toast.error(`Unsubscribe failed: ${errorData.message || 'Please try again later'}`, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Error unsubscribing from newsletter:", error);
+      toast.error('Failed to unsubscribe. Please check your connection and try again.', {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -199,7 +334,29 @@ export const Footer = (): JSX.Element => {
                     </div>
                     <div className="ml-3 flex-1 md:flex md:justify-between">
                       <p className="text-sm text-purple-700">
-                        Want to stay updated? <a href="#" onClick={(e) => { e.preventDefault(); setShowForm(true); }} className="font-medium text-purple-700 underline">Subscribe to our newsletter</a>
+                        {isSubscribed ? (
+                          <>
+                            You're subscribed to our newsletter.
+                            <button
+                              onClick={handleUnsubscribe}
+                              className="font-medium text-purple-700 underline ml-2"
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? 'Processing...' : 'Unsubscribe'}
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            Want to stay updated?
+                            <a
+                              href="#"
+                              onClick={(e) => { e.preventDefault(); setShowForm(true); }}
+                              className="font-medium text-purple-700 underline ml-2"
+                            >
+                              Subscribe to our newsletter
+                            </a>
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -207,77 +364,83 @@ export const Footer = (): JSX.Element => {
 
                 {/* Newsletter popup form */}
                 {showForm && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 transform transition-all">
+                  <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-medium text-gray-900">Subscribe to our newsletter</h3>
                         <button
                           onClick={() => setShowForm(false)}
                           className="text-gray-400 hover:text-gray-500"
                         >
-                          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <X className="h-6 w-6" />
                         </button>
                       </div>
 
-                      {showSuccess ? (
-                        <div className="bg-green-50 border border-green-200 rounded-md p-4">
-                          <div className="flex">
-                            <div className="flex-shrink-0">
-                              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="ml-3">
-                              <p className="text-sm font-medium text-green-800">
-                                Thank you for subscribing!
-                              </p>
-                              <p className="mt-2 text-sm text-green-700">
-                                We'll keep you updated with our latest news and offers.
-                              </p>
-                            </div>
-                          </div>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Join our newsletter to receive updates on our latest projects, events, and opportunities.
+                      </p>
+
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Enter your name"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                          />
                         </div>
-                      ) : (
-                        <>
-                          <p className="text-sm text-gray-500 mb-4">
-                            Join our newsletter to receive updates on our latest projects, events, and opportunities.
-                          </p>
-                          <form onSubmit={handleSubmit}>
-                            <div className="mb-4">
-                              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                Email address
-                              </label>
-                              <input
-                                type="email"
-                                id="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                              />
-                            </div>
-                            <div className="flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => setShowForm(false)}
-                                className="mr-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className={`inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : ''}`}
-                              >
-                                {isSubmitting ? 'Subscribing...' : 'Subscribe'}
-                              </button>
-                            </div>
-                          </form>
-                        </>
-                      )}
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                          />
+                        </div>
+
+                        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                        {success && <p className="text-green-500 text-sm mt-1">{success}</p>}
+
+                        <div className="flex justify-center transform scale-90 sm:scale-100 origin-top">
+                          <ReCAPTCHA
+                            sitekey={RECAPTCHA_SITE_KEY}
+                            onChange={(token: string | null) => {
+                              console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
+                              setCaptchaToken(token);
+                            }}
+                            onErrored={() => {
+                              console.error('reCAPTCHA error occurred');
+                              setError('Error loading captcha. Please refresh and try again.');
+                            }}
+                            onExpired={() => {
+                              console.log('reCAPTCHA expired');
+                              setCaptchaToken(null);
+                            }}
+                            theme="light"
+                            size="normal"
+                          />
+                        </div>
+
+                        <motion.button
+                          type="submit"
+                          disabled={isSubmitting}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-blue-400 text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          <Mail className="h-4 w-4" />
+                          {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+                        </motion.button>
+                      </form>
                     </div>
                   </div>
                 )}

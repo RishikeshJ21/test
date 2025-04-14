@@ -83,7 +83,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
   return (
     // Only display on large screens (lg:block)
     <section
-      className="hidden lg:block w-full py-10 bg-gradient-to-b from-gray-50 to-gray-50 relative overflow-hidden transition-all duration-500"
+      className="hidden lg:block w-full py-10  bg-gradient-to-b from-gray-50 to-gray-50 relative overflow-hidden transition-all duration-500"
       id="how-it-works"
       ref={sectionRef}
       onMouseEnter={handleMouseEnter}

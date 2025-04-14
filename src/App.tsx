@@ -130,7 +130,7 @@ export default function Home() {
           </motion.section>
         </div>
 
-        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 max-h-[480px] mb-20 sm:px-2 md:mt-18 lg:px-23 lg:py-29 scroll-mt-16">
+        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 max-h-[480px] mb-20 sm:px-2 md:mt-18 lg:px-23 lg:py-29  scroll-mt-16">
           <HowItWorks />
         </section>
 
@@ -152,7 +152,7 @@ export default function Home() {
         </div>
 
         {/* FAQ Section */}
-        <div id="FAQs" className="w-full mt-10 md:mt-0 scroll-mt-28">
+        <div id="FAQs" className="w-full px-2 mt-10 md:mt-0 scroll-mt-28">
           <FAQSection />
         </div>
 

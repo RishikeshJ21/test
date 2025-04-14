@@ -11,40 +11,49 @@ interface IconGridProps {
 const IconGrid: React.FC<IconGridProps> = ({ variant = 'default' }) => {
   const features = [
     {
-      icon: <RocketIcon className="w-6 h-6" />,
+      // icon: <RocketIcon className="w-6 h-6" />,
+      icon: "/frame-2.svg",
       title: "Zero Cost, Maximum Support",
       description: "Forget about expensive courses and hidden fees. We're here to support your creative journey without costing you a penny.",
-      bgColor: "bg-purple-500"
+      bgColor: "bg-gray-100"
     },
     {
-      icon: <HeadphonesIcon className="w-6 h-6" />,
+      icon: "/frame-11.svg",
+
       title: "Expert Guidance",
       description: "Learn from experienced creators and industry professionals who understand what it takes to succeed in a competitive landscape.",
-      bgColor: "bg-blue-500"
+      bgColor: "bg-gray-100"
+
     },
     {
-      icon: <BriefcaseIcon className="w-6 h-6" />,
+      icon: "/frame-12.svg",
+
       title: "Sustainable Career Building",
       description: "We help you go beyond growth and build a lasting career. Master monetization strategies and secure brand deals.",
-      bgColor: "bg-green-500"
+      bgColor: "bg-gray-100"
+
     },
     {
-      icon: <UsersIcon className="w-6 h-6" />,
+      icon: "/frame-7.svg",
+
       title: "Community-Driven Growth",
       description: "Connect with a thriving network of creators who share your passion. Collaborate and grow together while supporting one another.",
-      bgColor: "bg-orange-500"
+      bgColor: "bg-gray-100"
+
     },
     {
-      icon: <StarIcon className="w-6 h-6" />,
+      icon: "/frame-1.svg",
+
       title: "Proven Success Stories",
       description: "Our platform has already empowered countless creators to reach new heights. Be inspired by their journeys and take your path.",
-      bgColor: "bg-yellow-500"
+      bgColor: "bg-gray-100"
+
     },
     {
       icon: <BarChartIcon className="w-6 h-6" />,
       title: "Data-Driven Insights",
       description: "Make informed decisions with our analytics tools. Track your growth, understand your audience, and optimize your content.",
-      bgColor: "bg-red-500"
+      bgColor: "bg-gray-100"
     }
   ];
 
