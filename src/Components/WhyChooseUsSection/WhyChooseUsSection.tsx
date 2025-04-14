@@ -22,7 +22,7 @@ export const WhyChooseUsSection = () => {
       <div className="flex flex-col sm:flex-col justify-between items-start w-full gap-2">
         <div className="mb-1 md:mb-1">
           <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
-            Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Us?</span>
+            Why Choose        <span className=" bg-clip-text text-[#4e1f88] ">Us?</span>
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
           </h2>
           <p className="mt-1 text-gray-600 max-w-full text-lg">

@@ -139,7 +139,7 @@ export const TrustByCreatorSection = (): JSX.Element => {
             FAQ
           </div> */}
           <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
-            Trusted by  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">Creators</span>
+            Trusted by      <span className=" bg-clip-text text-[#4e1f88] ">Creators</span>
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
           </h2>
           <p className="mt-4 text-gray-600 max-w-full text-lg">
