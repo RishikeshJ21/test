@@ -24,7 +24,7 @@ export const NavigationSection = () => {
     { title: "How it Works", href: "#how-it-works", active: false, offset: 35 },
     { title: "Why Choose Us", href: "#why-choose-us", active: false, offset: 15 },
     { title: "Testimonials", href: "#Testimonials", active: false, offset: 40 },
-    { title: "FAQs", href: "#FAQs", active: false, offset: -40 },
+    { title: "FAQs", href: "#FAQs", active: false, offset: 40 },
     { title: "Join Us", href: "#ready-to-grow", active: false, offset: -10 },
   ];
 

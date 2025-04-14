@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BriefcaseIcon, RocketIcon, HeadphonesIcon, BarChartIcon, UsersIcon, StarIcon } from 'lucide-react';
+import {  BarChartIcon } from 'lucide-react';
 import FeatureCard from './FeatureCard';
  
 

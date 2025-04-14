@@ -219,7 +219,7 @@ export const FAQSection = (): JSX.Element => {
         </div>
 
         {/* Contact CTA with updated onClick */}
-        <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-8 bg-gray-900 rounded-xl p-8 border border-gray-800 shadow-lg relative overflow-hidden">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8 bg-gray-900 rounded-xl p-8 border border-gray-800 shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 opacity-20 rounded-full transform translate-x-1/2 -translate-y-1/2" />
           <div className="text-center sm:text-left relative z-10">
             <h3 className="text-white text-2xl font-bold mb-3">Still have questions?</h3>
