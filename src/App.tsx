@@ -119,7 +119,7 @@ export default function Home() {
         <div
           ref={howItWorksRef}
           id="how-it-works"
-          className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-1 lg:px-23 scroll-mt-24"
+          className="hidden  lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-1 lg:px-23 scroll-mt-24"
         >
           <motion.section
             initial={{ x: 100, y: 20, opacity: 0 }}
@@ -130,13 +130,13 @@ export default function Home() {
           </motion.section>
         </div>
 
-        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 max-h-[480px] mb-20 sm:px-2 md:mt-18 lg:px-23 lg:py-29  scroll-mt-16">
+        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 h-full max-h-[480px] mb-25 sm:px-2 md:mt-18 lg:px-23 lg:py-29  scroll-mt-16">
           <HowItWorks />
         </section>
 
         {/* Why Choose Us Section with Card Hover Effect */}
         <section
-          className="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-12 mb-16 scroll-mt-24"
+          className="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-14 mb-16 scroll-mt-24"
           id="why-choose-us"
         >
           <WhyChooseUsSection />

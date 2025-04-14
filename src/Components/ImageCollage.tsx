@@ -302,7 +302,7 @@ export default function ImageCollage() {
             className="h-10 w-10 rounded-full border-2 border-purple-300 object-cover shadow-glow"
           />
           <div className="flex flex-col">
-            <p className="font-semibold text-sm text-white relative z-10">
+            <p className={`font-semibold text-sm text-white relative z-10`}>
               {creator.name}
             </p>
             <p className="text-xs text-purple-200">{creator.category}</p>
@@ -334,22 +334,30 @@ export default function ImageCollage() {
                 exit={{ opacity: 0, y: 10, transition: { duration: 0.2 } }}
               >
                 <div className="flex flex-col items-center">
-                  <span className="font-bold text-white">
+                  <span className={`font-bold ${creator.name === "Emma Rodriguez" ? "text-white" : "text-white"}`}>
                     {creator.followers}
                   </span>
-                  <span>Followers</span>
+                  <span className={`  ${creator.name === "Emma Rodriguez" ? "text-white" : "text-white"}`}>
+
+                    Followers</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="font-bold text-white">
+                <span className={`font-bold ${creator.name === "Emma Rodriguez" ? "text-white" : "text-white"}`}>
+
                     {creator.subscribers}
                   </span>
-                  <span>Subscribers</span>
+                  <span className={`  ${creator.name === "Emma Rodriguez" ? "text-white" : "text-white"}`}>
+
+                    Subscribers</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="font-bold text-white">
+                <span className={`font-bold ${creator.name === "Emma Rodriguez" ? "text-white" : "text-white"}`}>
+
                     {creator.likes}
                   </span>
-                  <span>Likes</span>
+                  <span className={`  ${creator.name === "Emma Rodriguez" ? "text-white" : "text-white"}`}>
+                  
+                  Likes</span>
                 </div>
               </motion.div>
             )}
