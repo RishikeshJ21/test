@@ -1,3 +1,94 @@
+# Createathon React Application
+
+This is the frontend for the Createathon platform, built with React, TypeScript, and Vite.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (version 18.x or later)
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/createathon-react.git
+cd createathon-react
+
+# Install dependencies
+npm install
+```
+
+### Development
+
+```bash
+# Start development server
+npm run dev
+```
+
+### Building for Production
+
+```bash
+# Create production build
+npm run build
+```
+
+## Deployment Options
+
+### IIS Deployment
+
+This application can be deployed to IIS. See the [IIS-DEPLOYMENT.md](./IIS-DEPLOYMENT.md) file for detailed instructions.
+
+### CI/CD Pipelines
+
+This project includes GitHub Actions workflows for continuous integration and deployment:
+
+- **CI Pipeline**: Builds and tests the application on every push and pull request
+- **CD Pipeline**: Automatically deploys to production when changes are pushed to the main branch
+- **Staging Pipeline**: Deploys to staging environments for testing
+
+For detailed setup instructions, see the [CICD-SETUP.md](./CICD-SETUP.md) file.
+
+## Environment Configuration
+
+Environment variables are used for configuration and can be set in the following files:
+
+- `.env` - Development environment
+- `.env.production` - Production environment
+
+Key environment variables:
+
+```
+VITE_API_BASE_URL=https://api.createathon.co
+VITE_RECAPTCHA_SITE_KEY=your-recaptcha-site-key
+```
+
+## Project Structure
+
+```
+/src
+  /Components       # Reusable UI components
+  /SubComponents    # Smaller component units
+  /assets           # Static assets
+  /lib              # Utility functions and helpers
+  /data             # Static data and constants
+  App.tsx           # Main application component
+  main.tsx          # Application entry point
+  config.ts         # Configuration and environment variables
+```
+
+## Contributing
+
+1. Create a feature branch: `git checkout -b feature/my-feature`
+2. Commit your changes: `git commit -m 'Add some feature'`
+3. Push to the branch: `git push origin feature/my-feature`
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

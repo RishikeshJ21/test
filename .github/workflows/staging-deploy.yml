@@ -1,0 +1,65 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ develop, staging ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - qa
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build
+      run: npm run build
+      env:
+        VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        VITE_NEWSLETTER_SUBSCRIBE_ENDPOINT: ${{ secrets.VITE_NEWSLETTER_SUBSCRIBE_ENDPOINT }}
+        VITE_NEWSLETTER_UNSUBSCRIBE_ENDPOINT: ${{ secrets.VITE_NEWSLETTER_UNSUBSCRIBE_ENDPOINT }}
+        VITE_EMAIL_ENDPOINT: ${{ secrets.VITE_EMAIL_ENDPOINT }}
+        VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
+        VITE_RECAPTCHA_SECRET_KEY: ${{ secrets.VITE_RECAPTCHA_SECRET_KEY }}
+    
+    - name: Setup Web.config
+      run: |
+        Copy-Item -Path web.config -Destination dist/web.config -Force
+        
+    - name: Deploy to Staging IIS
+      uses: cschleiden/webdeploy-action@v1
+      with:
+        webSiteName: 'createathon-${{ github.event.inputs.environment || "staging" }}'
+        package: './dist'
+        serverUrl: '${{ secrets.IIS_SERVER_URL }}'
+        username: '${{ secrets.IIS_USERNAME }}'
+        password: '${{ secrets.IIS_PASSWORD }}' 
+        
+    - name: Send deployment notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: deployments
+        SLACK_COLOR: ${{ job.status }}
+        SLACK_USERNAME: GitHub Actions
+        SLACK_TITLE: Staging Deployment
+        SLACK_MESSAGE: 'Application deployed to ${{ github.event.inputs.environment || "staging" }} environment :rocket:' 
