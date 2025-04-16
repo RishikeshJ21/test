@@ -1,6 +1,7 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import config from '../config';
+import { handleRecaptchaError } from '../lib/recaptchaUtils';
 
 type FormState = {
   name: string;
@@ -18,6 +19,21 @@ export const ContactForm = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [captchaLoaded, setCaptchaLoaded] = useState(true);
+
+  // Listen for reCAPTCHA load errors from window
+  useEffect(() => {
+    const handleWindowRecaptchaError = () => {
+      handleRecaptchaError(setSubmitError, setCaptchaLoaded);
+    };
+
+    // Listen for the custom event we set up in index.html
+    window.addEventListener('recaptcha-load-error', handleWindowRecaptchaError);
+
+    return () => {
+      window.removeEventListener('recaptcha-load-error', handleWindowRecaptchaError);
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -26,6 +42,23 @@ export const ContactForm = () => {
 
   const handleRecaptchaChange = (token: string | null) => {
     setRecaptchaToken(token || '');
+    if (token) {
+      setSubmitError(''); // Clear captcha errors when completed
+    }
+  };
+
+  // Handle captcha load error
+  const handleCaptchaError = () => {
+    handleRecaptchaError(setSubmitError, setCaptchaLoaded);
+  };
+
+  // Handle retrying captcha load
+  const retryCaptcha = () => {
+    setCaptchaLoaded(true);
+    setSubmitError('');
+    
+    // The simplest and most reliable solution is to reload the page
+    window.location.reload();
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -122,10 +155,28 @@ export const ContactForm = () => {
           </div>
           
           <div className="mb-6">
-            <ReCAPTCHA
-              sitekey={config.recaptcha.siteKey}
-              onChange={handleRecaptchaChange}
-            />
+            {captchaLoaded ? (
+              <ReCAPTCHA
+                sitekey={config.recaptcha.siteKey}
+                onChange={handleRecaptchaChange}
+                onErrored={handleCaptchaError}
+                onExpired={() => {
+                  console.log('reCAPTCHA expired');
+                  setRecaptchaToken('');
+                }}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-3 p-4 border border-red-200 rounded-md bg-red-50">
+                <p className="text-red-600 text-sm">Captcha failed to load.</p>
+                <button 
+                  type="button"
+                  onClick={retryCaptcha}
+                  className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Retry Captcha
+                </button>
+              </div>
+            )}
           </div>
           
           {submitError && (

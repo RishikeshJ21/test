@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { faqItems } from "../../data/FAQData";
 import { ChevronDownIcon, Mail, MinusCircle, X } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import { handleRecaptchaError } from "../../lib/recaptchaUtils";
 
 // Add type declaration for grecaptcha
 declare global {
@@ -51,6 +52,7 @@ export const FAQSection = (): JSX.Element => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaLoaded, setCaptchaLoaded] = useState(true); // Track whether captcha loaded successfully
 
   const [formData, setFormData] = useState<ContactFormData>({
     firstName: "",
@@ -143,6 +145,20 @@ export const FAQSection = (): JSX.Element => {
     } else {
       setOpenItem(value);
     }
+  };
+
+  // Handle captcha load error
+  const handleCaptchaError = () => {
+    handleRecaptchaError(setError, setCaptchaLoaded);
+  };
+
+  // Handle retrying captcha load
+  const retryCaptcha = () => {
+    setCaptchaLoaded(true);
+    setError('');
+    
+    // The simplest and most reliable solution is to reload the page
+    window.location.reload();
   };
 
   return (
@@ -354,23 +370,37 @@ export const FAQSection = (): JSX.Element => {
               {success && <p className="text-green-500 text-sm">{success}</p>}
 
               <div className="flex justify-center transform scale-90 sm:scale-100 origin-top">
-                <ReCAPTCHA
-                  sitekey={RECAPTCHA_SITE_KEY}
-                  onChange={(token: string | null) => {
-                    console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
-                    setCaptchaToken(token);
-                  }}
-                  onErrored={() => {
-                    console.error('reCAPTCHA error occurred');
-                    setError('Error loading captcha. Please refresh and try again.');
-                  }}
-                  onExpired={() => {
-                    console.log('reCAPTCHA expired');
-                    setCaptchaToken(null);
-                  }}
-                  theme="light"
-                  size="normal"
-                />
+                {captchaLoaded ? (
+                  <ReCAPTCHA
+                    sitekey={RECAPTCHA_SITE_KEY}
+                    onChange={(token: string | null) => {
+                      console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
+                      setCaptchaToken(token);
+                      if (token) {
+                        setError(''); // Clear any previous errors when captcha is completed
+                      }
+                    }}
+                    onErrored={() => {
+                      handleCaptchaError();
+                    }}
+                    onExpired={() => {
+                      console.log('reCAPTCHA expired');
+                      setCaptchaToken(null);
+                    }}
+                    theme="light"
+                    size="normal"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 p-4 border border-red-200 rounded-md bg-red-50">
+                    <p className="text-red-600 text-sm">Captcha failed to load.</p>
+                    <button 
+                      onClick={retryCaptcha}
+                      className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                      Retry Captcha
+                    </button>
+                  </div>
+                )}
               </div>
 
               <motion.button

@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { JSX, useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify"; // Make sure you have react-toastify installed
 import "react-toastify/dist/ReactToastify.css"; // Import CSS for react-toastify
 import { motion } from "framer-motion";
 import { Mail, X } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import { handleRecaptchaError } from "../../lib/recaptchaUtils";
 
 // Add type declaration at the top of the file
 declare global {
@@ -30,6 +32,7 @@ export const Footer = (): JSX.Element => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaLoaded, setCaptchaLoaded] = useState(true); // Track whether captcha loaded successfully
 
   // Updated notify function to show the Terms and Conditions
   const notifyTerms = () => toast.info("🚀 Privacy Policy coming soon!", { position: "top-right", autoClose: 5000, theme: "light" });
@@ -48,6 +51,20 @@ export const Footer = (): JSX.Element => {
         localStorage.removeItem('newsletter_subscription');
       }
     }
+  }, []);
+
+  // Listen for reCAPTCHA load errors from window
+  useEffect(() => {
+    const handleWindowRecaptchaError = () => {
+      handleRecaptchaError(setError, setCaptchaLoaded);
+    };
+
+    // Listen for the custom event we set up in index.html
+    window.addEventListener('recaptcha-load-error', handleWindowRecaptchaError);
+
+    return () => {
+      window.removeEventListener('recaptcha-load-error', handleWindowRecaptchaError);
+    };
   }, []);
 
   const navigationLinks = {
@@ -188,6 +205,20 @@ export const Footer = (): JSX.Element => {
       });
       setIsSubmitting(false);
     }
+  };
+
+  // Handle captcha load error
+  const handleCaptchaError = () => {
+    handleRecaptchaError(setError, setCaptchaLoaded);
+  };
+
+  // Handle retrying captcha load
+  const retryCaptcha = () => {
+    setCaptchaLoaded(true);
+    setError('');
+    
+    // The simplest and most reliable solution is to reload the page
+    window.location.reload();
   };
 
   return (
@@ -411,23 +442,37 @@ export const Footer = (): JSX.Element => {
                         {success && <p className="text-green-500 text-sm mt-1">{success}</p>}
 
                         <div className="flex justify-center transform scale-90 sm:scale-100 origin-top">
-                          <ReCAPTCHA
-                            sitekey={RECAPTCHA_SITE_KEY}
-                            onChange={(token: string | null) => {
-                              console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
-                              setCaptchaToken(token);
-                            }}
-                            onErrored={() => {
-                              console.error('reCAPTCHA error occurred');
-                              setError('Error loading captcha. Please refresh and try again.');
-                            }}
-                            onExpired={() => {
-                              console.log('reCAPTCHA expired');
-                              setCaptchaToken(null);
-                            }}
-                            theme="light"
-                            size="normal"
-                          />
+                          {captchaLoaded ? (
+                            <ReCAPTCHA
+                              sitekey={RECAPTCHA_SITE_KEY}
+                              onChange={(token: string | null) => {
+                                console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
+                                setCaptchaToken(token);
+                                if (token) {
+                                  setError(''); // Clear any previous errors when captcha is completed
+                                }
+                              }}
+                              onErrored={() => {
+                                handleCaptchaError();
+                              }}
+                              onExpired={() => {
+                                console.log('reCAPTCHA expired');
+                                setCaptchaToken(null);
+                              }}
+                              theme="light"
+                              size="normal"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center gap-3 p-4 border border-red-200 rounded-md bg-red-50">
+                              <p className="text-red-600 text-sm">Captcha failed to load.</p>
+                              <button 
+                                onClick={retryCaptcha}
+                                className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                              >
+                                Retry Captcha
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         <motion.button

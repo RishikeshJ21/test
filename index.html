@@ -42,6 +42,9 @@
     </title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.google.com" crossorigin />
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
       rel="stylesheet"
@@ -56,6 +59,18 @@
       // Initial config in HTML - will be reconfigured in React for SPA tracking
       gtag('config', 'G-KJ6R7GQLGJ');
     </script>
+    
+    <!-- Pre-load Google reCAPTCHA -->
+    <script>
+      // This helps load reCAPTCHA more reliably
+      function onRecaptchaError() {
+        console.error('reCAPTCHA failed to load');
+        // Notify components that might be waiting for reCAPTCHA
+        const event = new CustomEvent('recaptcha-load-error');
+        window.dispatchEvent(event);
+      }
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer onerror="onRecaptchaError()"></script>
   </head>
   <body>
     <div id="root"></div>
