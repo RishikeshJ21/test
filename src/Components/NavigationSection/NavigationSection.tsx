@@ -3,6 +3,7 @@
 import  { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "../../SubComponents/button";
+import { useAnalyticsEvent, EventCategory } from "../../lib/useAnalyticsEvent";
  
  
 
@@ -11,6 +12,7 @@ const MotionButton = motion(Button);
 export const NavigationSection = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const trackEvent = useAnalyticsEvent();
 
   // Handle mouse movement for interactive background effect
   const handleMouseMove = () => {
@@ -29,7 +31,14 @@ export const NavigationSection = () => {
   ];
 
   // Add smooth scrolling for anchor links
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, offset: number = 0) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, title: string, offset: number = 0) => {
+    // Track navigation click
+    trackEvent({
+      action: 'navigation_click',
+      category: EventCategory.NAVIGATION,
+      label: title
+    });
+    
     // Only prevent default for hash links
     if (href.startsWith('#') && href !== '#') {
       e.preventDefault();
@@ -78,6 +87,15 @@ export const NavigationSection = () => {
         }, 1000); // Wait for initial scroll to complete
       }
     }
+  };
+
+  const handleGetStartedClick = () => {
+    trackEvent({
+      action: 'get_started_click',
+      category: EventCategory.CONVERSION,
+      label: 'Header Get Started button'
+    });
+    window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank");
   };
 
   return (
@@ -185,7 +203,7 @@ export const NavigationSection = () => {
                   color: "#9275E0",
                   transition: { duration: 0.2 }
                 }}
-                onClick={(e) => handleNavClick(e, item.href, item.offset)}
+                onClick={(e) => handleNavClick(e, item.href, item.title, item.offset)}
               >
                 {item.title}
               </motion.a>
@@ -205,7 +223,7 @@ export const NavigationSection = () => {
               boxShadow: "0px 8px 20px rgba(147, 117, 224, 0.9)"
               }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank")}
+              onClick={handleGetStartedClick}
             >
               Get Started
             </MotionButton>
@@ -233,7 +251,7 @@ export const NavigationSection = () => {
                     x: 5,
                     transition: { duration: 0.2 }
                   }}
-                  onClick={(e) => handleNavClick(e, item.href, item.offset)}
+                  onClick={(e) => handleNavClick(e, item.href, item.title, item.offset)}
                 >
                   {item.title}
                 </motion.a>
@@ -245,6 +263,7 @@ export const NavigationSection = () => {
                   boxShadow: "0px 8px 20px rgba(147, 117, 224, 0.9)"
                 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handleGetStartedClick}
               >
                 Get Started
               </MotionButton>

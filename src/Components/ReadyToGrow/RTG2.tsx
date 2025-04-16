@@ -3,10 +3,12 @@ import { JSX, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "../../SubComponents/button";
 import { Card, CardContent } from "../../SubComponents/card";
+import { useAnalyticsEvent, EventCategory } from "../../lib/useAnalyticsEvent";
 
 
 export const ReadyToGrow2 = (): JSX.Element => {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const trackEvent = useAnalyticsEvent();
 
   // Check if screen is large (above 1600px)
   useEffect(() => {
@@ -279,7 +281,15 @@ export const ReadyToGrow2 = (): JSX.Element => {
             >
               <div className="absolute  -inset-1 bg-gradient-to-r from-purple-600 to-blue-500 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 animate-pulse"></div>
               <Button
-                onClick={() => window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank")}
+                onClick={() => {
+                  // Track the "join now" button click event
+                  trackEvent({
+                    action: 'join_telegram_group',
+                    category: EventCategory.CONVERSION,
+                    label: 'Join Now For Free button'
+                  });
+                  window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank");
+                }}
                 className="relative  px-10 sm:px-[40px] py-4 sm:py-[22px] bg-white rounded-xl hover:bg-white mb-0 md:mb-0 transition-all duration-300 group-hover:text-[#6e2db8] overflow-hidden"
               >
                 <span className="font-['Instrument_Sans',Helvetica] font-semibold text-[#4e1f88] text-base sm:text-[20px] tracking-[-0.34px] leading-[23.8px] group-hover:bg-clip-text group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-700 group-hover:to-blue-600 relative z-10">
