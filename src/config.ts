@@ -45,8 +45,8 @@ export const config: AppConfig = {
     }
   },
   recaptcha: {
-    siteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LenfxorAAAAAG_cvlnwvkrA1fl-P1qdz28b6dwi',
-    secretKey: import.meta.env.VITE_RECAPTCHA_SECRET_KEY || '6LenfxorAAAAAML7BuOv40V5A8GYtBTnHRx4wWnf',
+    siteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LcdGRgrAAAAAIU-zzCAQN2GrwPnqS6mrVtjUb6v',
+    secretKey: import.meta.env.VITE_RECAPTCHA_SECRET_KEY || '6LcdGRgrAAAAACrE4X0QWkAWCKr2dI70Lka_KiYk',
   },
   // Add any other configuration categories as needed
 };
