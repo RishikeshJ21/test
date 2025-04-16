@@ -39,6 +39,10 @@ if (-not (Get-Website -Name $SiteName)) {
 Write-Host "Copying files to $SitePath..." -ForegroundColor Green
 Copy-Item -Path ".\dist\*" -Destination $SitePath -Recurse -Force
 
+# Copy environment file to the IIS site directory for reference
+Write-Host "Copying environment configuration..." -ForegroundColor Green
+Copy-Item -Path ".\.env" -Destination "$SitePath\.env.reference" -Force
+
 Write-Host "Deployment completed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "IMPORTANT: Make sure URL Rewrite module is installed in IIS." -ForegroundColor Yellow

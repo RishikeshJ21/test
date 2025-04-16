@@ -24,6 +24,10 @@ REM Copy all files from the dist folder to the IIS site directory
 echo Copying files to %SITE_PATH%...
 xcopy /E /Y dist\* "%SITE_PATH%"
 
+REM Copy environment file to the IIS site directory for reference
+echo Copying environment configuration...
+copy .env "%SITE_PATH%\.env.reference"
+
 echo Deployment completed successfully!
 echo.
 echo IMPORTANT: Make sure URL Rewrite module is installed in IIS.

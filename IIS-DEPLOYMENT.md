@@ -66,6 +66,34 @@ If you prefer to deploy manually, follow these steps:
    - Ensure the `web.config` file is copied to the site's root directory
    - This file contains the necessary rewrite rules for the React Router
 
+## Environment Variables
+
+This application uses environment variables for configuration. These are set up in the following ways:
+
+1. **During Development**: Variables are stored in the `.env` file at the root of the project
+2. **For Production**: Variables are configured in the `web.config` file in the `aspNetCore/environmentVariables` section
+3. **In Application Code**: Variables are accessed through the `src/config.ts` file, which provides a centralized configuration interface
+
+### Modifying Environment Variables for Production
+
+If you need to change environment variables for your production deployment:
+
+1. Edit the `web.config` file in your deployed application folder
+2. Locate the `environmentVariables` section and update the values as needed
+3. Save the file and restart the IIS application pool
+
+Example environment variables set in the web.config:
+
+```xml
+<aspNetCore>
+  <environmentVariables>
+    <environmentVariable name="VITE_API_BASE_URL" value="https://api.createathon.co" />
+    <environmentVariable name="VITE_NEWSLETTER_SUBSCRIBE_ENDPOINT" value="/newsletter/subscribe" />
+    <!-- Other environment variables -->
+  </environmentVariables>
+</aspNetCore>
+```
+
 ## Troubleshooting
 
 1. **404 Errors**: Ensure the URL Rewrite Module is installed and the web.config file is properly configured
