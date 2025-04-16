@@ -201,11 +201,14 @@ export const FAQSection = (): JSX.Element => {
                       <span className="font-['Instrument_Sans',Helvetica] font-medium text-gray-900 text-lg sm:text-xl leading-tight text-left">
                         {faq.question}
                       </span>
+                      <div className="hidden md:block">
                       {faq.defaultOpen && (
                         <span className="ml-auto mr-6 px-2 py-0.5 bg-purple-100 text-purple-600 text-xs rounded-full whitespace-nowrap">
                           Popular
                         </span>
                       )}
+                      </div>
+
                       <div className="ml-auto flex-shrink-0">
                         {openItem === `faq-${index}` ? (
                           <MinusCircle className="h-5 w-5 text-purple-600 shrink-0" />
