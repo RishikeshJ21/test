@@ -1,7 +1,7 @@
 # React App IIS Deployment Script
 param (
-    [string]$SiteName = "YourSiteName",
-    [string]$AppPoolName = "YourSiteName",
+    [string]$SiteName = "createathon",
+    [string]$AppPoolName = "createathon",
     [string]$SitePath = "C:\inetpub\wwwroot\$SiteName",
     [string]$Port = "80"
 )

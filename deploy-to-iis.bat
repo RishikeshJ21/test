@@ -2,7 +2,7 @@
 echo Deploying React application to IIS...
 
 REM Set these variables according to your IIS setup
-set SITE_NAME=YourSiteName
+set SITE_NAME=createathon
 set SITE_PATH=C:\inetpub\wwwroot\%SITE_NAME%
 
 REM Check if the site already exists in IIS

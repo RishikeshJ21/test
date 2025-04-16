@@ -14,16 +14,21 @@ Two scripts are provided for automating the deployment process:
 
 ### Using the Batch File
 
-1. Edit the `deploy-to-iis.bat` file and set the `SITE_NAME` and `SITE_PATH` variables to match your environment
+1. The `deploy-to-iis.bat` file is configured to deploy the site with the name "createathon"
 2. Run the batch file with administrator privileges
 
 ### Using the PowerShell Script
 
 1. Open PowerShell as Administrator
 2. Navigate to the project directory
-3. Run the script with custom parameters or use defaults:
+3. Run the script with custom parameters or use the default site name "createathon":
    ```powershell
-   .\Deploy-ToIIS.ps1 -SiteName "YourSiteName" -AppPoolName "YourAppPoolName" -SitePath "C:\inetpub\wwwroot\YourSiteName" -Port "80"
+   .\Deploy-ToIIS.ps1
+   ```
+   
+   Or customize the parameters if needed:
+   ```powershell
+   .\Deploy-ToIIS.ps1 -SiteName "createathon" -AppPoolName "createathon" -SitePath "C:\inetpub\wwwroot\createathon" -Port "80"
    ```
 
 ## Option 2: Manual Deployment
