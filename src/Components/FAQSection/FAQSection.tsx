@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { faqItems } from "../../data/FAQData";
 import { ChevronDownIcon, Mail, MinusCircle, X } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
+import { submitContactForm } from "../../utils/apiClient";
 
 // Add type declaration for grecaptcha
 declare global {
@@ -14,9 +15,12 @@ declare global {
 }
 
 // Get environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const EMAIL_ENDPOINT = import.meta.env.VITE_EMAIL_ENDPOINT;
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim() || "6LcdGRgrAAAAAIU-zzCAQN2GrwPnqS6mrVtjUb6v";
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+// Debug info for environment variables - will help troubleshoot Netlify issues
+console.log("Environment:", import.meta.env.MODE);
+console.log("Using reCAPTCHA v2 'I'm not a robot' checkbox");
+console.log("reCAPTCHA Site Key:", RECAPTCHA_SITE_KEY ? RECAPTCHA_SITE_KEY.substring(0, 8) + "..." : "undefined");
 
 interface ContactFormData {
   firstName: string;
@@ -51,6 +55,7 @@ export const FAQSection = (): JSX.Element => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<ContactFormData>({
     firstName: "",
@@ -71,6 +76,7 @@ export const FAQSection = (): JSX.Element => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setCaptchaError(null);
 
     // Validate form
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.message) {
@@ -79,6 +85,7 @@ export const FAQSection = (): JSX.Element => {
     }
 
     if (!captchaToken) {
+      setCaptchaError("Please complete the captcha verification");
       setError("Please complete the captcha verification");
       return;
     }
@@ -86,46 +93,35 @@ export const FAQSection = (): JSX.Element => {
     setIsSubmitting(true);
 
     try {
-      const emailPayload = {
-        subject: "Contact Form Submission",
-        message: `First Name: ${formData.firstName}\nLast Name: ${formData.lastName}\nMessage: ${formData.message}`,
-        to_email: formData.email,
-        captcha_response: captchaToken
-      };
+      // Use the centralized API client to handle the request
+      const result = await submitContactForm(formData, captchaToken);
 
-      const response = await fetch(`${API_BASE_URL}${EMAIL_ENDPOINT}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailPayload)
-      });
+      if (result.success) {
+        // Normal success case
+        setSuccess("Message sent successfully!");
 
-      const data = await response.json();
+        // Reset form
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          message: ""
+        });
+        setCaptchaToken(null);
+        setTimeout(() => setShowContactForm(false), 2000);
+      } else {
+        // Handle error
+        setError(result.error || "Failed to send message. Please try again later.");
 
-      if (!response.ok) {
-        if (data.message) {
-          throw new Error(data.message);
-        } else if (response.status === 422) {
-          throw new Error("Invalid input or captcha verification failed. Please try again.");
-        } else {
-          throw new Error("Failed to send message. Please try again.");
+        // Reset reCAPTCHA on error
+        if (window.grecaptcha) {
+          window.grecaptcha.reset();
         }
+        setCaptchaToken(null);
       }
-
-      setSuccess("Message sent successfully!");
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        message: ""
-      });
-      setCaptchaToken(null);
-      setTimeout(() => setShowContactForm(false), 2000);
-
     } catch (error) {
       console.error('Contact form error:', error);
-      setError(error instanceof Error ? error.message : "Failed to send message. Please try again.");
+      setError(error instanceof Error ? error.message : "An unexpected error occurred. Please try again.");
 
       // Reset reCAPTCHA on error
       if (window.grecaptcha) {
@@ -175,8 +171,8 @@ export const FAQSection = (): JSX.Element => {
             >
               <div
                 className={`w-full transition-all duration-200 ${openItem === `faq-${index}`
-                    ? 'ring-1 ring-purple-300 shadow-md'
-                    : 'ring-1 ring-gray-200 hover:ring-gray-300'
+                  ? 'ring-1 ring-purple-300 shadow-md'
+                  : 'ring-1 ring-gray-200 hover:ring-gray-300'
                   }`}
                 style={{ borderRadius: "0.75rem" }}
               >
@@ -184,8 +180,8 @@ export const FAQSection = (): JSX.Element => {
                   <button
                     onClick={() => handleAccordionChange(`faq-${index}`)}
                     className={`px-6 py-5 hover:no-underline focus:outline-none focus:ring-2 focus:ring-purple-300 focus:ring-inset w-full text-left transition-colors duration-200 ${openItem === `faq-${index}`
-                        ? 'bg-purple-50/30'
-                        : 'hover:bg-gray-50'
+                      ? 'bg-purple-50/30'
+                      : 'hover:bg-gray-50'
                       }`}
                     style={{
                       borderTopLeftRadius: "0.75rem",
@@ -202,11 +198,11 @@ export const FAQSection = (): JSX.Element => {
                         {faq.question}
                       </span>
                       <div className="hidden md:block">
-                      {faq.defaultOpen && (
-                        <span className="ml-auto mr-6 px-2 py-0.5 bg-purple-100 text-purple-600 text-xs rounded-full whitespace-nowrap">
-                          Popular
-                        </span>
-                      )}
+                        {faq.defaultOpen && (
+                          <span className="ml-auto mr-6 px-2 py-0.5 bg-purple-100 text-purple-600 text-xs rounded-full whitespace-nowrap">
+                            Popular
+                          </span>
+                        )}
                       </div>
 
                       <div className="ml-auto flex-shrink-0">
@@ -261,6 +257,7 @@ export const FAQSection = (): JSX.Element => {
         {/* Contact CTA with updated onClick */}
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8 bg-gray-900 rounded-xl p-8 border border-gray-800 shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 opacity-20 rounded-full transform translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500 opacity-15 rounded-full transform -translate-x-1/3 translate-y-1/3" />
           <div className="text-center sm:text-left relative z-10">
             <h3 className="text-white text-2xl font-bold mb-3">Still have questions?</h3>
             <p className="text-gray-300 text-lg">
@@ -358,19 +355,26 @@ export const FAQSection = (): JSX.Element => {
                   onChange={(token: string | null) => {
                     console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
                     setCaptchaToken(token);
+                    setCaptchaError(null);
                   }}
-                  onErrored={() => {
-                    console.error('reCAPTCHA error occurred');
+                  onErrored={(err: void) => {
+                    console.error('reCAPTCHA error occurred:', err);
+                    setCaptchaError('Error loading captcha. Please refresh and try again.');
                     setError('Error loading captcha. Please refresh and try again.');
                   }}
                   onExpired={() => {
                     console.log('reCAPTCHA expired');
                     setCaptchaToken(null);
+                    setCaptchaError('reCAPTCHA expired. Please verify again.');
                   }}
                   theme="light"
-                  size="normal"
+                  size="normal" // "normal" for checkbox style (v2)
                 />
               </div>
+
+              {captchaError && (
+                <p className="text-red-500 text-sm text-center mt-2">{captchaError}</p>
+              )}
 
               <motion.button
                 type="submit"

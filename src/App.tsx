@@ -14,6 +14,7 @@ import { TrustByCreatorSection } from './Components/TrustByCreatorSection/TrustB
 import { ReadyToGrow2 } from './Components/ReadyToGrow/RTG2';
 import { motion } from 'framer-motion';
 import TermsAndConditions from './Components/TermsAndConditions/TermsAndConditions';
+import { initGA, pageView } from './lib/analytics';
 
 
 export default function Home() {
@@ -23,10 +24,20 @@ export default function Home() {
   const howItWorksRef = useRef<HTMLDivElement>(null);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
+  // Initialize Google Analytics
+  useEffect(() => {
+    initGA('G-KJ6R7GQLGJ');
+    // Track initial page view
+    pageView(window.location.pathname + window.location.search);
+  }, []);
+
   useEffect(() => {
     // Update path state when URL changes
     const handleLocationChange = () => {
-      setCurrentPath(window.location.pathname);
+      const newPath = window.location.pathname;
+      setCurrentPath(newPath);
+      // Track page view on navigation
+      pageView(newPath + window.location.search);
     };
 
     window.addEventListener('popstate', handleLocationChange);

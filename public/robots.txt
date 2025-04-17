@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://createathon.com/sitemap.xml

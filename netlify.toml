@@ -1,0 +1,26 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Specific 404 handling for SPAs
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Proxy API requests to avoid CORS issues
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.createathon.co/:splat"
+  status = 200
+  force = true
+  headers = {X-From = "Netlify"}
+
+# Add security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "no-referrer"
+    X-Content-Type-Options = "nosniff"
