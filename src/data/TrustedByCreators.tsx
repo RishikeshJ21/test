@@ -3,7 +3,7 @@ export const testimonials = [
     id: 1,
     name: "Mia K",
     role: "Travel Vlogger",
-    image: "/testimonial/1.jpg",
+    image: "/testimonial/4.jpg",
     quote:
       "The financial support gave me the freedom to dream big. I used the stipend to upgrade my gear and invest in higher production quality. The difference was night and day—my videos started trending, and my follower count doubled in just a few months!",
   },
@@ -18,7 +18,7 @@ export const testimonials = [
   },
   {
     id: 3,
-    name: "Alex R.",
+    name: "Alexa R.",
     role: "Lifestyle Creator",
     image: "/testimonial/3.jpg",
 
@@ -29,7 +29,7 @@ export const testimonials = [
     id: 4,
     name: "Jordan",
     role: "Food Blogger",
-    image: "/testimonial/4.jpg",
+    image: "/testimonial/1.jpg",
 
     quote:
       "Createathon changed the game for me! I was stuck in a creative rut, unsure how to grow my channel. Thanks to their mentorship and community support, I learned to create content that resonates- and it paid off! My audience engagement skyrocketed, and I even secured my first brand partnership!",

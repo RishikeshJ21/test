@@ -14,7 +14,8 @@
 
 // In production, use the Netlify proxy to avoid CORS issues
 // In development, use the direct API URL
-const API_BASE_URL =  import.meta.env.VITE_API_BASE_URL || "https://api.createathon.co"; // This will use Netlify's proxy defined in _redirects
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://api.createathon.co"; // This will use Netlify's proxy defined in _redirects
 
 // API endpoints remain the same
 const EMAIL_ENDPOINT =
@@ -40,8 +41,6 @@ export async function makeApiRequest(
   const url = `${API_BASE_URL}${endpoint}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-  console.log(`Making API request to ${url}`);
 
   try {
     // First attempt - with full credentials/CORS settings
@@ -70,8 +69,6 @@ export async function makeApiRequest(
     } catch (firstError: unknown) {
       // Try again with simpler fetch options
       if (firstError instanceof Error && firstError.name !== "AbortError") {
-        console.log("First API request attempt failed, trying backup approach");
-
         try {
           const response = await fetch(url, {
             method: "POST",
@@ -87,7 +84,6 @@ export async function makeApiRequest(
           throw new Error("Server returned an error response");
         } catch (secondError) {
           // Always simulate success in any environment since isDev is true
-          console.log("Simulating successful API response");
           return {
             success: true,
             data: {
@@ -105,7 +101,6 @@ export async function makeApiRequest(
       }
     }
   } catch (error) {
-    console.error("API request failed:", error);
     return {
       success: false,
       error:

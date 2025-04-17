@@ -17,11 +17,6 @@ declare global {
 // Get environment variables
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
-// Debug info for environment variables - will help troubleshoot Netlify issues
-console.log("Environment:", import.meta.env.MODE);
-console.log("Using reCAPTCHA v2 'I'm not a robot' checkbox");
-console.log("reCAPTCHA Site Key:", RECAPTCHA_SITE_KEY ? RECAPTCHA_SITE_KEY.substring(0, 8) + "..." : "undefined");
-
 interface ContactFormData {
   firstName: string;
   lastName: string;
@@ -353,17 +348,14 @@ export const FAQSection = (): JSX.Element => {
                 <ReCAPTCHA
                   sitekey={RECAPTCHA_SITE_KEY}
                   onChange={(token: string | null) => {
-                    console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
                     setCaptchaToken(token);
                     setCaptchaError(null);
                   }}
-                  onErrored={(err: void) => {
-                    console.error('reCAPTCHA error occurred:', err);
+                  onErrored={() => {
                     setCaptchaError('Error loading captcha. Please refresh and try again.');
                     setError('Error loading captcha. Please refresh and try again.');
                   }}
                   onExpired={() => {
-                    console.log('reCAPTCHA expired');
                     setCaptchaToken(null);
                     setCaptchaError('reCAPTCHA expired. Please verify again.');
                   }}

@@ -13,7 +13,7 @@ import { WhyChooseUsSection } from './Components/WhyChooseUsSection/WhyChooseUsS
 import { TrustByCreatorSection } from './Components/TrustByCreatorSection/TrustByCreatorSection';
 import { ReadyToGrow2 } from './Components/ReadyToGrow/RTG2';
 import { motion } from 'framer-motion';
-import TermsAndConditions from './Components/TermsAndConditions/TermsAndConditions';
+ 
 import { initGA, pageView } from './lib/analytics';
 
 
@@ -22,7 +22,7 @@ export default function Home() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [howItWorksVisible, setHowItWorksVisible] = useState(false);
   const howItWorksRef = useRef<HTMLDivElement>(null);
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  // const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   // Initialize Google Analytics
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function Home() {
     // Update path state when URL changes
     const handleLocationChange = () => {
       const newPath = window.location.pathname;
-      setCurrentPath(newPath);
+      // setCurrentPath(newPath);
       // Track page view on navigation
       pageView(newPath + window.location.search);
     };
@@ -79,25 +79,7 @@ export default function Home() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [lastScrollY]);
-
-  // Simple routing based on path
-  if (currentPath === '/terms-and-conditions') {
-    return (
-      <>
-        {/* Fixed navigation
-        <div className="fixed top-0 left-0 right-0 z-50 bg-gray-50/100 backdrop-blur-md">
-          <NavigationSection />
-        </div> */}
-
-        {/* Page content with padding for fixed header */}
-        <div className="pt-10 lg:pt-12">
-          <TermsAndConditions />
-          {/* <Footer /> */}
-        </div>
-      </>
-    );
-  }
-
+ 
   // Main homepage content
   return (
     <main className="overflow-x-hidden">
@@ -141,7 +123,7 @@ export default function Home() {
           </motion.section>
         </div>
 
-        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 h-full max-h-[480px] mb-25 sm:px-2 md:mt-18 lg:px-23 lg:py-29  scroll-mt-16">
+        <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 h-full min-h-[390px] max-h-[480px] mb-29 sm:px-2 md:mt-18 lg:px-23 lg:py-29  scroll-mt-16">
           <HowItWorks />
         </section>
 
