@@ -48,14 +48,23 @@
     />
 
     <!-- Google tag (gtag.js) - Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"></script>
+    <!-- Temporarily commented out to resolve 500 error and ERR_BLOCKED_BY_CLIENT error
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"
+    ></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
       // Initial config in HTML - will be reconfigured in React for SPA tracking
-      gtag('config', 'G-KJ6R7GQLGJ');
+      gtag("config", "G-KJ6R7GQLGJ", {
+        send_page_view: false, // Disable automatic page views, we'll handle them in React
+      });
     </script>
+    -->
   </head>
   <body>
     <div id="root"></div>

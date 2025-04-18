@@ -33,6 +33,10 @@ export interface AppConfig {
     siteKey: string;
     secretKey: string;
   };
+  analytics: {
+    measurementId: string;
+    disabled?: boolean;
+  };
 }
 
 export const config: AppConfig = {
@@ -55,6 +59,10 @@ export const config: AppConfig = {
     secretKey:
       import.meta.env.VITE_RECAPTCHA_SECRET_KEY ||
       "6LcdGRgrAAAAACrE4X0QWkAWCKr2dI70Lka_KiYk",
+  },
+  analytics: {
+    measurementId: import.meta.env.VITE_GA_MEASUREMENT_ID || "G-KJ6R7GQLGJ",
+    disabled: import.meta.env.VITE_DISABLE_ANALYTICS === "true" || false,
   },
   // Add any other configuration categories as needed
 };

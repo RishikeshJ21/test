@@ -103,7 +103,7 @@ const Card = ({
 
   return (
     <motion.div
-      className={`absolute top-0 left-0 w-full h-full ${title === "Connect with Your Tribe" ? "max-h-[400px]" : "max-h-[380px]"} ${bgColor} rounded-3xl shadow-lg border border-white/30`}
+      className={`absolute top-0 left-0 w-full h-full ${title === "Connect with Your Tribe" ? "max-h-[380px]" : "max-h-[350px]"} ${bgColor} rounded-3xl shadow-lg border border-white/30`}
       style={{
         y,
         x,
