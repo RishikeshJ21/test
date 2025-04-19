@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import NotFound from './Components/NotFound';
 import SEO from './Components/SEO';
 import BlogPage from './pages/Blog';
+import BlogDetails from './pages/blogDetails';
 
 // Main homepage content component
 const HomePage = () => {
@@ -191,7 +192,9 @@ export default function App() {
         } />
 
         <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogDetails />} />
 
+        {/* FAQ section */}
         {/* 404 handling */}
         <Route path="*" element={<NotFound />} />
       </Routes>

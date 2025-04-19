@@ -5,6 +5,7 @@ import { NavigationSection } from '../../Components/NavigationSection/Navigation
 import BlogSection from '../../SubComponents/BlogSection';
 import { ReadyToGrow2 } from '../../Components/ReadyToGrow/RTG2';
 import { Footer } from '../../Components/Footer/Footer';
+import Hero from '../../Components/Hero';
 
 
 export default function BlogPage() {
@@ -55,39 +56,19 @@ export default function BlogPage() {
         />
       </motion.div>
 
-      <div className="pt-16 lg:pt-20">
-      <section className="text-center py-12 md:py-20 bg-gradient-to-b from-purple-100 to-white">
-          <motion.h1
-            className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 text-black px-4 break-words"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            Stay <span className="text-purple-600">Inspired,</span> Stay{' '}
-            <span className="text-purple-600">Ahead</span>
-          </motion.h1>
-          <motion.p
-            className="max-w-2xl mx-auto text-base md:text-lg text-gray-700 px-4 break-words"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            Level up your creator journey with actionable insights, cutting-edge strategies, and real-world success stories. Dive deep into industry trends, expert advice, and monetization secrets tailored just for you!
-          </motion.p>
-          <motion.a
-            href="#blog-section"
-            className="inline-block mt-6 bg-purple-600 text-white px-6 py-2 rounded-md shadow hover:bg-purple-700 transition duration-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            Discover Insights
-          </motion.a>
-        </section>
+      <div className="pt-16 lg:pt-10">
+  
+
+<Hero
+          title={{ t1: 'Stay', t2: 'Inspired,', t3: 'Stay', t4: 'Ahead' }}
+          description="Explore expert insights, creator tips, content strategies, industry trends and success stories designed to fuel your growth. Stay inspired and ahead with our blog."
+          buttonText="Discover Insights"
+           
+        />
 
         <div
           id="blog-section"
-          className={` bg-gradient-to-b from-white to-purple-10 sm:max-w-[98%] max-w-[99%] ${window.innerWidth < 1600 ? "lg:max-w-[97%]" : "lg:max-w-[94%] "} mx-auto px-4 sm:px-6 lg:px-16 pt-1 lg:pt-12`}
+          className={` bg-gradient-to-b from-[#f8f5ff] to-purple-10 sm:max-w-[98%] max-w-[99%] ${window.innerWidth < 1600 ? "lg:max-w-[97%]" : "lg:max-w-[94%] "} mx-auto px-4 sm:px-6 lg:px-16 pt-1 lg:pt-1`}
         >
           <BlogSection />
         </div>

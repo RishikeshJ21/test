@@ -1,11 +1,11 @@
-"use client";
-
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom"; // Import Link and useNavigate
 import { Button } from "../../SubComponents/button";
 import { EventCategory } from "../../lib/useAnalyticsEvent";
 
 const MotionButton = motion(Button);
+const MotionLink = motion(Link); // Create a motion component for Link
 
 interface NavItem { title: string; href: string; active: boolean; offset: number; }
 interface NavigationSectionProps { navItems?: NavItem[]; }
@@ -13,6 +13,7 @@ interface NavigationSectionProps { navItems?: NavItem[]; }
 export const NavigationSection = ({ navItems: customNavItems }: NavigationSectionProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+ 
 
   // Create a dummy trackEvent function that doesn't actually track
   const trackEvent = ({ action, category, label }: {
@@ -41,7 +42,7 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
 
   // Navigation menu items data
   const defaultNavItems: NavItem[] = [
-    { title: "Home", href: "#", active: true, offset: 0 },
+    { title: "Home", href: "/", active: true, offset: 0 }, // Changed href to / for home
     { title: "Blog", href: "/blog", active: false, offset: 0 },
     { title: "How it Works", href: "#how-it-works", active: false, offset: 30 },
     { title: "Why Choose Us", href: "#why-choose-us", active: false, offset: 15 },
@@ -51,7 +52,7 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
   ];
   const navItems = customNavItems ?? defaultNavItems;
 
-  // Add smooth scrolling for anchor links
+  // Add smooth scrolling for anchor links and handle client-side navigation
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, title: string, offset: number = 0) => {
     // Track navigation click
     trackEvent({
@@ -60,9 +61,9 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
       label: title
     });
 
-    // Only prevent default for hash links
+    // Handle hash links for smooth scrolling
     if (href.startsWith('#') && href !== '#') {
-      e.preventDefault();
+      e.preventDefault(); // Prevent default only for hash links to allow smooth scroll logic
       const targetId = href.substring(1); // Remove the # character
       const targetElement = document.getElementById(targetId);
 
@@ -107,8 +108,19 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
           }
         }, 1000); // Wait for initial scroll to complete
       }
+    } else if (!href.startsWith('#')) {
+      // For non-hash links, let react-router handle navigation
+      // Close mobile menu if open before navigating
+      if (isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+      // Note: The actual navigation is handled by the Link component's 'to' prop.
+      // This onClick handler is now primarily for tracking and hash link scrolling.
+      // If you needed programmatic navigation for non-hash links, you'd use:
+      // navigate(href);
     }
   };
+
 
   const handleGetStartedClick = () => {
     trackEvent({
@@ -132,46 +144,8 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        {/* Interactive cursor-following blob */}
-        {/* <motion.div
-        className="absolute rounded-full bg-gradient-to-r from-purple-300/40 to-pink-300/40 filter blur-3xl pointer-events-none"
-        animate={{
-          x: mousePosition.x - 75, // Adjusted to limit blob size
-          y: mousePosition.y - 75, // Adjusted to limit blob size
-          scale: 1.2,
-        }}
-        transition={{ type: "spring", damping: 15, stiffness: 100 }}
-        style={{ width: "150px", height: "150px" }} // Adjusted to limit blob size
-      /> */}
-
-        {/* Animated background blob */}
-        {/* <motion.div
-        className="absolute rounded-full bg-purple-100/70 filter blur-3xl"
-        initial={{ opacity: 0, scale: 0, x: "50%", y: "50%" }}
-        animate={{ 
-          opacity: isLoaded ? 0.6 : 0, 
-          scale: isLoaded ? 1.5 : 0,
-          x: "50%",
-          y: "50%"
-        }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-        style={{ width: "80%", height: "80%", top: "-40%", right: "-40%" }}
-      />
-       */}
-        {/* Additional light purple blob with low opacity */}
-        {/* <motion.div
-        className="absolute rounded-full bg-purple-200/40 filter blur-2xl"
-        initial={{ opacity: 0, scale: 0, x: "-30%", y: "20%" }}
-        animate={{ 
-          opacity: isLoaded ? 0.35 : 0, 
-          scale: isLoaded ? 1.2 : 0,
-          x: "-30%",
-          y: "20%"
-        }}
-        transition={{ duration: 1.5, ease: "easeOut" }}
-        style={{ width: "60%", height: "60%", bottom: "-20%", left: "-10%" }}
-      /> */}
-
+        {/* Commented out interactive elements */}
+        {/* ... */}
 
         <div className="flex justify-between items-center">
 
@@ -181,13 +155,16 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
             transition={{ duration: 0.9, delay: 0.2 }}
             className="flex items-center"
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center bg-transparent justify-center  font-bold shadow-md">
-              <img src="/Logotype.svg" className="bg-transparent text-transparent" alt="Logo icon" width={30} height={30} />
-            </div>
-            <span className="font-['Instrument_Sans'] font-bold text-lg sm:text-xl text-[#111111]">Createathon</span>
+             {/* Use Link for the logo to navigate home */}
+             <Link to="/" className="flex items-center">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center bg-transparent justify-center font-bold shadow-md">
+                <img src="/Logotype.svg" className="bg-transparent text-transparent" alt="Logo icon" width={30} height={30} />
+                </div>
+                <span className="font-['Instrument_Sans'] font-bold text-lg sm:text-xl text-[#111111] ml-2">Createathon</span>
+             </Link>
           </motion.div>
 
-          {/* Mobile menu button - now visible on lg screens too */}
+          {/* Mobile menu button */}
           <div className="lg:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -208,6 +185,7 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
             </button>
           </div>
 
+          {/* Desktop Navigation */}
           <motion.nav
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -215,9 +193,9 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
             className="hidden lg:flex space-x-4 xl:space-x-8"
           >
             {navItems.map((item, index) => (
-              <motion.a
+              <MotionLink // Use MotionLink instead of motion.a
                 key={index}
-                href={item.href}
+                to={item.href} // Use 'to' prop for react-router Link
                 className={`text-[#333333] transition-colors font-['Instrument_Sans'] ${item.active ? "font-semibold" : "font-medium"}`}
                 whileHover={{
                   scale: 1.1,
@@ -227,10 +205,11 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
                 onClick={(e) => handleNavClick(e, item.href, item.title, item.offset)}
               >
                 {item.title}
-              </motion.a>
+              </MotionLink>
             ))}
           </motion.nav>
 
+          {/* Get Started Button */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -251,21 +230,21 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
           </motion.div>
         </div>
 
-        {/* Mobile menu - now properly aligned and available for lg screens */}
+        {/* Mobile menu */}
         {isMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="lg:flex 2xl:flex mt-4 w-full"
+            className="lg:hidden mt-4 w-full" // Keep hidden on lg screens unless toggled
           >
             <div className="flex flex-col space-y-3 pb-3">
               {navItems.map((item, index) => (
-                <motion.a
+                <MotionLink // Use MotionLink here as well
                   key={index}
-                  href={item.href}
-                  className={`text-[#333333] transition-colors font-['Instrument_Sans'] ${item.active ? "font-semibold" : "font-medium"}`}
+                  to={item.href} // Use 'to' prop
+                  className={`text-[#333333] transition-colors font-['Instrument_Sans'] ${item.active ? "font-semibold" : "font-medium"} block py-1`} // Added block and py-1 for better spacing/click area
                   whileHover={{
                     scale: 1.05,
                     color: "#9275E0",
@@ -275,7 +254,7 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
                   onClick={(e) => handleNavClick(e, item.href, item.title, item.offset)}
                 >
                   {item.title}
-                </motion.a>
+                </MotionLink>
               ))}
               <MotionButton
                 className="bg-gradient-to-b from-[#9275E0] to-[#6C43D0] text-white py-3 w-full rounded-[10px] text-[20px] font-['Instrument_Sans'] font-semibold shadow-[0px_4px_10px_rgba(147,117,224,0.4)] hover:shadow-[0px_5px_15px_rgba(147,117,224,0.85)] transition-all duration-300 mt-2"

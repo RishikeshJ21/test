@@ -2,8 +2,11 @@ module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        playfair: ["Playfair Display", "Playfair", "serif"],
+      },
       screens: {
-        '3xl': '1600px', // Add custom breakpoint for 3xl
+        "3xl": "1600px", // Add custom breakpoint for 3xl
       },
       animation: {
         "gradient-shift": "gradient-shift 8s ease infinite",
