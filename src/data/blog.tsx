@@ -7,6 +7,10 @@ export const blogPosts = [
     date: "March 15, 2025",
     category: "Business",
     slug: "grow-your-creator-business",
+    author: {
+      name: "Jane Doe",
+      image: "/authors/jane-doe.webp"
+    },
     fullContent: [
       "Growing a creator business requires a multi-faceted approach. It's not just about creating content; it's about strategic planning and execution.",
       "Key strategies include optimizing your content for search engines (SEO), consistently engaging with your audience on social media platforms, building an email list for direct communication, and collaborating with other creators to cross-promote.",
@@ -21,6 +25,10 @@ export const blogPosts = [
     date: "March 12, 2025",
     category: "Content Creation",
     slug: "create-engaging-content",
+    author: {
+      name: "John Smith",
+      image: "/authors/john-smith.webp"
+    },
     fullContent: [
       "Engaging content captures attention, holds interest, and prompts action. Start by deeply understanding your target audience's needs, pain points, and interests.",
       "Use storytelling techniques to make your content relatable and memorable. High-quality visuals (images, videos, infographics) are crucial for grabbing attention in crowded feeds. Ensure your content provides genuine value, whether it's educational, entertaining, or inspiring.",
@@ -35,6 +43,10 @@ export const blogPosts = [
     date: "March 10, 2025",
     category: "Monetization",
     slug: "monetization-beyond-ads",
+    author: {
+      name: "Alice Johnson",
+      image: "/authors/alice-johnson.webp"
+    },
     fullContent: [
       "Relying solely on ads and sponsorships can be unpredictable. Diversifying your income streams provides stability and unlocks new growth potential.",
       "Consider creating and selling digital products like e-books, courses, templates, or presets. Exclusive content through membership platforms (like Patreon or Substack) can generate recurring revenue.",
@@ -49,6 +61,10 @@ export const blogPosts = [
     date: "March 8, 2025",
     category: "Branding",
     slug: "build-a-standout-personal-brand",
+    author: {
+      name: "Emily Davis",
+      image: "/authors/emily-davis.webp"
+    },
     fullContent: [
       "Your personal brand is your reputation and how you present yourself to the world. It's what makes you unique and memorable in a sea of creators.",
       "Start by defining your niche, values, and unique value proposition. What makes you different? Be authentic and let your personality shine through your content and interactions. Consistency in your messaging, visual identity (logo, colors, style), and tone of voice across all platforms is key.",
@@ -63,54 +79,17 @@ export const blogPosts = [
     date: "March 5, 2025",
     category: "Psychology",
     slug: "psychology-of-viral-content",
+    author: {
+      name: "Michael Brown",
+      image: "/authors/michael-brown.webp"
+    },
     fullContent: [
       "Viral content taps into fundamental human psychology. Understanding these triggers can help you create more shareable content, though virality is never guaranteed.",
       "Content that evokes strong emotions (awe, laughter, anger, inspiration) is more likely to be shared. People also share content that provides practical value (useful tips, how-tos) or helps them define themselves to others (social currency).",
       "Stories are powerful sharing mechanisms. Content that is surprising, features compelling narratives, or taps into current trends or social issues also has a higher potential to spread rapidly. Make it easy to share with prominent social sharing buttons."
     ]
   },
-  {
-    id: 6,
-    title: "Getting Started with AI Tools for Content Creation",
-    excerpt: "See how AI-powered tools can streamline your content workflow and save you time.",
-    imageSrc: "/blog/image6.webp",
-    date: "March 3, 2025",
-    category: "AI Tools",
-    slug: "ai-tools-for-content-creation",
-    fullContent: [
-      "Artificial intelligence is revolutionizing content creation, offering tools to enhance efficiency and creativity. Don't be intimidated; start small and explore.",
-      "AI can assist with brainstorming ideas, generating outlines, and even drafting initial versions of blog posts or scripts. Tools exist for grammar checking, style improvement, and summarizing long texts. AI-powered image generators can create unique visuals, while AI video editing tools can automate tasks like transcription and clip selection.",
-      "Experiment with different tools to find what fits your workflow. Use AI as an assistant to augment your skills, overcome creative blocks, and free up time for higher-level strategy and audience engagement, rather than a complete replacement for human creativity."
-    ]
-  },
-  {
-    id: 7,
-    title: "Optimizing Your Content for Search Engines",
-    excerpt: "Learn essential SEO techniques to help your content rank higher and reach a wider audience.",
-    imageSrc: "/blog/image1.webp",
-    date: "March 1, 2025",
-    category: "SEO",
-    slug: "optimizing-for-search-engines",
-    fullContent: [
-      "Search Engine Optimization (SEO) is essential for making your content discoverable by potential audience members who are actively searching for information in your niche.",
-      "Start with keyword research to understand what terms your target audience is searching for. Incorporate these keywords naturally into your titles, headers, meta descriptions, and throughout your content. Focus on creating comprehensive, valuable content that answers users' questions thoroughly.",
-      "Technical aspects matter too: ensure your site loads quickly, is mobile-friendly, has a clear site structure, and uses proper header tags. Building quality backlinks from reputable sites in your niche will also significantly boost your search rankings."
-    ]
-  },
-  {
-    id: 8,
-    title: "Building a Loyal Community Around Your Content",
-    excerpt: "Strategies to foster genuine connections with your audience and build a thriving community.",
-    imageSrc: "/blog/image2.webp",
-    date: "February 27, 2025",
-    category: "Community Building",
-    slug: "building-loyal-community",
-    fullContent: [
-      "A loyal community is the foundation of a sustainable creator business. Beyond just accumulating followers, focus on building genuine connections with people who resonate with your message.",
-      "Create spaces where your audience can connect with you and each other, whether through comments sections, dedicated community platforms, or social media groups. Be consistently present and engaged - respond to comments, ask questions, and acknowledge your community members' contributions.",
-      "Foster a sense of belonging by creating shared experiences, inside jokes, or community challenges. Recognize and celebrate your most engaged supporters. Remember that a smaller, highly engaged community is far more valuable than a large but passive audience."
-    ]
-  },
+  
   {
     id: 9,
     title: "Financial Management for Independent Creators",
@@ -119,6 +98,10 @@ export const blogPosts = [
     date: "February 25, 2025",
     category: "Finance",
     slug: "financial-management-for-creators",
+    author: {
+      name: "Jane Doe",
+      image: "/authors/jane-doe.webp"
+    },
     fullContent: [
       "Managing finances effectively is crucial for long-term success as a creator. Start by separating personal and business finances with a dedicated business bank account and track all income and expenses meticulously.",
       "Understand the tax implications of your creator business and set aside approximately 25-30% of your income for taxes. Consider working with an accountant who specializes in self-employed professionals or creative businesses to maximize deductions and ensure compliance.",
@@ -133,6 +116,10 @@ export const blogPosts = [
     date: "February 22, 2025",
     category: "Productivity",
     slug: "productivity-systems-for-creators",
+    author: {
+      name: "Jane Doe",
+      image: "/authors/jane-doe.webp"
+    },
     fullContent: [
       "Consistent content creation requires effective productivity systems. Start by identifying your peak creative hours and protect this time for your most important creative work.",
       "Batch similar tasks together - dedicate specific days or time blocks for content creation, editing, administrative work, and engagement. Use content calendars to plan ahead and reduce decision fatigue.",
