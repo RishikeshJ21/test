@@ -51,6 +51,7 @@
     />
 
     <!-- Google tag (gtag.js) - Google Analytics 4 -->
+<<<<<<< HEAD
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -71,6 +72,25 @@
       }
     </script>
     <script src="https://www.google.com/recaptcha/api.js" async defer onerror="onRecaptchaError()"></script>
+=======
+    <!-- Temporarily commented out to resolve 500 error and ERR_BLOCKED_BY_CLIENT error
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      // Initial config in HTML - will be reconfigured in React for SPA tracking
+      gtag("config", "G-KJ6R7GQLGJ", {
+        send_page_view: false, // Disable automatic page views, we'll handle them in React
+      });
+    </script>
+    -->
+>>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
   </head>
   <body>
     <div id="root"></div>

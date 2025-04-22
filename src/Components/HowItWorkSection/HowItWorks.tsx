@@ -120,7 +120,6 @@ export const HowItWorkSection = (): JSX.Element => {
               setIsLocked(true);
               document.body.style.overflow = 'hidden';
 
-
               if (sectionRef.current) {
                 const yOffset = -120; // Small offset to position optimally
                 const y = sectionRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
@@ -156,6 +155,7 @@ export const HowItWorkSection = (): JSX.Element => {
       id="how-it-works"
       ref={sectionRef}
       onMouseEnter={handleMouseEnter}
+      aria-labelledby="how-it-works-title"
     >
       <div className="max-w-[1384px] mx-auto px-4 md:px-8">
         <div className="flex flex-col md:flex-row items-start justify-between">
@@ -167,8 +167,11 @@ export const HowItWorkSection = (): JSX.Element => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <div className="mb-1 md:mb-1">
-              <h2 className="group font-['Instrument_Sans',Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
-                How It    <span className=" bg-clip-text text-[#4e1f88] ">Work</span>
+              <h2
+                id="how-it-works-title"
+                className="group font-['Instrument_Sans',Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block"
+              >
+                How It <span className="bg-clip-text text-[#4e1f88]">Works</span>
                 <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
               </h2>
               <p className="mt-3 md:mt-4 text-gray-600 max-w-full text-lg">
@@ -177,13 +180,15 @@ export const HowItWorkSection = (): JSX.Element => {
             </div>
 
             {/* Only show navigation dots on desktop */}
-            <div className="hidden md:flex mt-8 gap-2">
-              {stepCards.map((_, index) => (
+            <div className="hidden md:flex mt-8 gap-2" role="tablist" aria-label="Card navigation">
+              {stepCards.map((card, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveCard(index)}
                   className={`w-2.5 h-2.5 rounded-full transition-all ${activeCard === index ? "bg-purple-600 w-6" : "bg-gray-300"}`}
-                  aria-label={`Go to step ${index + 1}`}
+                  aria-label={`Go to ${card.title} card`}
+                  aria-selected={activeCard === index}
+                  role="tab"
                 />
               ))}
             </div>
@@ -204,7 +209,7 @@ export const HowItWorkSection = (): JSX.Element => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {isMobileView ? (
-              <div className="px-1 relative "> {/* Increased height for mobile */}
+              <div className="px-1 relative  ">
                 <SwipeCards />
               </div>
             ) : (
@@ -292,7 +297,7 @@ const StackedCards = ({
   };
 
   return (
-    <div className="relative h-[460px] md:h-[300px]  w-full overflow-visible">
+    <div className="relative h-[460px] md:h-[300px] w-full overflow-visible" role="tabpanel" aria-label="Card stack display">
       {stepCards.map((card, index) => {
         const position = (index - activeCard + stepCards.length) % stepCards.length;
         const stackPosition = position;
@@ -324,18 +329,28 @@ const StackedCards = ({
             dragElastic={0.2}
             dragTransition={{ bounceStiffness: 300, bounceDamping: 20 }}
             onDragEnd={handleDragEnd}
+            role="article"
+            aria-hidden={position !== 0}
+            aria-label={`${card.title} information card - ${position === 0 ? 'active' : 'stacked'}`}
           >
             <div className="flex flex-col">
               <div className="flex items-start justify-start gap-4 mb-5">
                 <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg shadow-sm">
-                  <img className="w-6 h-6" alt={card.title} src={card.icon} width={24} height={24} />
+                  <img
+                    className="w-6 h-6"
+                    alt={`${card.title} icon`}
+                    src={card.icon}
+                    width={24}
+                    height={24}
+                    loading="eager"
+                  />
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent pt-1">
                   {card.title}
                 </h3>
               </div>
 
-              <p className="text-black text-base md:text-lg leading-snug">
+              <p className="text-black text-base md:text-lg leading-relaxed">
                 {card.description}
               </p>
 
@@ -345,8 +360,8 @@ const StackedCards = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                   className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 flex items-center text-sm text-gray-600"
+                  aria-label="Swipe instruction"
                 >
-
                   <motion.svg
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
@@ -354,11 +369,11 @@ const StackedCards = ({
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                   </motion.svg>
                   <span>Swipe to see more</span>
-
                 </motion.div>
               )}
             </div>
@@ -369,5 +384,4 @@ const StackedCards = ({
   );
 };
 
-// Keep the SwipeCards implementation for mobile
 export default HowItWorkSection;

@@ -1,0 +1,51 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Force trailing slashes for consistency
+[[plugins]]
+  package = "@netlify/plugin-sitemap"
+
+  [plugins.inputs]
+  buildDir = "dist"
+  trailingSlash = true
+
+# Redirect www to non-www (or you could do the opposite if preferred)
+[[redirects]]
+  from = "https://www.createathon.co/*"
+  to = "https://createathon.co/:splat"
+  status = 301
+  force = true
+
+# Handle index.html and index.php redirects
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/index.php"
+  to = "/"
+  status = 301
+  force = true
+
+# Handle trailing slash consistency
+[[redirects]]
+  from = "/*"
+  to = "/:splat/"
+  status = 301
+  force = true
+  conditions = {path = {match = "^.+[^/]$"}}
+
+# Proper 404 handling - this should come AFTER all other redirects
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# SPA fallback - this should be the LAST redirect rule
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

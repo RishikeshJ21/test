@@ -344,7 +344,7 @@ export const ReadyToGrow2 = (): JSX.Element => {
                 <img
                   className="mx-auto md:mx-0 md:absolute w-[300px] sm:w-[340px] md:w-[380px] h-auto md:h-[380px] md:top-[23px] lg:left-[74px] object-cover rounded-lg hover:shadow-[0_0_30px_rgba(138,43,226,0.4)] transition-shadow duration-300"
                   alt="Rectangle"
-                  src="/rectangle-10.png"
+                  src="/rectangle-10.avif"
                   width={380}
                   height={380}
                 />

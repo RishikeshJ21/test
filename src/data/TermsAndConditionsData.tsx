@@ -6,10 +6,12 @@ interface Section {
 interface TermsAndConditionsData {
   title: string;
   sections: Section[];
+  lastUpdated: string;
 }
 
 const termsAndConditionsData: TermsAndConditionsData = {
   title: "Terms and Conditions",
+  lastUpdated: "April 15, 2025",
   sections: [
     {
       title: "1. Introduction",
@@ -74,32 +76,9 @@ const termsAndConditionsData: TermsAndConditionsData = {
         "The App is provided \"as is\" without warranties of any kind, express or implied."
       ]
     },
+
     {
-      title: "10. Privacy Policy",
-      content: [
-        "10.1 Data Collection",
-        "- We collect personal information such as name, email, and user activity for account management and service improvement.",
-        "- We do not sell or share your personal data with third parties without consent, except when required by law.",
-        
-        "10.2 Cookies and Tracking",
-        "- We use cookies and analytics tools to enhance user experience and monitor platform usage.",
-        "- Users can manage cookie preferences through their device settings.",
-        
-        "10.3 Security Measures",
-        "- We implement security measures to protect user data from unauthorized access and breaches.",
-        "- Users must also take necessary precautions to safeguard their own accounts.",
-        
-        "10.4 Data Retention",
-        "- User data is retained for as long as the account is active.",
-        "- Users can request data deletion, subject to legal and operational requirements.",
-        
-        "10.5 Third-Party Links",
-        "- The App may contain links to third-party websites. We are not responsible for their privacy practices.",
-        "- Users should review the policies of external sites before providing personal data."
-      ]
-    },
-    {
-      title: "11. Telegram Mini App Integration",
+      title: "10. Telegram Mini App Integration",
       content: [
         "The App will also function as a Mini App on Telegram, allowing users to access features directly through the Telegram platform.",
         "Users accessing the App via Telegram agree to abide by both these Terms and Telegram's Terms of Service.",
@@ -107,16 +86,16 @@ const termsAndConditionsData: TermsAndConditionsData = {
         "Telegram data, such as username and profile picture, may be used within the App to enhance functionality."
       ]
     },
+    // {
+    //   title: "11. Changes to Terms and Privacy Policy",
+    //   content: "We may update these Terms and Conditions or the Privacy Policy at any time. Continued use of the App after updates constitutes acceptance of the new terms."
+    // },
     {
-      title: "12. Changes to Terms and Privacy Policy",
-      content: "We may update these Terms and Conditions or the Privacy Policy at any time. Continued use of the App after updates constitutes acceptance of the new terms."
-    },
-    {
-      title: "13. Governing Law",
+      title: "11. Governing Law",
       content: "These Terms shall be governed by and interpreted in accordance with the laws of Respective country."
     },
     {
-      title: "14. Contact Information",
+      title: "12. Contact Information",
       content: "For questions or concerns regarding these Terms or Privacy Policy, please contact us at createathon@persistventures.com."
     }
   ]
