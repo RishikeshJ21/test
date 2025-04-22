@@ -201,7 +201,7 @@ export const Footer = (): JSX.Element => {
       />
 
       <footer id="Footer" className="w-full border-t border-gray-200">
-        <div className="max-w-8xl mx-auto md:px-29 px-6 py-12 w-full">
+        <div className="max-w-8xl mx-auto md:px-29 px-6 pt-12 pb-4 w-full">
           <div className="xl:grid xl:grid-cols-3 xl:gap-8">
             <div className="space-y-8 xl:col-span-1">
               <div className="flex">
@@ -316,11 +316,11 @@ export const Footer = (): JSX.Element => {
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="md:flex md:items-center md:justify-between">
               <div className="mt-2 md:mt-0">
                 <p className="text-sm text-gray-500">
-                  &copy; 2025 persistventures.com. All rights reserved.
+                  &copy; 2025 createathon.co. All rights reserved.
                 </p>
               </div>
 

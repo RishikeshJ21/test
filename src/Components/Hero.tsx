@@ -37,7 +37,7 @@ export default function Hero({ title, description, buttonText }: { title: { t1: 
 
   return (
     // Adjust the timeline here if needed
-    <motion.section className={`relative ${pathname === "/" ? "py-16  min-h-[70vh] " : "pt-25 pb-10  min-h-[50vh] sm:min-h-[40vh] md:min-h-[60vh] lg:min-h-[70vh]"} px-4 md:px-6 overflow-hidden bg-gradient-to-b from-[rgba(255,255,255,0.57)] to-[#f8f5ff]flex items-center`}
+    <motion.section className={`relative ${pathname === "/" ? "py-16  min-h-[70vh] " : "pt-25 pb-10  min-h-[50vh] sm:min-h-[40vh] md:min-h-[60vh] lg:min-h-[30vh]"} px-4 md:px-6 overflow-hidden bg-gradient-to-b from-[rgba(255,255,255,0.57)] to-[#f8f5ff]flex items-center`}
       initial={{
         // y:100
         opacity: 0,

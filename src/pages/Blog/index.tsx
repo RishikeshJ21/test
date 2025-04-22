@@ -3,14 +3,45 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { NavigationSection } from '../../Components/NavigationSection/NavigationSection';
 import BlogSection from '../../SubComponents/BlogSection';
-import { ReadyToGrow2 } from '../../Components/ReadyToGrow/RTG2';
 import { Footer } from '../../Components/Footer/Footer';
 import Hero from '../../Components/Hero';
+import { Mail, X } from 'lucide-react';
+import ReCAPTCHA from "react-google-recaptcha";
+import { submitContactForm } from "../../utils/apiClient";
 
+declare global {
+  interface Window {
+    grecaptcha: {
+      reset: () => void;
+    };
+  }
+}
+
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+interface ContactFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  message: string;
+}
 
 export default function BlogPage() {
   const [showNavbar, setShowNavbar] = useState(true);
   const lastScrollY = useRef(0);
+
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<ContactFormData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    message: ""
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +55,71 @@ export default function BlogPage() {
     document.documentElement.style.scrollBehavior = 'smooth';
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setCaptchaError(null);
+
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.message) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (!captchaToken) {
+      setCaptchaError("Please complete the captcha verification");
+      setError("Please complete the captcha verification");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await submitContactForm(formData, captchaToken);
+
+      if (result.success) {
+        setSuccess("Message sent successfully!");
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          message: ""
+        });
+        setCaptchaToken(null);
+        if (window.grecaptcha) {
+          window.grecaptcha.reset();
+        }
+        setTimeout(() => {
+          setShowContactForm(false);
+          setSuccess("");
+        }, 2000);
+      } else {
+        setError(result.error || "Failed to send message. Please try again later.");
+        if (window.grecaptcha) {
+          window.grecaptcha.reset();
+        }
+        setCaptchaToken(null);
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred. Please try again.");
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
+      setCaptchaToken(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -40,9 +136,8 @@ export default function BlogPage() {
       </Helmet>
 
       <motion.div
-        className={`fixed top-0 left-0 right-0 z-50 md:bg-transparent md:backdrop-blur-md transition-transform duration-300 ${
-          showNavbar ? 'translate-y-0' : '-translate-y-full'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 md:bg-transparent md:backdrop-blur-md transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'
+          }`}
         initial={{ y: '-100%' }}
         animate={{ y: showNavbar ? '0%' : '-100%' }}
         transition={{ duration: 0.3 }}
@@ -51,19 +146,16 @@ export default function BlogPage() {
           navItems={[
             { title: 'Blog', href: '#', active: true, offset: 0 },
             { title: 'Home', href: '/', active: false, offset: 0 },
-            { title: 'Join Us', href: '#ready-to-grow', active: false, offset: -10 },
+            { title: 'Join Us', href: '#CTA', active: false, offset: -10 },
           ]}
         />
       </motion.div>
 
       <div className="pt-16 lg:pt-10">
-  
-
-<Hero
+        <Hero
           title={{ t1: 'Stay', t2: 'Inspired,', t3: 'Stay', t4: 'Ahead' }}
           description="Explore expert insights, creator tips, content strategies, industry trends and success stories designed to fuel your growth. Stay inspired and ahead with our blog."
           buttonText="Discover Insights"
-           
         />
 
         <div
@@ -73,93 +165,159 @@ export default function BlogPage() {
           <BlogSection />
         </div>
 
-        <div id="ready-to-grow" className="scroll-mt-16 pl-2 max-w-[100%]">
-          <ReadyToGrow2 />
+        <div id="CTA" className={`scroll-mt-16 px-4 sm:px-6 lg:px-8 sm:max-w-[98%] max-w-[97%] ${window.innerWidth < 1600 ? "lg:max-w-[88%]" : "lg:max-w-[94%] "} mx-auto  `}>
+          <div className="mt-0 flex flex-col sm:flex-row items-center justify-center gap-8 bg-gray-900 rounded-xl p-8 border border-gray-800 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 opacity-20 rounded-full transform translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500 opacity-15 rounded-full transform -translate-x-1/3 translate-y-1/3" />
+            <div className="text-center sm:text-left relative z-10">
+              <h3 className="text-white text-2xl font-bold mb-3">Still have questions?</h3>
+              <p className="text-gray-300 text-lg">
+                We're here to help you with any questions you might have
+              </p>
+            </div>
+            <button
+              onClick={() => setShowContactForm(true)}
+              className="relative z-10 px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-400 text-white text-lg font-semibold rounded-lg hover:opacity-90 transition-all duration-200 transform focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-gray-900 flex items-center gap-2"
+            >
+              <Mail className="h-5 w-5" />
+              Contact Us
+            </button>
+          </div>
         </div>
 
-<div className={`${window.innerWidth < 1750 ? "ml-4" : "ml-15"}`} >
-<Footer />
+        {showContactForm && (
+          <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-[60] p-4">
+            <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Contact Us</h3>
+                <button
+                  onClick={() => {
+                    setShowContactForm(false);
+                    if (!success) {
+                      setError("");
+                      setSuccess("");
+                      setCaptchaError(null);
+                      setFormData({ firstName: "", lastName: "", email: "", message: "" });
+                      setCaptchaToken(null);
+                      if (window.grecaptcha) window.grecaptcha.reset();
+                    }
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
 
-</div>
+              <form onSubmit={handleContactSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      placeholder="Doe"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    placeholder="john@example.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message
+                  </label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 resize-none"
+                    placeholder="Your message here..."
+                    required
+                  />
+                </div>
+
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {success && <p className="text-green-500 text-sm">{success}</p>}
+
+                <div className="flex justify-center transform scale-90 sm:scale-100 origin-top">
+                  <ReCAPTCHA
+                    sitekey={RECAPTCHA_SITE_KEY}
+                    onChange={(token: string | null) => {
+                      setCaptchaToken(token);
+                      setCaptchaError(null);
+                      if (token) setError("");
+                    }}
+                    onErrored={() => {
+                      setCaptchaError('Error loading captcha. Please refresh and try again.');
+                      setError('Error loading captcha. Please refresh and try again.');
+                    }}
+                    onExpired={() => {
+                      setCaptchaToken(null);
+                      setCaptchaError('reCAPTCHA expired. Please verify again.');
+                      setError('reCAPTCHA expired. Please verify again.');
+                    }}
+                    theme="light"
+                    size="normal"
+                  />
+                </div>
+
+                {captchaError && !error && (
+                  <p className="text-red-500 text-sm text-center mt-2">{captchaError}</p>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting || !!success}
+                  whileHover={{ scale: !isSubmitting && !success ? 1.02 : 1 }}
+                  whileTap={{ scale: !isSubmitting && !success ? 0.98 : 1 }}
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-blue-400 text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 ${isSubmitting || success ? 'opacity-50 cursor-not-allowed' : ''} flex items-center justify-center gap-2`}
+                >
+                  <Mail className="h-4 w-4" />
+                  {isSubmitting ? 'Sending...' : success ? 'Sent!' : 'Send Message'}
+                </motion.button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className={`${window.innerWidth < 1750 ? "ml-4" : "ml-15"} mt-10`}>
+          <Footer />
+        </div>
       </div>
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-// import { useState, useEffect, useRef } from 'react';
-// import { Helmet } from 'react-helmet-async'; // Import Helmet
-
-// import { NavigationSection } from '../../Components/NavigationSection/NavigationSection';
-// import Hero from '../../Components/Hero';
-// import BlogSection from '../../SubComponents/BlogSection';
-// import { ReadyToGrow2 } from '../../Components/ReadyToGrow/RTG2';
-// import { Footer } from '../../Components/Footer/Footer';
-
-// export default function BlogPage() {
-//   const [showNavbar, setShowNavbar] = useState(true);
-//   const [lastScrollY, setLastScrollY] = useState(0);
-//   const headerRef = useRef<HTMLDivElement>(null);
-
-//   useEffect(() => {
-//     const handleScroll = () => {
-//       const currentScrollY = window.scrollY;
-//       if (window.innerWidth < 768) {
-//         setShowNavbar(currentScrollY <= lastScrollY || currentScrollY <= 100);
-//       }
-//       setLastScrollY(currentScrollY);
-//     };
-//     window.addEventListener('scroll', handleScroll);
-//     document.documentElement.style.scrollBehavior = 'smooth';
-//     return () => window.removeEventListener('scroll', handleScroll);
-//   }, [lastScrollY]);
-
-//   return (
-//     <>
-//       <Helmet>
-//         <title>Blog - Stay Inspired & Ahead | Your Company Name</title>
-//         <meta name="description" content="Explore expert insights, creator tips, content strategies, industry trends, and success stories designed to fuel your growth. Stay inspired and ahead with our blog." />
-//         <meta name="keywords" content="creator tips, content strategy, industry trends, monetization hacks, success stories, blog, insights" />
-//         {/* Add other relevant meta tags like Open Graph, Twitter Cards etc. if needed */}
-//       </Helmet>
-//       <div
-//         ref={headerRef}
-//         className={`fixed top-0 left-0 right-0 z-50 md:bg-gray-50/100 md:backdrop-blur-md transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'}`}
-//       >
-//         <NavigationSection navItems={[
-//           { title: 'Home', href: '/', active: true, offset: 0 },
-//           { title: 'Blog', href: '#', active: false, offset: 0 },
-//           { title: "Join Us", href: "#ready-to-grow", active: false, offset: -10 },
-//         ]} />
-//       </div>
-//       <div className="pt-10 lg:pt-12">
-//         <Hero
-//           title={{ t1: 'Stay', t2: 'Inspired,', t3: 'Stay', t4: 'Ahead' }}
-//           description="
-// Explore expert insights, creator tips, and success stories designed to fuel your growth. Whether you're looking for content strategies, industry trends, or monetization hacks—we've got you covered!"
-//           buttonText="Read Latest Posts"
-//         />
-//         {/* Use a simpler consistent container for the BlogSection */}
-//         <div className="w-full">
-//           <BlogSection />
-//         </div>
-//         <div id="ready-to-grow" className="scroll-mt-16">
-//           <ReadyToGrow2 />
-//         </div>
-//         <div className="w-full">
-//           <Footer />
-//         </div>
-//       </div>
-//     </>
-//   );
-// }
