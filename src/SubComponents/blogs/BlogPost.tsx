@@ -12,6 +12,20 @@ import { formatTimeAgo } from "./utils";
 import { blogPosts } from "../../data/blog";
 import { fetchRelatedBlogs, RelatedPost } from "./api";
 
+// Add a style block at the top level of the component
+const blogContentStyles = `
+  .blog-content a {
+    color: #8b5cf6 !important; /* violet-600 */
+    font-weight: 500;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+  }
+  
+  .blog-content a:hover {
+    color: #7c3aed !important; /* violet-700 */
+  }
+`;
+
 const BlogPost = ({
   title,
   tags,
@@ -129,18 +143,50 @@ const BlogPost = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      let currentId: string | null = null;
-      const scrollPosition = window.scrollY + 100;
-
-      tocSections.forEach((item: TocSection) => {
-        const element = document.getElementById(item.id);
-        if (element && element.offsetTop <= scrollPosition) {
-          currentId = item.id;
+      if (tocSections.length === 0) return;
+      
+      // Get viewport metrics
+      const viewportTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const viewportBottom = viewportTop + viewportHeight;
+      const viewportMiddle = viewportTop + (viewportHeight / 2);
+      
+      // Find which section has its heading closest to 1/4 of the viewport
+      // This prioritizes sections near the top of the viewport
+      const targetPosition = viewportTop + (viewportHeight * 0.25); 
+      
+      let bestSection = null;
+      let bestDistance = Infinity;
+      
+      // Find the section with heading closest to our target position
+      for (const section of tocSections) {
+        const element = document.getElementById(section.id);
+        if (element) {
+          // Get the position of the section heading
+          const elemTop = element.getBoundingClientRect().top + window.scrollY;
+          
+          // Calculate the distance from our target position
+          const distance = Math.abs(elemTop - targetPosition);
+          
+          // Update best section if this one is closer to target
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestSection = section.id;
+          }
         }
-      });
-      setActiveTocId(currentId);
+      }
+      
+      // Special case: if we're at the very top, select the first section
+      if (window.scrollY < 50 && tocSections.length > 0) {
+        bestSection = tocSections[0].id;
+      }
+      
+      setActiveTocId(bestSection);
     };
 
+    // Set initial active section
+    setTimeout(handleScroll, 100);
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [tocSections]);
@@ -344,31 +390,33 @@ const BlogPost = ({
     setReplyText(textarea.value);
   };
 
+  //  on clicking on the title in TOC how much to scroll is defined in the offsetTop
   const handleTocClick = (id: string, event: React.MouseEvent) => {
     event.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      const offsetTop = element.getBoundingClientRect().top + window.pageYOffset - 80;
+      const offsetTop = element.getBoundingClientRect().top + window.pageYOffset - 100;
       window.scrollTo({ top: offsetTop, behavior: "smooth" });
       setActiveTocId(id);
     }
   };
 
   return (
-    <div className="bg-white relative">
-      <div className="container mx-auto px-0 md:px-2 lg:px-2 m-0">
-        <div className="lg:grid lg:grid-cols-12 lg:gap-4">
-          {/* Left TOC sidebar - reducing from 3 to 2 columns */}
-          <div className="hidden lg:block lg:col-span-2 sticky top-28 h-fit max-h-[calc(100vh-200px)] self-start pl-0 pr-2">
+    <div className="bg-white relative w-full">
+      <style dangerouslySetInnerHTML={{ __html: blogContentStyles }} />
+      <div className="w-full max-w-none">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-6">
+          {/* Left TOC sidebar - making narrower */}
+          <div className="hidden lg:block lg:col-span-2 sticky top-28 h-fit max-h-[calc(100vh-200px)] self-start pl-4 pr-4">
             {/* Return to blog link above TOC */}
             <div className="mb-6 pl-0">
               <Link 
                 to="/blog" 
-                className="flex items-center text-purple-600 hover:text-purple-800 transition-colors text-sm font-medium"
+                className="flex items-center text-purple-600 hover:text-purple-800 transition-colors text-base font-medium"
               >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
-                  className="h-4 w-4 mr-1" 
+                  className="h-5 w-5 mr-2" 
                   fill="none" 
                   viewBox="0 0 24 24" 
                   stroke="currentColor"
@@ -385,23 +433,23 @@ const BlogPost = ({
             </div>
             
             {/* Separator line */}
-            <div className="h-px bg-gray-200 my-4"></div>
+            <div className="h-px bg-gray-200 my-5"></div>
             
             {/* Table of Contents */}
             <div className="mb-6">
-              <h3 className="text-xl font-medium text-gray-800 mb-4">Table of contents</h3>
+              <h3 className="text-xl font-medium text-gray-800 mb-5">Table of contents</h3>
               {tocSections.length > 0 ? (
                 <nav>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {tocSections.map((section) => (
-                      <li key={section.id}>
+                      <li key={section.id} className="leading-tight">
                         <a
                           href={`#${section.id}`}
                           onClick={(e) => handleTocClick(section.id, e)}
-                          className={`text-sm transition-colors ${
+                          className={`text-sm transition-colors block ${
                             activeTocId === section.id
-                              ? 'text-purple-600 font-medium'
-                              : 'text-gray-600 hover:text-gray-900'
+                              ? 'text-purple-600 font-semibold'
+                              : 'text-gray-700 hover:text-gray-900'
                           }`}
                         >
                           {section.title}
@@ -416,9 +464,9 @@ const BlogPost = ({
             </div>
           </div>
 
-          {/* Main content - increasing from 6 to 7 columns */}
-          <div className="lg:col-span-7 px-0">
-            <div className="mb-8 lg:hidden">
+          {/* Main content - making wider */}
+          <div className="lg:col-span-7 px-4 md:px-6 sm:px-4 lg:px-0 mx-auto w-full max-w-3xl">
+            <div className="mb-8 lg:hidden flex items-center justify-between">
               <Link
                 to="/blog"
                 className="flex items-center text-purple-600 hover:text-purple-800 transition-colors"
@@ -426,15 +474,61 @@ const BlogPost = ({
                 <ArrowLeft size={18} className="mr-2" />
                 <span className="font-medium">Back to all articles</span>
               </Link>
+              
+              {/* Mobile TOC dropdown */}
+              {tocSections.length > 0 && (
+                <div className="relative inline-block text-left">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    onClick={() => {
+                      const tocElement = document.getElementById('mobile-toc');
+                      if (tocElement) {
+                        tocElement.classList.toggle('hidden');
+                      }
+                    }}
+                  >
+                    <span className="mr-2">Contents</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div id="mobile-toc" className="hidden absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div className="py-2 px-3">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Table of contents</h4>
+                      <ul className="space-y-2">
+                        {tocSections.map((section) => (
+                          <li key={`mobile-${section.id}`} className="leading-tight">
+                            <a
+                              href={`#${section.id}`}
+                              onClick={(e) => {
+                                handleTocClick(section.id, e);
+                                const tocElement = document.getElementById('mobile-toc');
+                                if (tocElement) {
+                                  tocElement.classList.add('hidden');
+                                }
+                              }}
+                              className="text-sm text-gray-700 hover:text-purple-600 block py-1"
+                            >
+                              {section.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <motion.article
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
+              className="md:px-0 sm:px-0 px-0"
             >
               {imageSrc && (
-                <div className="relative w-full h-[250px] md:h-[350px] lg:h-[450px] mb-8 rounded-lg overflow-hidden shadow-md">
+                <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[450px] mb-8 rounded-lg overflow-hidden shadow-md">
                   <img
                     src={imageSrc}
                     alt={title}
@@ -443,34 +537,34 @@ const BlogPost = ({
                 </div>
               )}
 
-              <div className="prose prose-lg max-w-none">
+              <div className="prose prose-lg max-w-none sm:prose-base prose-sm">
                 {content.map((paragraph, index) => (
                   <div key={`content-${index}`} 
-                       className="text-base md:text-lg leading-relaxed mb-6 text-gray-800"
+                       className="text-base md:text-lg sm:text-base text-sm leading-relaxed mb-6 text-gray-800 blog-content"
                        dangerouslySetInnerHTML={{ __html: paragraph }}>
                   </div>
                 ))}
                 
                 {/* End of article marker */}
-                <div className="flex items-center justify-center my-14 opacity-80">
-                  <div className="flex items-center space-x-5">
-                    <div className="h-px bg-gray-400 w-16"></div>
+                <div className="flex items-center justify-center my-10 md:my-14 opacity-80">
+                  <div className="flex items-center space-x-3 md:space-x-5">
+                    <div className="h-px bg-gray-400 w-10 md:w-16"></div>
                     <div className="text-purple-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="md:w-6 md:h-6">
                         <circle cx="12" cy="12.003" r="4"></circle>
                         <circle cx="12" cy="12.003" r="8"></circle>
                       </svg>
                     </div>
-                    <div className="h-px bg-gray-400 w-16"></div>
+                    <div className="h-px bg-gray-400 w-10 md:w-16"></div>
                   </div>
                 </div>
               </div>
             </motion.article>
           </div>
 
-          {/* Right sidebar - 3 columns */}
-          <div className="hidden lg:block lg:col-span-3 sticky top-28 h-fit max-h-[calc(100vh-200px)] self-start pl-2 pr-0">
-            <div className="space-y-4 pb-4">
+          {/* Right sidebar - show collapsible on mobile, below content */}
+          <div className="lg:col-span-3 lg:sticky lg:top-28 h-fit lg:max-h-[calc(100vh-200px)] lg:self-start lg:pl-5 lg:pr-4">
+            <div className="hidden lg:block space-y-6">
               <MetricsGraph postTags={tags} slug={slug} />
               
               {isLoadingRelated ? (
@@ -484,12 +578,50 @@ const BlogPost = ({
                 />
               ) : null}
             </div>
+            
+            {/* Mobile version of Related Articles - show below content */}
+            <div className="lg:hidden mt-10 mx-0 sm:mx-0 px-4 sm:px-6">
+              <MetricsGraph postTags={tags} slug={slug} />
+              
+              {isLoadingRelated ? (
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-center items-center mt-6" style={{ minHeight: "100px" }}>
+                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-600"></div>
+                </div>
+              ) : relatedPosts.length > 0 ? (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Related Articles</h3>
+                  <div className="space-y-4">
+                    {relatedPosts.slice(0, 3).map((post) => (
+                      <Link 
+                        key={post.id || post.slug} 
+                        to={`/blog/${post.slug}`}
+                        className="flex items-start space-x-3 group"
+                      >
+                        <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden">
+                          <img 
+                            src={post.image || '/placeholder-image.jpg'} 
+                            alt={post.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
+                            {post.title}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-1">{post.date}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>        
       </div>
 
       {/* Add clear spacing between content and responses */}
-      <div className="h-28"></div>
+      <div className="h-48"></div>
       
       {/* Responses section - full width */}
         <div className="w-full pt-10 border-t border-gray-200 bg-white">

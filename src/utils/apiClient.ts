@@ -15,7 +15,7 @@
 // In production, use the Netlify proxy to avoid CORS issues
 // In development, use the direct API URL
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://api.createathon.co"; // This will use Netlify's proxy defined in _redirects
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"; // This will use Netlify's proxy defined in _redirects
 
 // API endpoints remain the same
 const EMAIL_ENDPOINT =

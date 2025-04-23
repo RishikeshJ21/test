@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface RelatedPost {
-  id: number;
+  id?: string;
   title: string;
   slug: string;
   date: string;
-  tags: string[];
-  imageSrc: string;
   category?: string;
+  excerpt?: string;
+  image?: string;
 }
 
 interface RelatedArticlesProps {
@@ -70,13 +70,13 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
       <div ref={containerRef} className="space-y-3">
         {currentPosts.map((post) => (
           <Link
-            key={post.id}
+            key={post.id || post.slug}
             to={`/blog/${post.slug}`}
             className="flex items-start space-x-4 group py-2 hover:bg-gray-50 rounded-md px-2"
           >
             <div className="relative flex-shrink-0">
               <img
-                src={post.imageSrc}
+                src={post.image || '/placeholder-image.jpg'}
                 alt={post.title}
                 className="w-16 h-16 object-cover rounded"
               />
@@ -84,7 +84,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
             <div className="flex-grow">
               <div className="flex items-center mb-1">
                 <span className="text-purple-600 text-xs font-medium mr-2">
-                  {post.tags?.[0] || post.category || 'General'}
+                  {post.category || 'General'}
                 </span>
                 <span className="text-gray-500 text-xs">
                   {post.date}

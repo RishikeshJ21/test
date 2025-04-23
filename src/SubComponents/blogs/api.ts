@@ -20,13 +20,13 @@ export interface BlogAPIResponse {
 
 // Related post simplified format for Most View component
 export interface RelatedPost {
-  id: number;
+  id?: string;
   title: string;
   slug: string;
   date: string;
-  tags: string[];
-  imageSrc: string;
-  category: string;
+  category?: string;
+  excerpt?: string;
+  image?: string;
 }
 
 /**
@@ -111,7 +111,7 @@ export async function fetchRelatedBlogs(
     
     // Map to the required format
     return limitedBlogs.map(blog => ({
-      id: blog.id,
+      id: blog.id.toString(),
       title: blog.title,
       slug: blog.slug,
       date: new Date(blog.date).toLocaleDateString('en-US', {
@@ -119,9 +119,8 @@ export async function fetchRelatedBlogs(
         day: 'numeric',
         year: 'numeric'
       }),
-      tags: [blog.category], // Use category as a tag
-      imageSrc: blog.image,
-      category: blog.category // Add category for highlighting in UI
+      category: blog.category,
+      image: blog.image
     }));
   } catch (error) {
     console.error('Error fetching related blogs:', error);
