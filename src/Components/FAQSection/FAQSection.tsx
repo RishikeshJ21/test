@@ -3,11 +3,8 @@ import { motion } from "framer-motion";
 import { faqItems } from "../../data/FAQData";
 import { ChevronDownIcon, Mail, MinusCircle, X } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
-<<<<<<< HEAD
 import { handleRecaptchaError } from "../../lib/recaptchaUtils";
-=======
 import { submitContactForm } from "../../utils/apiClient";
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
 // Add type declaration for grecaptcha
 declare global {
@@ -54,11 +51,8 @@ export const FAQSection = (): JSX.Element => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-<<<<<<< HEAD
   const [captchaLoaded, setCaptchaLoaded] = useState(true); // Track whether captcha loaded successfully
-=======
   const [captchaError, setCaptchaError] = useState<string | null>(null);
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
   const [formData, setFormData] = useState<ContactFormData>({
     firstName: "",
@@ -147,12 +141,14 @@ export const FAQSection = (): JSX.Element => {
   // Handle captcha load error
   const handleCaptchaError = () => {
     handleRecaptchaError(setError, setCaptchaLoaded);
+    setCaptchaError('Error loading captcha. Please refresh and try again.');
   };
 
   // Handle retrying captcha load
   const retryCaptcha = () => {
     setCaptchaLoaded(true);
     setError('');
+    setCaptchaError(null);
     
     // The simplest and most reliable solution is to reload the page
     window.location.reload();
@@ -367,7 +363,6 @@ export const FAQSection = (): JSX.Element => {
               {success && <p className="text-green-500 text-sm">{success}</p>}
 
               <div className="flex justify-center transform scale-90 sm:scale-100 origin-top">
-<<<<<<< HEAD
                 {captchaLoaded ? (
                   <ReCAPTCHA
                     sitekey={RECAPTCHA_SITE_KEY}
@@ -376,6 +371,7 @@ export const FAQSection = (): JSX.Element => {
                       setCaptchaToken(token);
                       if (token) {
                         setError(''); // Clear any previous errors when captcha is completed
+                        setCaptchaError(null);
                       }
                     }}
                     onErrored={() => {
@@ -384,6 +380,7 @@ export const FAQSection = (): JSX.Element => {
                     onExpired={() => {
                       console.log('reCAPTCHA expired');
                       setCaptchaToken(null);
+                      setCaptchaError('reCAPTCHA expired. Please verify again.');
                     }}
                     theme="light"
                     size="normal"
@@ -392,6 +389,7 @@ export const FAQSection = (): JSX.Element => {
                   <div className="flex flex-col items-center gap-3 p-4 border border-red-200 rounded-md bg-red-50">
                     <p className="text-red-600 text-sm">Captcha failed to load.</p>
                     <button 
+                      type="button"
                       onClick={retryCaptcha}
                       className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
                     >
@@ -399,25 +397,6 @@ export const FAQSection = (): JSX.Element => {
                     </button>
                   </div>
                 )}
-=======
-                <ReCAPTCHA
-                  sitekey={RECAPTCHA_SITE_KEY}
-                  onChange={(token: string | null) => {
-                    setCaptchaToken(token);
-                    setCaptchaError(null);
-                  }}
-                  onErrored={() => {
-                    setCaptchaError('Error loading captcha. Please refresh and try again.');
-                    setError('Error loading captcha. Please refresh and try again.');
-                  }}
-                  onExpired={() => {
-                    setCaptchaToken(null);
-                    setCaptchaError('reCAPTCHA expired. Please verify again.');
-                  }}
-                  theme="light"
-                  size="normal" // "normal" for checkbox style (v2)
-                />
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
               </div>
 
               {captchaError && (

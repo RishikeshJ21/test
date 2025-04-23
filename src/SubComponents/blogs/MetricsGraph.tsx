@@ -1,32 +1,57 @@
 import { motion } from 'framer-motion';
 
-const MetricsGraph = () => {
+interface MetricsGraphProps {
+  postTags?: string[];
+  slug?: string;
+}
+
+const MetricsGraph = ({ postTags, slug }: MetricsGraphProps) => {
+  // Use slug to create a unique ID for analytics tracking
+  const uniqueId = slug ? `challenge-${slug}` : 'challenge';
+  
   return (
     <motion.div
-      className="w-full bg-white rounded-2xl border-2 border-purple-600 p-4 shadow-xl"
-      initial={{ opacity: 0, y: 50 }}
+      className="w-full bg-white rounded-xl border border-purple-200 p-5 shadow-sm overflow-hidden relative"
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, type: "spring" }}
+      transition={{ duration: 0.5, type: "spring" }}
+      id={uniqueId}
     >
-      <div className="text-center">
-        <h2 className="text-5xl font-extrabold text-purple-700 mb-2">21</h2>
-        <div className="bg-purple-100 rounded-md py-1 px-3 inline-block">
-          <span className="text-xl font-bold text-black">DAYS</span>
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-16 h-16 bg-purple-50 rounded-full -mr-8 -mt-8 z-0"></div>
+      <div className="absolute bottom-0 left-0 w-20 h-20 bg-purple-50 rounded-full -ml-10 -mb-10 z-0"></div>
+      
+      <div className="text-center relative z-10">
+        <div className="flex items-center justify-center mb-2">
+          <div className="bg-purple-100 rounded-lg py-1 px-3 inline-flex items-center justify-center">
+            <h2 className="text-3xl font-bold text-purple-700 mr-2">21</h2>
+            <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Days</span>
+          </div>
         </div>
-        <h3 className="mt-2 text-2xl font-bold text-white bg-black py-1 px-3 inline-block rounded">
+        
+        <h3 className="mb-3 text-base font-bold text-gray-800 bg-gray-100 py-1 px-3 inline-block rounded-md">
           CHALLENGE
         </h3>
-        <p className="mt-4 text-base text-gray-700 font-medium">
-          Build better habits <br /> in just 3 weeks
+        
+        {/* {postTags && postTags.length > 0 && (
+          <p className="mb-3 text-xs text-gray-500">
+            Related to: <span className="font-medium">{postTags[0]}</span>
+          </p>
+        )} */}
+        
+        <p className="mb-4 text-sm text-gray-700 font-medium">
+          Build better habits in just 3 weeks
         </p>
+        
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="mt-5 bg-black text-white px-7 py-2 rounded-full font-semibold w-full"
+          whileHover={{ scale: 1.02, backgroundColor: '#7e22ce' }}
+          whileTap={{ scale: 0.98 }}
+          className="mb-2 bg-purple-700 text-white px-5 py-2 rounded-full text-sm font-medium w-full transition-colors duration-200 shadow-sm hover:shadow-md"
         >
           JOIN NOW
         </motion.button>
-        <p className="mt-4 text-xs text-purple-700 font-semibold">
+        
+        <p className="text-xs text-purple-600 font-medium">
           Get motivated and start your transformation!
         </p>
       </div>

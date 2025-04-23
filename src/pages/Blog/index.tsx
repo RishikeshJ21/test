@@ -8,6 +8,9 @@ import Hero from '../../Components/Hero';
 import { Mail, X } from 'lucide-react';
 import ReCAPTCHA from "react-google-recaptcha";
 import { submitContactForm } from "../../utils/apiClient";
+import BlogCard from "../../SubComponents/BlogCard";
+import { fetchBlogs, BlogAPIResponse } from "../../SubComponents/blogs/api";
+import Loader from "../../SubComponents/Loader";
 
 declare global {
   interface Window {
@@ -43,6 +46,9 @@ export default function BlogPage() {
     message: ""
   });
 
+  const [blogs, setBlogs] = useState<BlogAPIResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -54,6 +60,23 @@ export default function BlogPage() {
     window.addEventListener('scroll', handleScroll);
     document.documentElement.style.scrollBehavior = 'smooth';
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchBlogData = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchBlogs();
+        setBlogs(data);
+      } catch (err) {
+        console.error("Error fetching blogs:", err);
+        setError("Failed to load blog posts. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogData();
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -121,6 +144,16 @@ export default function BlogPage() {
     }
   };
 
+  // Format dates for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  };
+
   return (
     <>
       <Helmet>
@@ -152,17 +185,93 @@ export default function BlogPage() {
       </motion.div>
 
       <div className="pt-16 lg:pt-10">
-        <Hero
-          title={{ t1: 'Stay', t2: 'Inspired,', t3: 'Stay', t4: 'Ahead' }}
-          description="Explore expert insights, creator tips, content strategies, industry trends and success stories designed to fuel your growth. Stay inspired and ahead with our blog."
-          buttonText="Discover Insights"
-        />
+        <motion.section className="relative px-4 md:px-6 overflow-hidden bg-gradient-to-b from-[rgba(255,255,255,0.57)] to-[#f8f5ff] py-16 md:py-16"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.2 }}
+        >
+          {/* Blobs for background effect */}
+          <motion.div
+            className="absolute w-[300px] h-[400px] rounded-full bg-orange-200/40 blur-[150px]"
+            style={{
+              left: '50%',
+              bottom: '30px',
+            }}
+          />
+          <motion.div
+            className="absolute w-[600px] h-[300px] rounded-full bg-purple-300/70 blur-[100px]"
+            style={{
+              left: 'calc(4/7 * 100%)',
+              bottom: 'calc(3/8 * 100%)',
+            }}
+          />
+
+          {/* Main content */}
+          <div className="relative max-w-9xl mx-auto flex flex-col items-center text-center w-full z-10">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-tight mb-8 max-w-5xl mt-18">
+              <div className="whitespace-nowrap">
+                <span className="text-black">Stay </span>
+                <span className="text-[#4e1f88]">Inspired, </span>
+                <span className="text-black">Stay </span>
+                <span className="text-[#4e1f88]">Ahead</span>
+              </div>
+            </h1>
+            <div className="mb-12 text-center">
+              <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-6">
+                <span className="text-black">The Createathon Blog</span>
+              </h2>
+            </div>
+
+            <p className="max-w-3xl text-[#222222] text-base sm:text-lg md:text-xl mt-3 font-medium leading-relaxed mb-10">
+              Explore expert insights, creator tips, content strategies, industry trends and success stories designed to fuel your growth.
+            </p>
+          </div>
+          
+        </motion.section>
 
         <div
-          id="blog-section"
-          className={` bg-gradient-to-b from-[#f8f5ff] to-purple-10 sm:max-w-[98%] max-w-[99%] ${window.innerWidth < 1600 ? "lg:max-w-[97%]" : "lg:max-w-[94%] "} mx-auto px-4 sm:px-6 lg:px-16 pt-1 lg:pt-1`}
+          id="blog-content"
+          className={`bg-gradient-to-b from-[#f8f5ff] to-purple-10 sm:max-w-[98%] max-w-[99%] ${window.innerWidth < 1600 ? "lg:max-w-[97%]" : "lg:max-w-[94%] "} mx-auto px-4 sm:px-6 lg:px-16`}
         >
-          <BlogSection />
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Blog Listing */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {loading ? (
+                <div className="col-span-full flex justify-center py-20">
+                  <Loader />
+                </div>
+              ) : blogs.length > 0 ? (
+                blogs.map((blog, index) => (
+                  <BlogCard
+                    key={blog.id}
+                    title={blog.title}
+                    excerpt={blog.excerpt}
+                    imageSrc={blog.image}
+                    date={formatDate(blog.date)}
+                    slug={blog.slug}
+                    category={blog.category}
+                    index={index}
+                    author={{
+                      name: "Blog Author",
+                      image: "/testimonial/1.webp"
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center">
+                  <p className="text-gray-500">No blog posts available at the moment. Please check back later.</p>
+                </div>
+              )}
+            </div>
+
+            {/* If there are no blogs and not loading/error */}
+            {!loading && !error && blogs.length === 0 && (
+              <div className="text-center py-16">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-2">No blog posts found</h2>
+                <p className="text-gray-600">Check back soon for new content!</p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div id="CTA" className={`scroll-mt-16 px-4 sm:px-6 lg:px-8 sm:max-w-[98%] max-w-[97%] ${window.innerWidth < 1600 ? "lg:max-w-[88%]" : "lg:max-w-[94%] "} mx-auto  `}>
