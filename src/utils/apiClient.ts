@@ -25,6 +25,8 @@ const SUBSCRIBE_ENDPOINT =
 const UNSUBSCRIBE_ENDPOINT =
   import.meta.env.VITE_NEWSLETTER_UNSUBSCRIBE_ENDPOINT ||
   "/newsletter/unsubscribe";
+// Blog API endpoints
+const BLOGS_ENDPOINT = "/v0/api/blog/blogs";
 
 /**
  * Makes an API request with consistent behavior across environments
@@ -36,6 +38,7 @@ export async function makeApiRequest(
     fallbackSuccessMessage?: string;
     fallbackErrorMessage?: string;
     submissionType?: "contact" | "newsletter";
+    method?: string;
   } = {}
 ) {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -46,7 +49,7 @@ export async function makeApiRequest(
     // First attempt - with full credentials/CORS settings
     try {
       const response = await fetch(url, {
-        method: "POST",
+        method: options.method || "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -54,7 +57,7 @@ export async function makeApiRequest(
         },
         credentials: "include",
         mode: "cors",
-        body: JSON.stringify(data),
+        body: options.method === "GET" ? undefined : JSON.stringify(data),
         signal: controller.signal,
       });
 
@@ -71,10 +74,10 @@ export async function makeApiRequest(
       if (firstError instanceof Error && firstError.name !== "AbortError") {
         try {
           const response = await fetch(url, {
-            method: "POST",
+            method: options.method || "POST",
             headers: { "Content-Type": "application/json" },
             mode: "cors",
-            body: JSON.stringify(data),
+            body: options.method === "GET" ? undefined : JSON.stringify(data),
           });
 
           if (response.ok) {
@@ -155,4 +158,48 @@ export async function unsubscribeFromNewsletter(email: string) {
     fallbackSuccessMessage: "You have been unsubscribed from the newsletter.",
     fallbackErrorMessage: "Failed to unsubscribe. Please try again later.",
   });
+}
+
+// Blog API functions
+export async function fetchAllBlogs() {
+  const result = await makeApiRequest(BLOGS_ENDPOINT, {}, {
+    method: "GET",
+    fallbackErrorMessage: "Failed to fetch blogs. Please try again later.",
+  });
+
+  if (result.success) {
+    return result.data;
+  } else {
+    console.error("Error fetching blogs:", result.error);
+    throw new Error(result.error);
+  }
+}
+
+export async function fetchBlogById(blogId: number | string) {
+  const result = await makeApiRequest(`${BLOGS_ENDPOINT}/${blogId}`, {}, {
+    method: "GET",
+    fallbackErrorMessage: "Failed to fetch blog details. Please try again later.",
+  });
+
+  if (result.success) {
+    return result.data;
+  } else {
+    console.error(`Error fetching blog ${blogId}:`, result.error);
+    throw new Error(result.error);
+  }
+}
+
+export async function fetchBlogBySlug(slug: string) {
+  // First fetch all blogs
+  const blogs = await fetchAllBlogs();
+  
+  // Find the blog with the matching slug
+  const blog = blogs.find((blog: any) => blog.slug === slug);
+  
+  if (blog) {
+    // If found, fetch the complete blog
+    return await fetchBlogById(blog.id);
+  } else {
+    throw new Error(`Blog with slug "${slug}" not found`);
+  }
 }

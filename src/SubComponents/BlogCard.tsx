@@ -53,15 +53,6 @@ export default function BlogCard({
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
-            {author && (
-              <img
-                src={author.image}
-                alt={author.name}
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-            )}
             {date && <span className="text-xs text-gray-500">{date}</span>}
           </div>
         </div>

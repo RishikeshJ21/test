@@ -9,52 +9,66 @@ interface RelatedPost {
   date: string;
   tags: string[];
   imageSrc: string;
+  category?: string;
 }
 
-interface MostViewProps {
+interface RelatedArticlesProps {
   relatedPosts: RelatedPost[];
+  currentCategory?: string;
 }
 
-const MostView: React.FC<MostViewProps> = ({ relatedPosts }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, currentCategory }) => {
+  const [currentPage, setCurrentPage] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Number of posts to display per page
+  const postsPerPage = 3;
+  
+  // Calculate total number of pages
+  const totalPages = Math.ceil(relatedPosts.length / postsPerPage);
+  
+  // Get current page posts
+  const currentPosts = relatedPosts.slice(
+    currentPage * postsPerPage, 
+    (currentPage + 1) * postsPerPage
+  );
 
   const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
   const handleNext = () => {
-    if (currentIndex < relatedPosts.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900">Most View</h2>
+        <h2 className="text-xl font-bold text-gray-900">Related Articles</h2>
         <div className="flex">
           <button
             onClick={handlePrev}
-            className={`w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md mr-2 ${currentIndex === 0 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
-            disabled={currentIndex === 0}
+            className={`w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md mr-2 ${currentPage === 0 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            disabled={currentPage === 0}
           >
             <ChevronLeft size={18} />
           </button>
           <button
             onClick={handleNext}
-            className={`w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md ${currentIndex >= relatedPosts.length - 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
-            disabled={currentIndex >= relatedPosts.length - 1}
+            className={`w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md ${currentPage >= totalPages - 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            disabled={currentPage >= totalPages - 1}
           >
             <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
-      <div ref={containerRef} className="space-y-4 max-h-[400px] overflow-y-auto">
-        {relatedPosts.map((post, index) => (
+      <div ref={containerRef} className="space-y-3">
+        {currentPosts.map((post) => (
           <Link
             key={post.id}
             to={`/blog/${post.slug}`}
@@ -64,13 +78,13 @@ const MostView: React.FC<MostViewProps> = ({ relatedPosts }) => {
               <img
                 src={post.imageSrc}
                 alt={post.title}
-                className="w-20 h-20 object-cover rounded"
+                className="w-16 h-16 object-cover rounded"
               />
             </div>
             <div className="flex-grow">
               <div className="flex items-center mb-1">
                 <span className="text-purple-600 text-xs font-medium mr-2">
-                  {post.tags?.[0] || 'General'}
+                  {post.tags?.[0] || post.category || 'General'}
                 </span>
                 <span className="text-gray-500 text-xs">
                   {post.date}
@@ -82,9 +96,25 @@ const MostView: React.FC<MostViewProps> = ({ relatedPosts }) => {
             </div>
           </Link>
         ))}
+        
+        {/* Show empty state if no posts */}
+        {currentPosts.length === 0 && (
+          <div className="py-8 text-center text-gray-500">
+            No other articles in this category
+          </div>
+        )}
       </div>
+      
+      {/* Page indicator */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4">
+          <div className="text-xs text-gray-500">
+            Page {currentPage + 1} of {totalPages}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default MostView;
+export default RelatedArticles;

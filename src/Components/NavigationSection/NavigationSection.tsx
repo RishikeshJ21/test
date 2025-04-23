@@ -2,14 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom"; // Import Link and useNavigate
 import { Button } from "../../SubComponents/button";
-<<<<<<< HEAD
 import { useAnalyticsEvent, EventCategory } from "../../lib/useAnalyticsEvent";
- 
- 
-=======
-import { EventCategory } from "../../lib/useAnalyticsEvent";
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
-
 const MotionButton = motion(Button);
 const MotionLink = motion(Link); // Create a motion component for Link
 
@@ -19,25 +12,7 @@ interface NavigationSectionProps { navItems?: NavItem[]; }
 export const NavigationSection = ({ navItems: customNavItems }: NavigationSectionProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-<<<<<<< HEAD
   const trackEvent = useAnalyticsEvent();
-=======
- 
-
-  // Create a dummy trackEvent function that doesn't actually track
-  const trackEvent = ({ action, category, label }: {
-    action: string;
-    category?: string;
-    label?: string;
-    value?: number;
-  }) => {
-    // During development, log to console instead of tracking
-    if (typeof console !== 'undefined') {
-      console.debug('Analytics event:', { action, category, label });
-    }
-    // In production, this would call real analytics
-  };
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
   // Handle mouse movement for interactive background effect
   const handleMouseMove = () => {
@@ -62,11 +37,7 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
   ];
   const navItems = customNavItems ?? defaultNavItems;
 
-<<<<<<< HEAD
   // Add smooth scrolling for anchor links
-=======
-  // Add smooth scrolling for anchor links and handle client-side navigation
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, title: string, offset: number = 0) => {
     // Track navigation click
     trackEvent({
@@ -74,13 +45,8 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
       category: EventCategory.NAVIGATION,
       label: title
     });
-<<<<<<< HEAD
-    
-    // Only prevent default for hash links
-=======
 
-    // Handle hash links for smooth scrolling
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
+    // Only prevent default for hash links
     if (href.startsWith('#') && href !== '#') {
       e.preventDefault(); // Prevent default only for hash links to allow smooth scroll logic
       const targetId = href.substring(1); // Remove the # character
@@ -140,10 +106,6 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
     }
   };
 
-<<<<<<< HEAD
-=======
-
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
   const handleGetStartedClick = () => {
     trackEvent({
       action: 'get_started_click',

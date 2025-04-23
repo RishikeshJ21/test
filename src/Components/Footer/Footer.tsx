@@ -5,13 +5,10 @@ import "react-toastify/dist/ReactToastify.css"; // Import CSS for react-toastify
 import { motion } from "framer-motion";
 import { Mail, X } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
-<<<<<<< HEAD
 import { handleRecaptchaError } from "../../lib/recaptchaUtils";
-=======
 import { subscribeToNewsletter, unsubscribeFromNewsletter } from "../../utils/apiClient";
 import TermsAndConditionsModal from "../TermsAndConditions/TermsAndConditionsModal";
 import PrivacyPolicyModal from "../TermsAndConditions/PrivacyPolicyModal";
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
 // Add type declaration at the top of the file
 declare global {

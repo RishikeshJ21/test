@@ -13,15 +13,12 @@ import { WhyChooseUsSection } from './Components/WhyChooseUsSection/WhyChooseUsS
 import { TrustByCreatorSection } from './Components/TrustByCreatorSection/TrustByCreatorSection';
 import { ReadyToGrow2 } from './Components/ReadyToGrow/RTG2';
 import { motion } from 'framer-motion';
-<<<<<<< HEAD
-import TermsAndConditions from './Components/TermsAndConditions/TermsAndConditions';
+
 import { initGA, pageView } from './lib/analytics';
-=======
 import NotFound from './Components/NotFound';
 import SEO from './Components/SEO';
 import BlogPage from './pages/Blog';
 import BlogDetails from './pages/blogDetails';
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
 // Main homepage content component
 const HomePage = () => {
@@ -29,7 +26,7 @@ const HomePage = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [howItWorksVisible, setHowItWorksVisible] = useState(false);
   const howItWorksRef = useRef<HTMLDivElement>(null);
-<<<<<<< HEAD
+
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   // Initialize Google Analytics
@@ -54,8 +51,6 @@ const HomePage = () => {
       window.removeEventListener('popstate', handleLocationChange);
     };
   }, []);
-=======
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
   useEffect(() => {
     const handleScroll = () => {

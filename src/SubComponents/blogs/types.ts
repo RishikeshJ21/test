@@ -29,6 +29,11 @@ export interface BlogPostAuthor {
   image: string;
 }
 
+export interface TocSection {
+  id: string;
+  title: string;
+}
+
 export interface BlogPostProps {
   title: string;
   date: string;
@@ -38,4 +43,7 @@ export interface BlogPostProps {
   slug: string;
   author: BlogPostAuthor;
   initialComments?: Comment[];
+  tocSections?: TocSection[];
+  isCommentsOpen?: boolean;
+  onToggleComments?: (isOpen: boolean) => void;
 }

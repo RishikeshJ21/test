@@ -1,13 +1,7 @@
-<<<<<<< HEAD
 import { useState, FormEvent, useEffect } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import config from '../config';
 import { handleRecaptchaError } from '../lib/recaptchaUtils';
-=======
-import { useState, FormEvent } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
-import config from '../config';
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
 type FormState = {
   name: string;
@@ -25,7 +19,6 @@ export const ContactForm = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [recaptchaToken, setRecaptchaToken] = useState('');
-<<<<<<< HEAD
   const [captchaLoaded, setCaptchaLoaded] = useState(true);
 
   // Listen for reCAPTCHA load errors from window
@@ -41,8 +34,6 @@ export const ContactForm = () => {
       window.removeEventListener('recaptcha-load-error', handleWindowRecaptchaError);
     };
   }, []);
-=======
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -51,7 +42,6 @@ export const ContactForm = () => {
 
   const handleRecaptchaChange = (token: string | null) => {
     setRecaptchaToken(token || '');
-<<<<<<< HEAD
     if (token) {
       setSubmitError(''); // Clear captcha errors when completed
     }
@@ -69,8 +59,6 @@ export const ContactForm = () => {
     
     // The simplest and most reliable solution is to reload the page
     window.location.reload();
-=======
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -167,7 +155,6 @@ export const ContactForm = () => {
           </div>
           
           <div className="mb-6">
-<<<<<<< HEAD
             {captchaLoaded ? (
               <ReCAPTCHA
                 sitekey={config.recaptcha.siteKey}
@@ -190,12 +177,6 @@ export const ContactForm = () => {
                 </button>
               </div>
             )}
-=======
-            <ReCAPTCHA
-              sitekey={config.recaptcha.siteKey}
-              onChange={handleRecaptchaChange}
-            />
->>>>>>> e5e19c510f9e5754f29a70d82f406e422fe4379f
           </div>
           
           {submitError && (
