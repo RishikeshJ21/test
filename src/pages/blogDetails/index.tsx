@@ -263,7 +263,7 @@ const BlogDetails = () => {
           if (distance < bestDistance) {
             bestDistance = distance;
             bestSection = section.id;
-          }
+        }
         }
       }
       
@@ -277,7 +277,7 @@ const BlogDetails = () => {
 
     // Initial call to set the active section on component mount
     setTimeout(handleScroll, 100);
-    
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [sections]);
@@ -415,10 +415,10 @@ const BlogDetails = () => {
                 {/* Author and date section */}
                 <div className="flex items-center justify-center mb-6 md:mb-8">
                   <div className="flex items-center space-x-4">
-                    <div className="text-left">
+                  <div className="text-left">
                       <div className="text-xs sm:text-sm text-gray-500">
                         Posted: {formatDateDDMMYYYY(currentBlogData.date)} • 
-                        <span className="ml-2">3 min read</span>
+                      <span className="ml-2">3 min read</span>
                       </div>
                     </div>
                   </div>

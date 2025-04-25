@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NavigationSection } from '../../Components/NavigationSection/NavigationSection';
 import BlogSection from '../../SubComponents/BlogSection';
 import { Footer } from '../../Components/Footer/Footer';
@@ -387,115 +387,121 @@ export default function BlogPage() {
             </div>
             
             {/* Filter dropdown panel */}
-            {showFilters && (
-              <div 
-                ref={filterRef}
-                className="absolute right-4 sm:right-6 lg:right-8 top-14 w-[500px] max-w-[90vw] bg-white rounded-lg shadow-xl border border-gray-200 z-50"
-              >
-                <div className="p-4 sm:p-5">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Refine Search</h2>
-                  
-                  {/* Two column layout for filter options */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Left column - Categories */}
-                    <div>
-                      <h3 className="text-base font-medium text-gray-700 mb-2">Blog Categories</h3>
-                      {/* Recently added option */}
-                      <div className="mt-2">
-                        <label className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            className="rounded w-4 h-4 text-purple-600 focus:ring-purple-500"
-                            checked={showRecentOnly}
-                            onChange={() => setShowRecentOnly(!showRecentOnly)}
-                          />
-                          <span className="ml-2 text-sm text-gray-700 py-2">Show recent blogs</span>
-                        </label>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {categories.map(category => (
-                          <label key={category} className="flex items-center">
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div 
+                  ref={filterRef}
+                  className="absolute right-4 sm:right-6 lg:right-8 top-14 w-[500px] max-w-[90vw] bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <div className="p-4 sm:p-5">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Refine Search</h2>
+                    
+                    {/* Two column layout for filter options */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Left column - Categories */}
+                      <div>
+                        <h3 className="text-base font-medium text-gray-700 mb-2">Blog Categories</h3>
+                        {/* Recently added option */}
+                        <div className="mt-2">
+                          <label className="flex items-center">
                             <input 
                               type="checkbox" 
                               className="rounded w-4 h-4 text-purple-600 focus:ring-purple-500"
-                              checked={selectedCategories.includes(category)}
-                              onChange={() => handleCategoryToggle(category)}
+                              checked={showRecentOnly}
+                              onChange={() => setShowRecentOnly(!showRecentOnly)}
                             />
-                            <span className="ml-2 text-sm text-gray-700">{category}</span>
+                            <span className="ml-2 text-sm text-gray-700 py-2">Show recent blogs</span>
                           </label>
-                        ))}
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {categories.map(category => (
+                            <label key={category} className="flex items-center">
+                              <input 
+                                type="checkbox" 
+                                className="rounded w-4 h-4 text-purple-600 focus:ring-purple-500"
+                                checked={selectedCategories.includes(category)}
+                                onChange={() => handleCategoryToggle(category)}
+                              />
+                              <span className="ml-2 text-sm text-gray-700">{category}</span>
+                            </label>
+                          ))}
+                        </div>
+                        
+                        
                       </div>
                       
+                      {/* Divider for desktop view */}
+                      <div className="hidden md:block absolute left-1/2 top-[72px] bottom-5 w-px bg-gray-200"></div>
                       
-                    </div>
-                    
-                    {/* Divider for desktop view */}
-                    <div className="hidden md:block absolute left-1/2 top-[72px] bottom-5 w-px bg-gray-200"></div>
-                    
-                    {/* Divider for mobile view */}
-                    <div className="md:hidden h-px w-full bg-gray-200 my-3"></div>
-                    
-                    {/* Right column - Date Range */}
-                    <div className="px-4">
-                      <h3 className="text-base font-medium text-gray-700 mb-2 ">Date Range</h3>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">From</label>
-                          <div className="relative">
-                            <DatePicker 
-                              selected={fromDate}
-                              onChange={(date: Date | null) => setFromDate(date)}
-                              placeholderText="dd/mm/yyyy"
-                              dateFormat="dd/MM/yyyy"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 pr-8 text-black text-sm"
-                              calendarClassName="bg-white rounded-lg shadow-lg border border-gray-200"
-                              dayClassName={(date: Date) => 
-                                date.getDate() === new Date().getDate() && 
-                                date.getMonth() === new Date().getMonth() &&
-                                date.getFullYear() === new Date().getFullYear()
-                                  ? "bg-purple-500 text-white rounded-full"
-                                  : "text-gray-700 hover:bg-purple-100 rounded-full"
-                              }
-                              popperClassName="react-datepicker-right"
-                              popperPlacement="bottom-end"
-                            />
-                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
-                              <Calendar className="h-4 w-4" />
+                      {/* Divider for mobile view */}
+                      <div className="md:hidden h-px w-full bg-gray-200 my-3"></div>
+                      
+                      {/* Right column - Date Range */}
+                      <div className="px-4">
+                        <h3 className="text-base font-medium text-gray-700 mb-2 ">Date Range</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">From</label>
+                            <div className="relative">
+                              <DatePicker 
+                                selected={fromDate}
+                                onChange={(date: Date | null) => setFromDate(date)}
+                                placeholderText="dd/mm/yyyy"
+                                dateFormat="dd/MM/yyyy"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 pr-8 text-black text-sm"
+                                calendarClassName="bg-white rounded-lg shadow-lg border border-gray-200"
+                                dayClassName={(date: Date) => 
+                                  date.getDate() === new Date().getDate() && 
+                                  date.getMonth() === new Date().getMonth() &&
+                                  date.getFullYear() === new Date().getFullYear()
+                                    ? "bg-purple-500 text-white rounded-full"
+                                    : "text-gray-700 hover:bg-purple-100 rounded-full"
+                                }
+                                popperClassName="react-datepicker-right"
+                                popperPlacement="bottom-end"
+                              />
+                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                                <Calendar className="h-4 w-4" />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">To</label>
-                          <div className="relative">
-                            <DatePicker 
-                              selected={toDate}
-                              onChange={(date: Date | null) => setToDate(date)}
-                              placeholderText="dd/mm/yyyy"
-                              dateFormat="dd/MM/yyyy"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 pr-8 text-black text-sm"
-                              calendarClassName="bg-white rounded-lg shadow-lg border border-gray-200"
-                              dayClassName={(date: Date) => 
-                                date.getDate() === new Date().getDate() && 
-                                date.getMonth() === new Date().getMonth() &&
-                                date.getFullYear() === new Date().getFullYear()
-                                  ? "bg-purple-500 text-white rounded-full"
-                                  : "text-gray-700 hover:bg-purple-100 rounded-full"
-                              }
-                              popperClassName="react-datepicker-right"
-                              popperPlacement="bottom-end"
-                              minDate={fromDate || undefined}
-                            />
-                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
-                              <Calendar className="h-4 w-4" />
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-1">To</label>
+                            <div className="relative">
+                              <DatePicker 
+                                selected={toDate}
+                                onChange={(date: Date | null) => setToDate(date)}
+                                placeholderText="dd/mm/yyyy"
+                                dateFormat="dd/MM/yyyy"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 pr-8 text-black text-sm"
+                                calendarClassName="bg-white rounded-lg shadow-lg border border-gray-200"
+                                dayClassName={(date: Date) => 
+                                  date.getDate() === new Date().getDate() && 
+                                  date.getMonth() === new Date().getMonth() &&
+                                  date.getFullYear() === new Date().getFullYear()
+                                    ? "bg-purple-500 text-white rounded-full"
+                                    : "text-gray-700 hover:bg-purple-100 rounded-full"
+                                }
+                                popperClassName="react-datepicker-right"
+                                popperPlacement="bottom-end"
+                                minDate={fromDate || undefined}
+                              />
+                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
+                                <Calendar className="h-4 w-4" />
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
