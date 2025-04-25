@@ -47,7 +47,7 @@ export const lightBackgroundColors = [
   "#F0F7FF", // Light Blue
   "#F5F0FF", // Light Lavender
   "#F0FFF4", // Light Mint
-  "#FFF0F7", // Light Pink
+  "#E6FFFD", // Light Teal (replacing Pink)
   "#FFFDF0", // Light Yellow
   "#F2F2F2"  // Light Gray
 ];
@@ -58,7 +58,7 @@ export const lightBadgeColors = [
   "#D0E6FF", // Blue
   "#E6D8FF", // Lavender
   "#D1F5D6", // Mint
-  "#FFD6E7", // Pink
+  "#B8EAE7", // Teal (replacing Pink)
   "#FFEEA8", // Yellow
   "#E0E0E0"  // Gray
 ];
@@ -70,10 +70,25 @@ export const getRandomColor = (colorArray: string[]) => {
 };
 
 // Get a matched pair of background and badge colors with the same index
-export const getMatchedColors = () => {
-  const randomIndex = Math.floor(Math.random() * lightBackgroundColors.length);
+// Now using deterministic pattern based on slug or ID
+export const getMatchedColors = (slug?: string) => {
+  // Extract a numeric value from the slug if available
+  let colorIndex = 0;
+  
+  if (slug) {
+    // Use the last character of the slug if it exists
+    const lastChar = slug.charAt(slug.length - 1);
+    // Convert the character to a number (using ASCII code)
+    const charCode = lastChar.charCodeAt(0);
+    // Use modulo to get an index within our color array range
+    colorIndex = charCode % lightBackgroundColors.length;
+  } else {
+    // If no slug is provided, default to a specific color
+    colorIndex = 0;
+  }
+  
   return {
-    background: lightBackgroundColors[randomIndex],
-    badge: lightBadgeColors[randomIndex]
+    background: lightBackgroundColors[colorIndex],
+    badge: lightBadgeColors[colorIndex]
   };
 };

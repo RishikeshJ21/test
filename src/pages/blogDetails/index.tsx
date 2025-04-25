@@ -26,7 +26,7 @@ const BlogDetails = () => {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   
   // Add state for theme colors
-  const [themeColors, setThemeColors] = useState(() => getMatchedColors());
+  const [themeColors, setThemeColors] = useState(() => getMatchedColors(slug));
 
   // Handle navbar visibility on scroll
   useEffect(() => {
@@ -212,23 +212,71 @@ const BlogDetails = () => {
     }
   };
 
+  // Generate gradient colors based on theme
+  const getGradientColors = () => {
+    const baseColor = themeColors.background.replace('#', '');
+    const baseColorRgb = {
+      r: parseInt(baseColor.substring(0, 2), 16),
+      g: parseInt(baseColor.substring(2, 4), 16),
+      b: parseInt(baseColor.substring(4, 6), 16)
+    };
+    
+    // Create slightly different shades for gradient
+    const lighterShade = `rgba(${baseColorRgb.r + 15}, ${baseColorRgb.g + 15}, ${baseColorRgb.b + 20}, 0.8)`;
+    const darkerShade = `rgba(${Math.max(baseColorRgb.r - 15, 0)}, ${Math.max(baseColorRgb.g - 15, 0)}, ${Math.max(baseColorRgb.b - 10, 0)}, 0.9)`;
+    
+    return {
+      gradient: `linear-gradient(135deg, ${lighterShade} 0%, ${themeColors.background} 50%, ${darkerShade} 100%)`,
+      accent: themeColors.badge
+    };
+  };
+  
+  const gradientColors = getGradientColors();
+
   // Handle scroll to highlight active TOC item - moved after sections is defined
   useEffect(() => {
     const handleScroll = () => {
       if (sections.length === 0) return;
       
-      let currentId: string | null = null;
-      const scrollPosition = window.scrollY + 120;
-
-      sections.forEach((item) => {
-        const element = document.getElementById(item.id);
-        if (element && element.offsetTop <= scrollPosition) {
-          currentId = item.id;
-        }
-      });
+      // Get viewport metrics
+      const viewportTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const viewportBottom = viewportTop + viewportHeight;
       
-      setActiveTocId(currentId);
+      // Find which section has its heading closest to 1/4 of the viewport
+      const targetPosition = viewportTop + (viewportHeight * 0.25); 
+      
+      let bestSection = null;
+      let bestDistance = Infinity;
+      
+      // Find the section with heading closest to our target position
+      for (const section of sections) {
+        const element = document.getElementById(section.id);
+        if (element) {
+          // Get the position of the section heading
+          const elemTop = element.getBoundingClientRect().top + window.scrollY;
+          
+          // Calculate the distance from our target position
+          const distance = Math.abs(elemTop - targetPosition);
+          
+          // Update best section if this one is closer to target
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestSection = section.id;
+        }
+        }
+      }
+      
+      // Special case: if we're at the very top, select the first section
+      if (window.scrollY < 50 && sections.length > 0) {
+        bestSection = sections[0].id;
+      }
+      
+      setActiveTocId(bestSection);
     };
+
+    // Initial call to set the active section on component mount
+    setTimeout(handleScroll, 100);
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -313,13 +361,46 @@ const BlogDetails = () => {
       </motion.div>
 
       <main className="min-h-screen bg-white pt-16 lg:pt-20">
-        {/* Blog Title Section - Updated to match reference image */}
-        <div className="w-full py-34 mt-2" style={{ backgroundColor: themeColors.background }}>
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Blog Title Section - Updated with gradient and decorative elements */}
+        <div className="w-full py-12 md:py-16 lg:py-20 mt-1 relative overflow-hidden" 
+             style={{ background: gradientColors.gradient }}>
+          {/* Left decorative element */}
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 opacity-40 hidden md:block">
+            <svg width="280" height="560" viewBox="0 0 280 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="0" cy="280" r="280" fill={themeColors.badge} />
+            </svg>
+          </div>
+          
+          {/* Right decorative element */}
+          <div className="absolute right-0 top-1/4 transform -translate-y-1/4 opacity-40 hidden md:block">
+            <svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="240" cy="120" r="120" fill={themeColors.badge} />
+            </svg>
+          </div>
+          
+          {/* Floating dots pattern - left side */}
+          <div className="absolute left-10 top-1/3 hidden lg:block">
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(9)].map((_, i) => (
+                <div key={`dot-l-${i}`} className="w-2 h-2 rounded-full bg-gray-500 opacity-40"></div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Floating dots pattern - right side */}
+          <div className="absolute right-10 bottom-1/4 hidden lg:block">
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(9)].map((_, i) => (
+                <div key={`dot-r-${i}`} className="w-2 h-2 rounded-full bg-gray-500 opacity-40"></div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex justify-center">
-              <div className="w-full lg:w-[70%] text-center">
+              <div className="w-full md:w-[85%] lg:w-[70%] text-center">
                 {/* Category Badge */}
-                <div className="mb-5">
+                <div className="mb-4 md:mb-5">
                   <span className="inline-block text-[#0f172a] text-sm font-medium px-4 py-1.5 rounded-full" 
                         style={{ backgroundColor: themeColors.badge }}>
                     {tags[0] || "News"}
@@ -327,16 +408,18 @@ const BlogDetails = () => {
                 </div>
                 
                 {/* Title */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#0f172a] mb-6 leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#0f172a] mb-4 md:mb-6 leading-tight">
                   {currentBlogData.title}
                 </h1>
                 
                 {/* Author and date section */}
-                <div className="flex items-center justify-center mb-8">
+                <div className="flex items-center justify-center mb-6 md:mb-8">
+                  <div className="flex items-center space-x-4">
                   <div className="text-left">
-                    <div className="text-sm text-gray-500">
-                      Posted On: {formatDateDDMMYYYY(currentBlogData.date)} • 
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        Posted: {formatDateDDMMYYYY(currentBlogData.date)} • 
                       <span className="ml-2">3 min read</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -390,10 +473,10 @@ const BlogDetails = () => {
           </div>
         </div>
 
-        <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-2 py-8">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-4">
-            {/* Main content area spans all 12 columns now that TOC is moved to BlogPost component */}
-            <div className="lg:col-span-12 bg-white rounded-lg p-0 shadow-sm">
+        <div className="w-full max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-8">
+          <div className="lg:grid lg:grid-cols-12 lg:gap-0">
+            {/* Main content area spans all 12 columns */}
+            <div className="lg:col-span-12 bg-white rounded-lg p-0">
               <BlogPost
                 title={currentBlogData.title}
                 date={currentBlogData.date}
@@ -410,13 +493,13 @@ const BlogDetails = () => {
           </div>
         </div>
         
-        <footer className="bg-white border-t border-gray-200 py-3">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <p className="text-sm text-gray-500">
+        <footer className="bg-white border-t border-gray-200 py-4 mt-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center">
+            <p className="text-sm text-gray-500 mb-4 sm:mb-0 text-center sm:text-left">
               © {new Date().getFullYear()} persistventures.com. All rights
               reserved.
             </p>
-            <div className="flex space-x-1 mt-2">
+            <div className="flex space-x-4 items-center">
               <a
                 href="https://x.com/createathonn"
                 className="text-gray-500 hover:text-purple-600"
@@ -425,7 +508,7 @@ const BlogDetails = () => {
               >
                 <span className="sr-only">X (Twitter)</span>
                 <svg
-                  className="h-6 w-6 sm:h-9 sm:w-9"
+                  className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -441,7 +524,7 @@ const BlogDetails = () => {
               >
                 <span className="sr-only">LinkedIn</span>
                 <svg
-                  className="h-6 w-6 sm:h-8 sm:w-8 mt-0.5"
+                  className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -457,7 +540,7 @@ const BlogDetails = () => {
               >
                 <span className="sr-only">Instagram</span>
                 <svg
-                  className="h-6 w-6 sm:h-9 sm:w-9"
+                  className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -477,7 +560,7 @@ const BlogDetails = () => {
               >
                 <span className="sr-only">Reddit</span>
                 <svg
-                  className="h-6 w-6 sm:h-9 sm:w-9"
+                  className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="currentColor"
                   viewBox="0 0 448 512"
                   aria-hidden="true"

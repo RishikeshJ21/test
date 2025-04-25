@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface RelatedPost {
-  id: number;
+  id?: string;
   title: string;
   slug: string;
   date: string;
-  tags: string[];
-  imageSrc: string;
   category?: string;
+  excerpt?: string;
+  image?: string;
 }
 
 interface RelatedArticlesProps {
@@ -46,23 +46,23 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white p-5 rounded-xl shadow-md border border-gray-200">
+      <div className="flex justify-between items-center mb-5">
         <h2 className="text-xl font-bold text-gray-900">Related Articles</h2>
         <div className="flex">
           <button
             onClick={handlePrev}
-            className={`w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md mr-2 ${currentPage === 0 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg mr-2 transition-all ${currentPage === 0 ? 'text-gray-300 bg-gray-50' : 'text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'}`}
             disabled={currentPage === 0}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
           <button
             onClick={handleNext}
-            className={`w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md ${currentPage >= totalPages - 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg transition-all ${currentPage >= totalPages - 1 ? 'text-gray-300 bg-gray-50' : 'text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'}`}
             disabled={currentPage >= totalPages - 1}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
@@ -70,21 +70,21 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
       <div ref={containerRef} className="space-y-3">
         {currentPosts.map((post) => (
           <Link
-            key={post.id}
+            key={post.id || post.slug}
             to={`/blog/${post.slug}`}
-            className="flex items-start space-x-4 group py-2 hover:bg-gray-50 rounded-md px-2"
+            className="flex items-start space-x-4 group py-2.5 hover:bg-gray-50 rounded-lg px-1 transition-all border border-transparent hover:border-gray-100 hover:shadow-sm"
           >
             <div className="relative flex-shrink-0">
               <img
-                src={post.imageSrc}
+                src={post.image || '/placeholder-image.jpg'}
                 alt={post.title}
-                className="w-16 h-16 object-cover rounded"
+                className="w-16 h-16 object-cover rounded-lg shadow-sm"
               />
             </div>
             <div className="flex-grow">
-              <div className="flex items-center mb-1">
-                <span className="text-purple-600 text-xs font-medium mr-2">
-                  {post.tags?.[0] || post.category || 'General'}
+              <div className="flex items-center mb-1.5">
+                <span className="text-purple-600 text-xs font-semibold mr-2 bg-purple-50 px-2 py-0.5 rounded-full">
+                  {post.category || 'General'}
                 </span>
                 <span className="text-gray-500 text-xs">
                   {post.date}
@@ -99,8 +99,8 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
         
         {/* Show empty state if no posts */}
         {currentPosts.length === 0 && (
-          <div className="py-8 text-center text-gray-500">
-            No other articles in this category
+          <div className="py-10 text-center text-gray-500 border border-dashed border-gray-200 rounded-lg bg-gray-50">
+            <p className="font-medium">No other articles in this category</p>
           </div>
         )}
       </div>
@@ -108,7 +108,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
       {/* Page indicator */}
       {totalPages > 1 && (
         <div className="flex justify-center mt-4">
-          <div className="text-xs text-gray-500">
+          <div className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
             Page {currentPage + 1} of {totalPages}
           </div>
         </div>

@@ -11,6 +11,7 @@ export interface Reply {
   date: string;
   likes: number;
   isLiked?: boolean;
+  user_id?: string;
 }
 
 export interface Comment {
@@ -22,6 +23,7 @@ export interface Comment {
   isLiked?: boolean;
   replies?: Reply[];
   showReplies?: boolean;
+  user_id?: string;
 }
 
 export interface BlogPostAuthor {
