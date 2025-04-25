@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { blogPosts } from "../../data/blog";
 import { fetchBlogBySlugName, BlogAPIResponse } from "../../SubComponents/blogs/api";
+import { fetchCommentsByBlogId, fetchBlogBySlug } from "../../utils/apiClient";
 import Loader from "../../SubComponents/Loader";
 import { NavigationSection } from "../../Components/NavigationSection/NavigationSection";
 import { motion } from "framer-motion";
@@ -28,6 +29,19 @@ const BlogDetails = () => {
   // Add state for theme colors
   const [themeColors, setThemeColors] = useState(() => getMatchedColors(slug));
 
+  // Add refs to prevent duplicate API calls
+  const commentCountLoadedRef = useRef(false);
+  const isMountedRef = useRef(true);
+
+  // Set isMounted on component initialization and cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Handle navbar visibility on scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -42,24 +56,53 @@ const BlogDetails = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load like status from localStorage
+  // Load like status and comment count from API
   useEffect(() => {
-    if (slug) {
-      const storedLikeStatus = localStorage.getItem(`blog-${slug}-liked`);
-      const storedLikeCount = localStorage.getItem(`blog-${slug}-likes`);
-      const storedComments = localStorage.getItem(`blog-${slug}-comments`);
+    if (!slug || !isMountedRef.current || commentCountLoadedRef.current) return;
 
-      if (storedLikeStatus) setIsLiked(storedLikeStatus === "true");
-      if (storedLikeCount) setLikes(parseInt(storedLikeCount));
-      if (storedComments) {
-        try {
-          const parsedComments = JSON.parse(storedComments);
-          setCommentsCount(parsedComments.length || 0);
-        } catch (error) {
-          console.error("Failed to parse comments from localStorage", error);
+    // Load likes from localStorage (until API endpoint is available)
+    const storedLikeStatus = localStorage.getItem(`blog-${slug}-liked`);
+    const storedLikeCount = localStorage.getItem(`blog-${slug}-likes`);
+
+    if (storedLikeStatus) setIsLiked(storedLikeStatus === "true");
+    if (storedLikeCount) setLikes(parseInt(storedLikeCount));
+    
+    // First get the blog ID, then fetch comment count
+    const getCommentCount = async () => {
+      try {
+        // Get the blog ID from the slug
+        const blogData = await fetchBlogBySlug(slug);
+        
+        if (!isMountedRef.current) return;
+        
+        if (blogData && blogData.id) {
+          // Use the blog ID to fetch comment data, not the slug
+          const response = await fetchCommentsByBlogId(blogData.id);
+          
+          if (!isMountedRef.current) return;
+          
+          if (response.success && response.data) {
+            // API returns comments array, but we want to use total_comments if available
+            if (response.data && typeof response.data === 'object' && 'total_comments' in response.data) {
+              setCommentsCount(response.data.total_comments || 0);
+            } else {
+              // Fallback to comments array length if needed
+              const commentsData = Array.isArray(response.data) ? response.data : [];
+              setCommentsCount(commentsData.length || 0);
+            }
+            commentCountLoadedRef.current = true;
+          }
         }
+      } catch (error) {
+        console.error("Failed to fetch comment count:", error);
       }
-    }
+    };
+    
+    getCommentCount();
+    
+    return () => {
+      commentCountLoadedRef.current = false;
+    };
   }, [slug]);
 
   // Handler functions

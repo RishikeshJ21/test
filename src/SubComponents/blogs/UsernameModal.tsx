@@ -56,6 +56,10 @@ const UsernameModal = ({ isOpen, onClose, onSubmit }: UsernameModalProps) => {
         onSubmit(userProfile.name);
       }
       onClose();
+      
+      // Store a flag in sessionStorage to indicate login is complete
+      // This prevents the modal from showing again in the same session
+      sessionStorage.setItem("google-signin-complete", "true");
     }
   }, [signInSuccess, countdown, userProfile, onSubmit, onClose]);
 
@@ -64,12 +68,12 @@ const UsernameModal = ({ isOpen, onClose, onSubmit }: UsernameModalProps) => {
     if (!isOpen) return;
 
     // Define callback function for Google Sign-In
-    window.handleGoogleSignIn = async (response: any) => {
+    window.handleGoogleSignIn = async (googleResponse: any) => {
       try {
         setIsSigningIn(true);
         
         // Decode the JWT token from Google
-        const base64Url = response.credential.split('.')[1];
+        const base64Url = googleResponse.credential.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
           return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
@@ -89,14 +93,27 @@ const UsernameModal = ({ isOpen, onClose, onSubmit }: UsernameModalProps) => {
           avatar: googleUser.picture // Use the avatar URL from Google
         };
         
-        // Store user data in localStorage
+        // Store initial user data in localStorage
         localStorage.setItem("blog-user-data", JSON.stringify(userData));
         
-        await createOrUpdateBlogUser(userData);
+        // Create or update user in backend and get the numeric ID
+        const apiResponse = await createOrUpdateBlogUser(userData);
+        
+        if (apiResponse.success && apiResponse.data && apiResponse.data.id) {
+          // Update user data with the numeric ID from API
+          const updatedUserData = {
+            ...userData,
+            id: apiResponse.data.id,
+            user_id: apiResponse.data.id
+          };
+          
+          // Save the updated user data with ID
+          localStorage.setItem("blog-user-data", JSON.stringify(updatedUserData));
+        }
         
         // Show success message and start countdown
         setSignInSuccess(true);
-        setCountdown(2);
+        setCountdown(4);
         
       } catch (error) {
         console.error('Error processing Google Sign-In:', error);

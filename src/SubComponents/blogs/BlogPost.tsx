@@ -1,4 +1,4 @@
-import { ArrowLeft, X, MessageCircle } from "lucide-react";
+import { ArrowLeft, X, MessageCircle, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "../button";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,18 +13,14 @@ import { blogPosts } from "../../data/blog";
 import { fetchRelatedBlogs, RelatedPost } from "./api";
 import { 
   fetchCommentsByBlogId, 
-  fetchCommentsByBlogSlug,
   addCommentToBlog, 
-  fetchRepliesByCommentId, 
-  addReplyToComment, 
-  toggleLike, 
+  deleteComment, 
+  addReplyToBlogComment, 
+  deleteReply, 
+  toggleLikeComment,
+  toggleLikeReply, 
   createOrUpdateBlogUser,
-  fetchBlogUserById,
-  deleteComment,
-  deleteReply,
-  fetchBlogUserByUsername,
-  fetchAllBlogUsers,
-  fetchBlogLikes
+  fetchBlogBySlug
 } from "../../utils/apiClient";
 
 // Add a style block at the top level of the component
@@ -65,11 +61,20 @@ const BlogPost = ({
   const [userAvatar, setUserAvatar] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [blogId, setBlogId] = useState<number | null>(null);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [blogId, setBlogId] = useState<string | number | null>(null);
-  const [userDataMap, setUserDataMap] = useState<Record<string, any>>({});
-  const [likedContent, setLikedContent] = useState<Record<string, boolean>>({});
+  const [hasLoadedAllComments, setHasLoadedAllComments] = useState(false);
+  const [isRespondAnimating, setIsRespondAnimating] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationType, setNotificationType] = useState<"success" | "error">("success");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+  
+  // Use refs to prevent duplicate API calls
+  const commentsLoadedRef = useRef(false);
+  const blogIdLoadedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const commentTextAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -79,130 +84,164 @@ const BlogPost = ({
 
   const currentCategory = tags.length > 0 ? tags[0] : undefined;
 
+  // Set isMounted on component initialization and cleanup
   useEffect(() => {
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // First, get the actual blog ID from the slug
+  useEffect(() => {
+    const getBlogId = async () => {
+      // Skip if we already have the blog ID
+      if (blogIdLoadedRef.current || blogId) return;
+      
+      try {
+        // Fetch blog details to get the ID
+        const blog = await fetchBlogBySlug(slug);
+        
+        // Check if component is still mounted before updating state
+        if (isMountedRef.current && blog && blog.id) {
+          setBlogId(blog.id);
+          blogIdLoadedRef.current = true;
+        }
+      } catch (error) {
+        // Error is already handled by API client
+      }
+    };
+
+    getBlogId();
+  }, [slug, blogId]);
+
+  // Then use that ID to fetch comments and load user data
+  useEffect(() => {
+    // This function handles user data loading
+    const loadUserData = () => {
+      const storedUserData = localStorage.getItem("blog-user-data");
     const storedUserName = localStorage.getItem("user-name");
+
     if (storedUserName) {
       setUserName(storedUserName);
     }
 
-    // Reset blogId when slug changes
-    setBlogId(null);
-    
-    let isMounted = true; // Flag to prevent state updates after unmount
-    
-    const fetchBlogDetails = async () => {
-      try {
-        // Get blog details first to get the ID
-        const blogModule = await import("../../utils/apiClient");
-        
-        // Check if slug is available
-        if (!slug) {
-          console.error("No slug provided, cannot fetch blog details");
-          return null;
-        }
-        
-        try {
-          const blogData = await blogModule.fetchBlogBySlug(slug);
-          
-          if (blogData && typeof blogData === 'object' && 'id' in blogData && blogData.id && isMounted) {
-            setBlogId(blogData.id);
-            return blogData.id;
-          } else {
-            console.error("Blog details incomplete or invalid format", blogData);
-            // Try to use any available ID from the data if available
-            if (blogData && typeof blogData === 'object' && 'id' in blogData) {
-              return blogData.id;
-            }
-            return null;
-          }
-        } catch (fetchError) {
-          console.error("Error in fetchBlogBySlug:", fetchError);
-          // If we have a blog ID already from props or state, use that as fallback
-          if (blogId) {
-            return blogId;
-          }
-          return null;
-        }
-      } catch (error) {
-        console.error("Failed to fetch blog details:", error);
-        // Use existing blogId if available as fallback
-        if (blogId) {
-          return blogId;
-        }
-        return null;
-      }
-    };
-
-    const fetchComments = async () => {
-      try {
-        // First get the blog ID
-        const id = await fetchBlogDetails();
-        
-        if (id && isMounted) {
-          await loadComments(id);
-        } else if (isMounted) {
-          setComments(initialComments);
-        }
-      } catch (error) {
-        console.error("Failed to fetch comments:", error);
-        if (isMounted) {
-          setComments(initialComments);
-        }
-      }
-    };
-
-    // Only fetch once when component mounts or slug changes
-    fetchComments();
-    window.scrollTo(0, 0);
-    
-    // Cleanup function to prevent state updates after unmount
-    return () => {
-      isMounted = false;
-    };
-  }, [slug]);
-
-  // Fetch and set user data from stored user info
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const storedUserData = localStorage.getItem("blog-user-data");
       if (storedUserData) {
         try {
           const userData = JSON.parse(storedUserData);
-          setUserName(userData.name || "");
-          setUserEmail(userData.email || "");
-          setUserAvatar(userData.avatar || "");
           
-          // Try to fetch user ID if we have a username
-          if (userData.username) {
-            try {
-              const userResponse = await fetchBlogUserByUsername(userData.username);
-              if (userResponse.success && userResponse.data) {
-                setUserId(userResponse.data.id.toString());
-              } else {
-                // Create user if not found
-                const newUserResponse = await createOrUpdateBlogUser({
-                  username: userData.username,
-                  name: userData.name || userData.username,
-                  email: userData.email || "",
-                  avatar: userData.avatar || "/testimonial/1.webp",
-                });
-                
-                if (newUserResponse.success && newUserResponse.data) {
-                  setUserId(newUserResponse.data.id.toString());
-                }
-              }
-            } catch (error) {
-              console.error("Error fetching/creating user:", error);
+          if (userData) {
+            // Only set user data if we have it
+            if (userData.name) setUserName(userData.name);
+            if (userData.email) setUserEmail(userData.email);
+            if (userData.avatar) setUserAvatar(userData.avatar);
+            
+            // For user_id, we need the numeric ID from the API response, not the username
+            if (userData.id) {
+              setUserId(userData.id.toString());
+            } else if (userData.user_id) {
+              setUserId(userData.user_id.toString());
             }
           }
         } catch (error) {
-          console.error("Failed to parse user data", error);
+          // Error parsing user data - unable to set user data
         }
       }
     };
-    
-    fetchUserData();
-  }, []);
+
+    // Load user data
+    loadUserData();
+
+    // Only fetch initial comments (with limit) if we have a blog ID
+    const getInitialComments = async () => {
+      // Don't proceed if any of these conditions are true
+      if (!blogId || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
+        return;
+      }
+      
+      setIsLoadingComments(true);
+      
+      try {
+        // Fetch only 3 comments initially
+        const response = await fetchCommentsByBlogId(blogId.toString(), 4);
+        
+        // Check if component is still mounted before updating state
+        if (!isMountedRef.current) return;
+        
+        if (response.success && response.data) {
+          // Make sure we handle the response format correctly
+          const commentsData = Array.isArray(response.data) ? response.data : [];
+          
+          // Map API response to Comment interface format with safety checks
+          const formattedComments = commentsData.map((c: any) => {
+            // Always create a safe author object with fallbacks
+            const author = {
+              name: c.user?.username || "Anonymous",
+              image: c.user?.avatar || "/testimonial/1.webp",
+              username: c.user?.username || "",
+              user_id: c.user?.id?.toString() || ""
+            };
+
+            // Handle replies with safety checks
+            const replies = Array.isArray(c.replies) 
+              ? c.replies.map((r: any) => ({
+                  id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
+                  author: {
+                    name: r.user?.username || "Anonymous",
+                    image: r.user?.avatar || "/testimonial/1.webp",
+                    username: r.user?.username || "",
+                    user_id: r.user?.id?.toString() || ""
+                  },
+                  text: r.content || "",
+                  date: r.created_at || new Date().toISOString(),
+                  likes: r.likes_count || 0,
+                  isLiked: Array.isArray(r.likes) && userId && r.likes.some((like: any) => 
+                    like.user_id?.toString() === userId || like.username === userId
+                  )
+                }))
+              : [];
+            
+            return {
+              id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
+              author,
+              text: c.content || "",
+              date: c.created_at || new Date().toISOString(),
+              likes: c.likes_count || 0,
+              isLiked: Array.isArray(c.likes) && userId && c.likes.some((like: any) => 
+                like.user_id?.toString() === userId || like.username === userId
+              ),
+            showReplies: true,
+              replies
+            };
+          });
+          
+          setComments(formattedComments);
+          
+          // Mark comments as loaded
+          commentsLoadedRef.current = true;
+        } else {
+          setComments(initialComments);
+        }
+      } catch (error) {
+        setComments(initialComments);
+      } finally {
+        if (isMountedRef.current) {
+          setIsLoadingComments(false);
+        }
+      }
+    };
+
+    getInitialComments();
+  }, [blogId, initialComments, userId]);
+
+  // Reset loaded flags when the slug changes
+  useEffect(() => {
+    return () => {
+      commentsLoadedRef.current = false;
+      blogIdLoadedRef.current = false;
+    };
+  }, [slug]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -286,7 +325,7 @@ const BlogPost = ({
           if (distance < bestDistance) {
             bestDistance = distance;
             bestSection = section.id;
-          }
+        }
         }
       }
       
@@ -300,7 +339,7 @@ const BlogPost = ({
 
     // Set initial active section
     setTimeout(handleScroll, 100);
-    
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [tocSections]);
@@ -312,7 +351,7 @@ const BlogPost = ({
         const related = await fetchRelatedBlogs(slug, currentCategory, 6);
         setRelatedPosts(related);
       } catch (error) {
-        console.error("Failed to fetch related blogs:", error);
+        // Error is already handled by API client
       } finally {
         setIsLoadingRelated(false);
       }
@@ -321,121 +360,226 @@ const BlogPost = ({
     getRelatedBlogs();
   }, [slug, currentCategory]);
 
-  const handleAddComment = async () => {
+  // Function to load all comments when "See more responses" is clicked
+  const handleLoadAllComments = async () => {
+    if (!blogId || isLoadingComments || hasLoadedAllComments) return;
+    
+    setIsLoadingComments(true);
+    
     try {
-      // Validate comment text and user info
-      if (!commentText.trim()) {
-        return;
-      }
-
-      if (!userName) {
-        setShowUsernameModal(true);
-        return;
-      }
-
-      // Show loading animation
-      setIsSubmittingComment(true);
-
-      // Check if we have a user ID or need to create/update a user
-      let currentUserId = userId;
-      if (!currentUserId) {
-        try {
-          // Create or update a user with the name
-          const createResponse = await createOrUpdateBlogUser({
-            username: userName,
-            name: userName,
-            email: userEmail || "",
-            avatar: userAvatar || "",
-          });
-          
-          if (createResponse.success && createResponse.data) {
-            currentUserId = createResponse.data.id;
-            setUserId(currentUserId);
-            localStorage.setItem("blog_user_id", currentUserId.toString());
-          } else {
-            alert("Failed to create user. Please try again.");
-            setIsSubmittingComment(false);
-            return;
-          }
-        } catch (error) {
-          console.error("Error creating user:", error);
-          alert("An error occurred. Please try again.");
-          setIsSubmittingComment(false);
-          return;
-        }
-      }
-      
-      // Get the blog ID if we don't have it
-      let currentBlogId = blogId;
-      if (!currentBlogId && slug) {
-        try {
-          // Import fetchBlogBySlug from apiClient if needed
-          const apiClient = await import("../../utils/apiClient");
-          const blogResponse = await apiClient.fetchBlogBySlug(slug);
-          if (blogResponse.success && blogResponse.data) {
-            currentBlogId = blogResponse.data.id;
-          } else {
-            alert("Failed to fetch blog details. Please try again.");
-            setIsSubmittingComment(false);
-            return;
-          }
-        } catch (error) {
-          console.error("Error fetching blog:", error);
-          alert("An error occurred. Please try again.");
-          setIsSubmittingComment(false);
-          return;
-        }
-      }
-      
-      if (!currentBlogId) {
-        alert("Blog ID is missing. Cannot add comment.");
-        setIsSubmittingComment(false);
-        return;
-      }
-      
-      // Prepare the comment data
-      const commentData = {
-        blog_id: currentBlogId,
-        user_id: currentUserId,
-        content: commentText.trim(),
-      };
-      
-      // Submit the comment
-      const response = await addCommentToBlog(commentData);
+      // Fetch all comments without limit
+      const response = await fetchCommentsByBlogId(blogId.toString());
       
       if (response.success && response.data) {
-        // Create a formatted comment object to add to our state
-        const newComment = {
-          id: response.data.id || `temp-${Date.now()}`,
-          text: commentText,
-          author: {
-            name: userName,
-            image: userAvatar || "/testimonial/1.webp",
-          },
-          date: new Date().toISOString(),
-          likes: 0,
-          isLiked: false,
-          replies: [],
-          showReplies: false, // Hide replies by default
-          user_id: currentUserId,
-        };
+        // Format comments as before
+        const commentsData = Array.isArray(response.data) ? response.data : [];
         
-        // Add the new comment to the beginning of the comments array
-        setComments([newComment, ...comments]);
-        setCommentText("");
+        const formattedComments = commentsData.map((c: any) => {
+          const author = {
+            name: c.user?.username || "Anonymous",
+            image: c.user?.avatar || "/testimonial/1.webp",
+            username: c.user?.username || "",
+            user_id: c.user?.id?.toString() || ""
+          };
+
+          const replies = Array.isArray(c.replies) 
+            ? c.replies.map((r: any) => ({
+                id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
+                author: {
+                  name: r.user?.username || "Anonymous",
+                  image: r.user?.avatar || "/testimonial/1.webp",
+                  username: r.user?.username || "",
+                  user_id: r.user?.id?.toString() || ""
+                },
+                text: r.content || "",
+                date: r.created_at || new Date().toISOString(),
+                likes: r.likes_count || 0,
+                isLiked: Array.isArray(r.likes) && userId && r.likes.some((like: any) => 
+                  like.user_id?.toString() === userId || like.username === userId
+                )
+              }))
+            : [];
+          
+          return {
+            id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
+            author,
+            text: c.content || "",
+            date: c.created_at || new Date().toISOString(),
+            likes: c.likes_count || 0,
+            isLiked: Array.isArray(c.likes) && userId && c.likes.some((like: any) => 
+              like.user_id?.toString() === userId || like.username === userId
+            ),
+            showReplies: true,
+            replies
+          };
+        });
         
-        // Reset the textarea height
-        if (commentTextAreaRef.current) {
-          commentTextAreaRef.current.style.height = "auto";
-        }
-      } else {
-        alert("Failed to add comment. Please try again.");
+        setComments(formattedComments);
+        setHasLoadedAllComments(true);
       }
     } catch (error) {
-      console.error("Error adding comment:", error);
-      alert("An error occurred. Please try again.");
+      // Error is already handled by API client
     } finally {
-      // Hide loading animation when done
+      setIsLoadingComments(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+
+    // Check if user is logged in
+    if (!userName) {
+      // Check sessionStorage to see if user just completed Google sign-in
+      const isSignInComplete = sessionStorage.getItem("google-signin-complete");
+      if (isSignInComplete) {
+        // User has signed in already, try to get their data from localStorage instead
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          try {
+            const userData = JSON.parse(storedUserData);
+            if (userData.name) {
+              setUserName(userData.name);
+              // Proceed with comment after getting user data
+              setTimeout(() => handleAddComment(), 500);
+              return;
+            }
+          } catch (e) {
+            // Error parsing user data - continue to show login modal
+          }
+        }
+      }
+      
+      // No valid session data, show the modal
+      setShowUsernameModal(true);
+      return;
+    }
+
+    // Trigger respond animation
+    setIsRespondAnimating(true);
+    setTimeout(() => setIsRespondAnimating(false), 800);
+    
+    // Set submitting state
+    setIsSubmittingComment(true);
+
+    // Get userId from state or try to get it from localStorage if missing
+    let currentUserId = userId;
+    let currentBlogId = blogId;
+    
+    if (!currentUserId) {
+      try {
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          currentUserId = (userData.id || userData.user_id)?.toString();
+          if (currentUserId) {
+            setUserId(currentUserId); // Update state for future requests
+          }
+        }
+      } catch (error) {
+        // Error getting user ID from localStorage
+      }
+    }
+    
+    // Get blogId if missing by fetching from API
+    if (!currentBlogId) {
+      try {
+        const blog = await fetchBlogBySlug(slug);
+        if (blog && blog.id) {
+          currentBlogId = blog.id;
+          setBlogId(currentBlogId); // Update state for future requests
+        }
+      } catch (error) {
+        // Error fetching blog ID
+      }
+    }
+
+    // Final check if we have the required IDs
+    if (!currentUserId || !currentBlogId) {
+      // If we're missing user ID, prompt sign in
+      if (!currentUserId) {
+        setShowUsernameModal(true);
+      }
+      
+      // Show error notification
+      setNotificationType("error");
+      setNotificationMessage("Failed to add comment. Please sign in again.");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+      
+      // Set submitting state to false
+      setIsSubmittingComment(false);
+      return;
+    }
+
+    try {
+      const response = await addCommentToBlog({
+        blog_id: currentBlogId,
+        content: commentText.trim(),
+        user_id: currentUserId
+      });
+
+      if (response.success && response.data) {
+        // Format the API response to match the Comment interface structure
+        const apiComment = response.data;
+        
+        // Create a properly formatted comment object
+        const formattedComment: Comment = {
+          id: apiComment.id?.toString() || `comment-${Date.now()}`,
+      author: {
+            name: apiComment.user?.username || userName,
+            image: apiComment.user?.avatar || userAvatar,
+            username: apiComment.user?.username || userName,
+            user_id: apiComment.user?.id?.toString() || currentUserId
+      },
+          text: apiComment.content || commentText.trim(),
+          date: apiComment.created_at || new Date().toISOString(),
+          likes: apiComment.likes_count || 0,
+      isLiked: false,
+      showReplies: true,
+          replies: [],
+          isNew: true // Add a flag to identify new comments for animation
+    };
+
+        // Add the new formatted comment to the beginning of the array
+        const updatedComments = [formattedComment, ...comments];
+    setComments(updatedComments);
+    setCommentText("");
+
+    if (commentTextAreaRef.current) {
+      commentTextAreaRef.current.style.height = "auto";
+    }
+
+        // After a delay, remove the isNew flag
+        setTimeout(() => {
+          setComments(currentComments => 
+            currentComments.map(comment => 
+              comment.id === formattedComment.id 
+                ? { ...comment, isNew: false } 
+                : comment
+            )
+          );
+        }, 2000);
+        
+        // Show success notification
+        setNotificationType("success");
+        setNotificationMessage("Comment added successfully!");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+      } else {
+        // Show error notification
+        setNotificationType("error");
+        setNotificationMessage("Failed to add comment. Please try again.");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+      }
+    } catch (error) {
+      // Show error notification
+      setNotificationType("error");
+      setNotificationMessage("Error adding comment. Please try again.");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
+    } finally {
+      // Set submitting state to false
       setIsSubmittingComment(false);
     }
   };
@@ -446,134 +590,147 @@ const BlogPost = ({
   };
 
   const handleLikeComment = async (commentId: string) => {
-    if (!userId) {
-      setShowUsernameModal(true);
-      return;
-    }
-
-    try {
-      const likeData = {
-        user_id: userId,
-        target_type: "comment" as "comment" | "blog" | "reply",
-        target_id: commentId
-      };
-      
-      // Use 'comment-{id}' format for key
-      const likeKey = `comment-${commentId}`;
-      
-      // Check current liked status
-      const currentLikedState = likedContent[likeKey] || false;
-      const newLikedState = !currentLikedState;
-      
-      // Start optimistic update for UI
-      const updatedComments = comments.map((comment) => {
-        if (comment.id === commentId) {
-          const newLikes = newLikedState
-            ? comment.likes + 1
-            : Math.max(0, comment.likes - 1);
-          return { ...comment, likes: newLikes, isLiked: newLikedState };
+    // First update the UI optimistically
+    const updatedComments = comments.map((comment) => {
+      if (comment.id === commentId) {
+        const newLikedState = !(comment.isLiked ?? false);
+        const newLikes = newLikedState
+          ? comment.likes + 1
+          : Math.max(0, comment.likes - 1);
+        return { ...comment, likes: newLikes, isLiked: newLikedState };
+      }
+      return comment;
+    });
+    setComments(updatedComments);
+    
+    // Get userId from state or try to get it from localStorage if missing
+    let currentUserId = userId;
+    let currentBlogId = blogId;
+    
+    if (!currentUserId) {
+      try {
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          currentUserId = (userData.id || userData.user_id)?.toString();
+          if (currentUserId) {
+            setUserId(currentUserId); // Update state for future requests
+          }
         }
-        return comment;
+      } catch (error) {
+        // Error getting user ID from localStorage
+      }
+    }
+    
+    // Get blogId if missing by fetching from API
+    if (!currentBlogId) {
+      try {
+        const blog = await fetchBlogBySlug(slug);
+        if (blog && blog.id) {
+          currentBlogId = blog.id;
+          setBlogId(currentBlogId); // Update state for future requests
+        }
+      } catch (error) {
+        // Error fetching blog ID
+      }
+    }
+    
+    // Then update the server
+    try {
+      if (!currentUserId || !currentBlogId) {
+        // If we're missing user ID, prompt sign in
+        if (!currentUserId) {
+          setShowUsernameModal(true);
+        }
+        return;
+      }
+      
+      await toggleLikeComment({
+        blog_id: currentBlogId,
+        comment_id: commentId,
+        user_id: currentUserId
       });
-      setComments(updatedComments);
-      
-      // Update the liked content map
-      const updatedLikedContent = { ...likedContent };
-      if (newLikedState) {
-        updatedLikedContent[likeKey] = true;
-      } else {
-        delete updatedLikedContent[likeKey];
-      }
-      setLikedContent(updatedLikedContent);
-      
-      console.log("Updated like status:", updatedLikedContent); // Debugging
-      
-      // Then perform actual API call
-      const response = await toggleLike(likeData);
-      
-      if (!response.success) {
-        // Revert optimistic update if API call failed
-        console.error("Failed to toggle like:", response.error);
-        // Revert back to original state
-        setComments(comments);
-        setLikedContent(likedContent);
-      }
     } catch (error) {
-      console.error("Error toggling like:", error);
-      // Revert back to original state
+      // Revert the optimistic update on error
       setComments(comments);
-      setLikedContent(likedContent);
     }
   };
 
   const handleLikeReply = async (commentId: string, replyId: string) => {
-    if (!userId) {
-      setShowUsernameModal(true);
-      return;
-    }
-
-    try {
-      const likeData = {
-        user_id: userId,
-        target_type: "reply" as "comment" | "blog" | "reply",
-        target_id: replyId
-      };
-      
-      // Use 'reply-{id}' format for key
-      const likeKey = `reply-${replyId}`;
-      
-      // Check current liked status
-      const currentLikedState = likedContent[likeKey] || false;
-      const newLikedState = !currentLikedState;
-      
-      // Start optimistic update for UI
-      const originalComments = [...comments];
-      const updatedComments = comments.map((comment) => {
-        if (comment.id === commentId && comment.replies) {
-          const updatedReplies = comment.replies.map((reply) => {
-            if (reply.id === replyId) {
-              const newLikes = newLikedState
-                ? reply.likes + 1
-                : Math.max(0, reply.likes - 1);
-              return { ...reply, likes: newLikes, isLiked: newLikedState };
-            }
-            return reply;
-          });
-          return { ...comment, replies: updatedReplies };
+    // First update the UI optimistically
+    const updatedComments = comments.map((comment) => {
+      if (comment.id === commentId && comment.replies) {
+        const updatedReplies = comment.replies.map((reply) => {
+          if (reply.id === replyId) {
+            const newLikedState = !(reply.isLiked ?? false);
+            const newLikes = newLikedState
+              ? reply.likes + 1
+              : Math.max(0, reply.likes - 1);
+            return { ...reply, likes: newLikes, isLiked: newLikedState };
+          }
+          return reply;
+        });
+        return { ...comment, replies: updatedReplies };
+      }
+      return comment;
+    });
+    setComments(updatedComments);
+    
+    // Get userId from state or try to get it from localStorage if missing
+    let currentUserId = userId;
+    let currentBlogId = blogId;
+    
+    if (!currentUserId) {
+      try {
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          currentUserId = (userData.id || userData.user_id)?.toString();
+          if (currentUserId) {
+            setUserId(currentUserId); // Update state for future requests
+          }
         }
-        return comment;
+      } catch (error) {
+        // Error getting user ID from localStorage
+      }
+    }
+    
+    // Get blogId if missing by fetching from API
+    if (!currentBlogId) {
+      try {
+        const blog = await fetchBlogBySlug(slug);
+        if (blog && blog.id) {
+          currentBlogId = blog.id;
+          setBlogId(currentBlogId); // Update state for future requests
+        }
+      } catch (error) {
+        // Error fetching blog ID
+      }
+    }
+    
+    // Then update the server
+    try {
+      if (!currentUserId || !currentBlogId) {
+        // If we're missing user ID, prompt sign in
+        if (!currentUserId) {
+          setShowUsernameModal(true);
+        }
+        return;
+      }
+      
+      // Use the specific toggleLikeReply function for replies
+      await toggleLikeReply({
+        blog_id: currentBlogId,
+        reply_id: replyId,
+        user_id: currentUserId
       });
-      setComments(updatedComments);
-      
-      // Update the liked content map
-      const updatedLikedContent = { ...likedContent };
-      if (newLikedState) {
-        updatedLikedContent[likeKey] = true;
-      } else {
-        delete updatedLikedContent[likeKey];
-      }
-      setLikedContent(updatedLikedContent);
-      
-      console.log("Updated reply like status:", updatedLikedContent); // Debugging
-      
-      // Then perform actual API call
-      const response = await toggleLike(likeData);
-      
-      if (!response.success) {
-        // Revert optimistic update if API call failed
-        console.error("Failed to toggle reply like:", response.error);
-        setComments(originalComments);
-        setLikedContent(likedContent);
-      }
     } catch (error) {
-      console.error("Error toggling reply like:", error);
+      // Revert the optimistic update on error
       setComments(comments);
-      setLikedContent(likedContent);
     }
   };
 
-  const toggleShowReplies = async (commentId: string) => {
-    // Toggle UI state first for responsiveness
+  const toggleShowReplies = (commentId: string) => {
     const updatedComments = comments.map((comment) => {
       if (comment.id === commentId) {
         return { ...comment, showReplies: !comment.showReplies };
@@ -581,54 +738,31 @@ const BlogPost = ({
       return comment;
     });
     setComments(updatedComments);
-    
-    // Fetch replies if they haven't been loaded yet
-    const comment = comments.find(c => c.id === commentId);
-    if (comment && comment.showReplies && (!comment.replies || comment.replies.length === 0)) {
-      try {
-        const response = await fetchRepliesByCommentId(commentId);
-        if (response.success && response.data) {
-          // Update the comment with fetched replies
-          const updatedCommentsWithReplies = comments.map((c) => {
-            if (c.id === commentId) {
-              return { 
-                ...c, 
-                replies: response.data.map((reply: any) => {
-                  // Format author data
-                  const authorData = {
-                    name: reply.author_name || "Anonymous",
-                    image: reply.author_image || "/testimonial/1.webp",
-                  };
-                  
-                  // Check if this reply is liked by the current user
-                  // Use the same format as loadLikeStatus
-                  const replyLikeKey = `reply-${reply.id}`;
-                  const isLiked = likedContent[replyLikeKey] || false;
-                  
-                  return {
-                    id: reply.id,
-                    author: authorData,
-                    text: reply.content,
-                    date: reply.created_at,
-                    likes: reply.likes_count || 0,
-                    isLiked: isLiked,
-                    user_id: reply.user?.id || "",
-                  };
-                })
-              };
-            }
-            return c;
-          });
-          setComments(updatedCommentsWithReplies);
-        }
-      } catch (error) {
-        console.error("Failed to fetch replies:", error);
-      }
-    }
   };
 
   const handleReplyComment = (commentId: string) => {
+    // Check if user is logged in
     if (!userName) {
+      // Check sessionStorage to see if user just completed Google sign-in
+      const isSignInComplete = sessionStorage.getItem("google-signin-complete");
+      if (isSignInComplete) {
+        // User has signed in already, try to get their data from localStorage instead
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          try {
+            const userData = JSON.parse(storedUserData);
+            if (userData.name) {
+              setUserName(userData.name);
+              // Retry the reply action after setting user name
+              setTimeout(() => handleReplyComment(commentId), 500);
+              return;
+            }
+          } catch (e) {
+            // Error parsing user data - unable to set user data
+          }
+        }
+      }
+      
       setIsAddingReply(true);
       setReplyingTo(commentId);
       setShowUsernameModal(true);
@@ -652,108 +786,195 @@ const BlogPost = ({
   };
 
   const handleAddReply = async () => {
-    try {
-      // Validate reply and user info
-      if (!replyText.trim()) {
-        return;
-      }
-      if (!userName) {
-        setShowUsernameModal(true);
-        return;
-      }
-      
-      // Show loading animation
-      setIsSubmittingComment(true);
-      
-      // Make sure we have the user ID
-      let currentUserId = userId;
-      if (!currentUserId) {
-        try {
-          // Create or update the user
-          const createResponse = await createOrUpdateBlogUser({
-            username: userName,
-            name: userName,
-            email: userEmail || "",
-            avatar: userAvatar || "", // Don't use default image here
-          });
-          
-          if (createResponse.success && createResponse.data) {
-            currentUserId = createResponse.data.id;
-            setUserId(currentUserId);
-            localStorage.setItem("blog_user_id", currentUserId.toString());
-          } else {
-            alert("Failed to create user. Please try again.");
-            setIsSubmittingComment(false);
-            return;
+    if (!replyingTo || !replyText.trim()) return;
+    if (!userName) {
+      setShowUsernameModal(true);
+      return;
+    }
+
+    // Set submitting state
+    setIsSubmittingReply(true);
+
+    // Get userId from state or try to get it from localStorage if missing
+    let currentUserId = userId;
+    let currentBlogId = blogId;
+    
+    if (!currentUserId) {
+      try {
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          currentUserId = (userData.id || userData.user_id)?.toString();
+          if (currentUserId) {
+            setUserId(currentUserId); // Update state for future requests
           }
-        } catch (error) {
-          console.error("Error creating user:", error);
-          alert("An error occurred. Please try again.");
-          setIsSubmittingComment(false);
-          return;
         }
+      } catch (error) {
+        // Error getting user ID from localStorage
+      }
+    }
+    
+    // Get blogId if missing by fetching from API
+    if (!currentBlogId) {
+      try {
+        const blog = await fetchBlogBySlug(slug);
+        if (blog && blog.id) {
+          currentBlogId = blog.id;
+          setBlogId(currentBlogId); // Update state for future requests
+        }
+      } catch (error) {
+        // Error fetching blog ID
+      }
+    }
+    
+    // Final check if we have the required IDs
+    if (!currentUserId || !currentBlogId) {
+      // If we're missing user ID, prompt sign in
+      if (!currentUserId) {
+        setShowUsernameModal(true);
       }
       
-      // Prepare the reply data
-      const replyData = {
-        comment_id: replyingTo || '',
-        user_id: currentUserId,
-        content: replyText.trim()
-      };
+      // Show error notification
+      setNotificationType("error");
+      setNotificationMessage("Failed to add reply. Please sign in again.");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
       
-      // Make sure we have a valid comment ID
-      if (!replyingTo) {
-        alert("Comment ID is missing. Cannot add reply.");
-        setIsSubmittingComment(false);
-        return;
+      setIsSubmittingReply(false);
+      return;
+    }
+
+    // Create a temporary ID until we get the real one from the server
+    const tempId = `temp-${Date.now()}`;
+    const newReplyDate = new Date().toISOString();
+
+    // Find the comment we're replying to
+    const commentToUpdate = comments.find((comment) => comment.id === replyingTo);
+    if (!commentToUpdate) return;
+
+    // Prepare the new reply
+    const newReply: Reply = {
+      id: tempId,
+      author: {
+        name: userName,
+        image: userAvatar,
+        user_id: currentUserId
+      },
+      text: replyText.trim(),
+      date: newReplyDate,
+      likes: 0,
+      isLiked: false,
+      isLoading: true // Add loading state for the reply
+    };
+
+    // First update the UI optimistically
+    const updatedComments = comments.map((comment) => {
+      if (comment.id === replyingTo) {
+        const existingReplies = comment.replies || [];
+        return {
+          ...comment,
+          replies: [...existingReplies, newReply],
+          showReplies: true
+        };
       }
-      
-      // Submit the reply
-      const response = await addReplyToComment(replyData);
-      
+      return comment;
+    });
+    setComments(updatedComments);
+    setReplyingTo(null);
+    setReplyText("");
+
+    // Trigger animation
+    setIsRespondAnimating(true);
+    setTimeout(() => setIsRespondAnimating(false), 800);
+
+    // Then update the server
+    try {
+      const response = await addReplyToBlogComment({
+        blog_id: currentBlogId,
+        comment_id: replyingTo,
+        content: replyText.trim(),
+        user_id: currentUserId
+      });
+
       if (response.success && response.data) {
-        // Update the UI with the new reply
-        const updatedComments = comments.map(comment => {
-          if (comment.id === replyingTo) {
-            // Keep the current showReplies value
-            const currentShowReplies = comment.showReplies;
+        // Format the API response to match the Reply interface
+        const apiReply = response.data;
+        
+        // Create a properly formatted reply object
+        const formattedReply: Reply = {
+          id: apiReply.id?.toString() || tempId,
+          author: {
+            name: apiReply.user?.username || userName,
+            image: apiReply.user?.avatar || userAvatar,
+            username: apiReply.user?.username || userName,
+            user_id: apiReply.user?.id?.toString() || currentUserId
+          },
+          text: apiReply.content || replyText.trim(),
+          date: apiReply.created_at || newReplyDate,
+          likes: apiReply.likes_count || 0,
+          isLiked: false,
+          isLoading: false
+        };
+        
+        // Replace the temporary reply with the properly formatted one from the server
+        // Using the current state to avoid stale references
+        setComments(prevComments => {
+          return prevComments.map((comment) => {
+            if (comment.id === replyingTo && comment.replies) {
+              return {
+                ...comment,
+                replies: comment.replies.map((reply) => 
+                  reply.id === tempId ? formattedReply : reply
+                )
+              };
+            }
+            return comment;
+          });
+        });
+        
+        // Show success notification
+        setNotificationType("success");
+        setNotificationMessage("Reply added successfully!");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+      } else {
+        // Revert the optimistic update
+        setComments(prevComments => prevComments.map(comment => {
+          if (comment.id === replyingTo && comment.replies) {
             return {
               ...comment,
-              replies: [...(comment.replies || []), {
-                id: response.data.id || Date.now().toString(),
-                author: {
-                  name: userName,
-                  image: userAvatar || "/testimonial/1.webp", // Only use default for UI
-                },
-                text: replyText.trim(),
-                date: new Date().toISOString(),
-                likes: 0,
-                isLiked: false,
-                user_id: currentUserId,
-              }],
-              showReplies: true, // Always show replies after adding one
+              replies: comment.replies.filter(reply => reply.id !== tempId)
             };
           }
           return comment;
-        });
+        }));
         
-        setComments(updatedComments);
-        setReplyText("");
-        setReplyingTo(null);
-        
-        // Reset the textarea height
-        if (replyTextAreaRef.current) {
-          replyTextAreaRef.current.style.height = "auto";
-        }
-      } else {
-        alert("Failed to add reply. Please try again.");
+        // Show error notification
+        setNotificationType("error");
+        setNotificationMessage("Failed to add reply. Please try again.");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
       }
     } catch (error) {
-      console.error("Error adding reply:", error);
-      alert("An error occurred. Please try again.");
+      // Revert the optimistic update
+      setComments(prevComments => prevComments.map(comment => {
+        if (comment.id === replyingTo && comment.replies) {
+          return {
+            ...comment,
+            replies: comment.replies.filter(reply => reply.id !== tempId)
+          };
+        }
+        return comment;
+      }));
+      
+      // Show error notification
+      setNotificationType("error");
+      setNotificationMessage("Error adding reply. Please try again.");
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 3000);
     } finally {
-      // Hide loading animation when done
-      setIsSubmittingComment(false);
+      // Set submitting state to false
+      setIsSubmittingReply(false);
     }
   };
 
@@ -761,7 +982,10 @@ const BlogPost = ({
     // Get user data from localStorage (set by UsernameModal)
     const storedUserData = localStorage.getItem("blog-user-data");
     
-    let username = '';
+    let username = "";
+    let email = "";
+    let avatar = "";
+    let user_id = "";
     
     if (storedUserData) {
       try {
@@ -769,33 +993,48 @@ const BlogPost = ({
         setUserName(userData.name || name);
         setUserEmail(userData.email || "");
         setUserAvatar(userData.avatar || "");
-        username = userData.username || name.toLowerCase().replace(/\s/g, '_');
+        
+        // Store the user info
+        username = userData.username || "";
+        email = userData.email || "";
+        avatar = userData.avatar || "";
+        
+        // Create or update the user in the database
+        try {
+          if (username && email) {
+            const response = await createOrUpdateBlogUser({
+              username,
+              name,
+              email,
+              avatar
+            });
+            
+            // Extract the numeric user ID from the response
+            if (response.success && response.data && response.data.id) {
+              user_id = response.data.id.toString();
+              
+              // Update the stored user data with the numeric ID
+              const updatedUserData = {
+                ...userData,
+                id: response.data.id,
+                user_id: response.data.id
+              };
+              
+              // Save the updated user data with ID
+              localStorage.setItem("blog-user-data", JSON.stringify(updatedUserData));
+              
+              // Update state
+              setUserId(user_id);
+            }
+          }
+        } catch (error) {
+          // Failed to create/update user
+        }
       } catch (error) {
-        console.error("Failed to parse user data", error);
-        setUserName(name);
-        username = name.toLowerCase().replace(/\s/g, '_');
+    setUserName(name);
       }
     } else {
       setUserName(name);
-      username = name.toLowerCase().replace(/\s/g, '_');
-    }
-    
-    // If we don't have an actual user avatar, don't use the default image in the backend
-    const avatarToSend = userAvatar && userAvatar !== "/testimonial/1.webp" ? userAvatar : "";
-    // Create or update user in the API
-    try {
-      const userResponse = await createOrUpdateBlogUser({
-        username,
-        name: name,
-        email: userEmail || `${username}@example.com`,
-        avatar: avatarToSend,
-      });
-      
-      if (userResponse.success && userResponse.data) {
-        setUserId(userResponse.data.id.toString());
-      }
-    } catch (error) {
-      console.error("Failed to create/update user", error);
     }
     
     setShowUsernameModal(false);
@@ -844,236 +1083,153 @@ const BlogPost = ({
     }
   };
 
+  // Scroll to top only on initial load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleDeleteComment = async (commentId: string) => {
-    if (!userId) {
+    // Get userId from state or try to get it from localStorage if missing
+    let currentUserId = userId;
+    let currentBlogId = blogId;
+    
+    if (!currentUserId) {
+      try {
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          currentUserId = (userData.id || userData.user_id)?.toString();
+          if (currentUserId) {
+            setUserId(currentUserId); // Update state for future requests
+          }
+        }
+      } catch (error) {
+        // Error getting user ID from localStorage
+      }
+    }
+    
+    // Get blogId if missing by fetching from API
+    if (!currentBlogId) {
+      try {
+        const blog = await fetchBlogBySlug(slug);
+        if (blog && blog.id) {
+          currentBlogId = blog.id;
+          setBlogId(currentBlogId); // Update state for future requests
+        }
+      } catch (error) {
+        // Error fetching blog ID
+      }
+    }
+    
+    // Make sure we have blog ID
+    if (!currentBlogId) {
       return;
     }
-
+    
+    // First update the UI optimistically
+    const updatedComments = comments.filter(comment => comment.id !== commentId);
+    setComments(updatedComments);
+    
     try {
-      const response = await deleteComment(commentId, userId);
+      // Call API to delete the comment
+      const response = await deleteComment(currentBlogId, commentId);
       
-      if (response.success) {
-        // Update state by removing the deleted comment
-        const updatedComments = comments.filter(comment => comment.id !== commentId);
-        setComments(updatedComments);
-        
-        // Also refresh comments from server to ensure we have the latest data
-        if (blogId) {
-          const commentResponse = await fetchCommentsByBlogId(blogId);
-          if (commentResponse.success && commentResponse.data) {
-            // This will trigger a re-render with the latest data from the server
-            // We would need to reformat the data but this is a simple way to refresh
-            await loadComments(blogId);
-          }
-        }
-      } else {
-        console.error("Failed to delete comment:", response.error);
-        alert("Failed to delete comment. Please try again.");
+      if (!response.success) {
+        // Revert the optimistic update
+        setComments(comments);
       }
     } catch (error) {
-      console.error("Error deleting comment:", error);
-      alert("An error occurred. Please try again.");
+      // Revert the optimistic update
+      setComments(comments);
     }
   };
-
-  // Helper function to reload comments
-  const loadComments = async (blogId: string | number) => {
-    try {
-      // Prevent duplicate calls if already loading
-      if (isLoadingComments) return;
-      
-      setIsLoadingComments(true);
-      
-      // Load all users first to avoid multiple API calls
-      const userMap = await loadAllUserData();
-      
-      // Load the like status for this blog
-      const likeMap = await loadLikeStatus(blogId);
-      
-      // Use the ID to fetch comments
-      const response = await fetchCommentsByBlogId(blogId);
-      
-      if (response.success && response.data) {
-        // Format the API response to match our Comment type
-        const formattedComments = response.data.map((c: any) => {
-          // Get user data from preloaded user map
-          let authorData = { name: "Anonymous", image: "/testimonial/1.webp" };
-          if (c.user && c.user.id && userMap[c.user.id]) {
-            const userData = userMap[c.user.id];
-            authorData = {
-              name: userData.name || userData.username || "Anonymous",
-              image: userData.avatar || "/testimonial/1.webp",
-            };
-          }
-          
-          // Check if this comment is liked by the current user
-          // Use consistent key format with loadLikeStatus
-          const commentLikeKey = `comment-${c.id}`;
-          const isLiked = likeMap ? !!likeMap[commentLikeKey] : false;
-          
-          // Process replies if they exist
-          let replies: any[] = [];
-          if (Array.isArray(c.replies) && c.replies.length > 0) {
-            replies = c.replies.map((r: any) => {
-              // Get reply author data from preloaded user map
-              let replyAuthorData = { name: "Anonymous", image: "/testimonial/1.webp" };
-              if (r.user && r.user.id && userMap[r.user.id]) {
-                const userData = userMap[r.user.id];
-                replyAuthorData = {
-                  name: userData.name || userData.username || "Anonymous",
-                  image: userData.avatar || "/testimonial/1.webp",
-                };
-              }
-              
-              // Check if this reply is liked by the current user
-              // Use consistent key format with loadLikeStatus
-              const replyLikeKey = `reply-${r.id}`;
-              const isReplyLiked = likeMap ? !!likeMap[replyLikeKey] : false;
-              
-              return {
-                id: r.id || `temp-reply-${Date.now()}-${Math.random()}`,
-                author: replyAuthorData,
-                text: r.content || "",
-                date: r.created_at || new Date().toISOString(),
-                likes: r.likes_count || 0,
-                isLiked: isReplyLiked,
-                user_id: r.user?.id || "",
-              };
-            });
-          }
-          
-          return {
-            id: c.id || `temp-${Date.now()}`,
-            author: authorData,
-            text: c.content || "",
-            date: c.created_at || new Date().toISOString(),
-            likes: c.likes_count || 0,
-            isLiked: isLiked,
-            replies: replies,
-            showReplies: false, // Ensure replies are hidden by default
-            user_id: c.user?.id || "",
-          };
-        });
-        
-        setComments(formattedComments);
-        
-        // Update liked content state to match retrieved data for consistency
-        if (likeMap) {
-          setLikedContent(likeMap);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to reload comments:", error);
-    } finally {
-      setIsLoadingComments(false);
-    }
-  };
-
+  
   const handleDeleteReply = async (commentId: string, replyId: string) => {
-    if (!userId) {
+    // Get userId from state or try to get it from localStorage if missing
+    let currentUserId = userId;
+    let currentBlogId = blogId;
+    
+    if (!currentUserId) {
+      try {
+        const storedUserData = localStorage.getItem("blog-user-data");
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          currentUserId = (userData.id || userData.user_id)?.toString();
+          if (currentUserId) {
+            setUserId(currentUserId); // Update state for future requests
+          }
+        }
+      } catch (error) {
+        // Error getting user ID from localStorage
+      }
+    }
+    
+    // Get blogId if missing by fetching from API
+    if (!currentBlogId) {
+      try {
+        const blog = await fetchBlogBySlug(slug);
+        if (blog && blog.id) {
+          currentBlogId = blog.id;
+          setBlogId(currentBlogId); // Update state for future requests
+        }
+      } catch (error) {
+        // Error fetching blog ID
+      }
+    }
+    
+    // Make sure we have blog ID
+    if (!currentBlogId) {
       return;
     }
-
+    
+    // First update the UI optimistically
+    const updatedComments = comments.map(comment => {
+      if (comment.id === commentId && comment.replies) {
+        const updatedReplies = comment.replies.filter(reply => reply.id !== replyId);
+        return { ...comment, replies: updatedReplies };
+      }
+      return comment;
+    });
+    setComments(updatedComments);
+    
     try {
-      const response = await deleteReply(replyId, userId);
+      // Call API to delete the reply
+      const response = await deleteReply(currentBlogId, commentId, replyId);
       
-      if (response.success) {
-        // Update state by removing the deleted reply
-        const updatedComments = comments.map(comment => {
-          if (comment.id === commentId) {
-            return {
-              ...comment,
-              replies: comment.replies?.filter(reply => reply.id !== replyId) || []
-            };
-          }
-          return comment;
-        });
-        setComments(updatedComments);
-      } else {
-        console.error("Failed to delete reply:", response.error);
-        alert("Failed to delete reply. Please try again.");
+      if (!response.success) {
+        // Revert the optimistic update
+        setComments(comments);
       }
     } catch (error) {
-      console.error("Error deleting reply:", error);
-      alert("An error occurred. Please try again.");
-    }
-  };
-
-  // Add a function to load user data efficiently
-  const loadAllUserData = async () => {
-    try {
-      const response = await fetchAllBlogUsers();
-      if (response.success && Array.isArray(response.data)) {
-        // Create a map of user data for quick lookup
-        const userMap: Record<string, any> = {};
-        response.data.forEach(user => {
-          if (user.id) {
-            userMap[user.id.toString()] = user;
-          }
-        });
-        setUserDataMap(userMap);
-        return userMap;
-      }
-    } catch (error) {
-      console.error("Failed to load users:", error);
-    }
-    return {};
-  };
-
-  // Add a function to check if the current user has liked the content
-  const loadLikeStatus = async (blogId: string | number) => {
-    try {
-      // Check if we have a valid blog ID
-      if (!blogId) {
-        console.log("No blog ID provided, cannot load like status");
-        return {};
-      }
-      
-      // If user isn't logged in, we just return empty like status
-      // instead of logging an error
-      if (!userId) {
-        // Log at debug level only, not an error
-        console.log("No user ID available yet, skipping like status loading");
-        return {};
-      }
-
-      const response = await fetchBlogLikes(blogId);
-      
-      if (response.success && Array.isArray(response.data)) {
-        // Create a map of liked content for quick lookup
-        const likeMap: Record<string, boolean> = {};
-        
-        // Format keys to match 'comment-{id}' and 'reply-{id}' used in the component
-        response.data.forEach(like => {
-          if (like && like.user_id && like.user_id.toString() === userId.toString()) {
-            // Create key in the same format as used in handleLikeComment and handleLikeReply
-            let key;
-            if (like.target_type === 'comment') {
-              key = `comment-${like.target_id}`;
-            } else if (like.target_type === 'reply') {
-              key = `reply-${like.target_id}`;
-            } else {
-              key = `${like.target_type}-${like.target_id}`;
-            }
-            likeMap[key] = true;
-          }
-        });
-        
-        setLikedContent(likeMap);
-        return likeMap;
-      } else {
-        // Return empty object instead of logging error for unsuccessful responses
-        return {};
-      }
-    } catch (error) {
-      console.error("Failed to load like status:", error);
-      return {};
+      // Revert the optimistic update
+      setComments(comments);
     }
   };
 
   return (
     <div className="bg-white relative w-full">
       <style dangerouslySetInnerHTML={{ __html: blogContentStyles }} />
+      {/* Notification Popup */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg flex items-center z-50 ${
+              notificationType === "success" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+            }`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {notificationType === "success" ? (
+              <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+            ) : (
+              <AlertCircle className="mr-2 h-5 w-5 text-red-500" />
+            )}
+            <span className="font-medium">{notificationMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="w-full max-w-none">
         <div className="lg:grid lg:grid-cols-12 lg:gap-6">
           {/* Left TOC sidebar - making narrower */}
@@ -1256,7 +1412,7 @@ const BlogPost = ({
               {isLoadingRelated ? (
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-center items-center mt-6" style={{ minHeight: "100px" }}>
                   <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-600"></div>
-                </div>
+          </div>
               ) : relatedPosts.length > 0 ? (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Related Articles</h3>
@@ -1297,19 +1453,19 @@ const BlogPost = ({
         <div className="w-full pt-10 border-t border-gray-200 bg-white">
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
-              <div className="flex justify-between items-center mb-10">
-                <h2 className="text-2xl md:text-3xl text-gray-900 font-bold">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl md:text-3xl text-gray-900 font-semibold">
                   Comments
                 </h2>
-                <span className="text-gray-500 text-sm font-medium bg-gray-100 px-3 py-1 rounded-full">
+                {/* <span className="text-gray-500 text-sm">
                   {comments.length}{" "}
                   {comments.length === 1 ? "response" : "responses"}
-                </span>
+                </span> */}
               </div>
 
               <div className="mb-12">
                 <div className="flex gap-4 mb-10">
-                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-1 overflow-hidden shadow-md">
+                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white flex-shrink-0 mt-1 overflow-hidden">
                     {userAvatar ? (
                       <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
                     ) : (
@@ -1319,7 +1475,18 @@ const BlogPost = ({
                     )}
                   </div>
                   <div className="flex-grow">
-                    <div className="bg-gray-50 rounded-xl p-4 shadow-sm border border-gray-100 transition-all hover:shadow-md hover:border-gray-200">
+                    <motion.div
+                      className="bg-gray-50 rounded-xl p-4 shadow-sm"
+                      animate={isRespondAnimating ? {
+                        scale: [1, 1.02, 1],
+                        boxShadow: [
+                          "0 1px 3px rgba(0,0,0,0.1)",
+                          "0 4px 6px rgba(124,58,237,0.1)",
+                          "0 1px 3px rgba(0,0,0,0.1)"
+                        ]
+                      } : {}}
+                      transition={{ duration: 0.8 }}
+                    >
                       <textarea
                         value={commentText}
                         onChange={handleTextareaInput}
@@ -1328,45 +1495,49 @@ const BlogPost = ({
                         rows={1}
                         ref={commentTextAreaRef}
                       />
-                    </div>
-                    <div className="flex justify-end mt-4">
-                      <div className="flex gap-3">
-                        <button
-                          className="px-4 py-2 text-gray-700 hover:text-gray-900 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors"
-                          onClick={() => {
-                            setCommentText("");
-                            if (commentTextAreaRef.current)
-                              commentTextAreaRef.current.style.height = "auto";
-                          }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleAddComment}
-                          disabled={isSubmittingComment || !commentText.trim()}
-                          className={`px-5 py-2 rounded-md bg-purple-600 text-white ${
-                            isSubmittingComment || !commentText.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-purple-700 shadow-sm hover:shadow'
-                          } transition-all font-medium`}
-                        >
-                          {isSubmittingComment ? (
-                            <div className="flex items-center justify-center">
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Sending...
-                            </div>
-                          ) : (
-                            "Respond"
-                          )}
-                        </button>
+                    </motion.div>
+                    {commentText && (
+                      <div className="flex justify-end mt-4">
+                        <div className="flex gap-3">
+                          <button
+                            className="px-4 py-2 text-gray-700 hover:text-gray-900 rounded-full text-sm font-medium"
+                            onClick={() => {
+                              setCommentText("");
+                              if (commentTextAreaRef.current)
+                                commentTextAreaRef.current.style.height = "auto";
+                            }}
+                            disabled={isSubmittingComment}
+                          >
+                            Cancel
+                          </button>
+                          <motion.button
+                            onClick={handleAddComment}
+                            disabled={!commentText.trim() || isSubmittingComment}
+                            className={`px-4 py-2 rounded-full text-white text-sm font-medium ${
+                              commentText.trim() && !isSubmittingComment
+                                ? "bg-purple-600 hover:bg-purple-700"
+                                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                            }`}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {isSubmittingComment ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                <span>Submitting...</span>
+                              </div>
+                            ) : (
+                              "Respond"
+                            )}
+                          </motion.button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
                 {comments.length > 0 && (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
+                    <AnimatePresence>
                     {comments.slice(0, 3).map((comment) => (
                       <CommentItem
                         key={comment.id}
@@ -1381,29 +1552,42 @@ const BlogPost = ({
                         handleAddReply={handleAddReply}
                         replyTextAreaRef={replyTextAreaRef}
                         formatTimeAgo={formatTimeAgo}
-                        handleDeleteComment={handleDeleteComment}
-                        handleDeleteReply={handleDeleteReply}
-                        currentUserId={userId}
+                          handleDeleteComment={handleDeleteComment}
+                          handleDeleteReply={handleDeleteReply}
+                          currentUserId={userId}
+                          isSubmittingReply={isSubmittingReply}
                       />
                     ))}
+                    </AnimatePresence>
 
                     {comments.length > 3 && (
-                      <div className="relative mt-12">
+                      <div className="relative mt-10">
                         <div className="h-20"></div>
                         <div
                           className="absolute inset-0 bg-gradient-to-b from-transparent to-white"
                           style={{
                             background:
-                              "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 70%, rgba(255,255,255,1) 100%)",
+                              "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,1) 100%)",
                           }}
                         ></div>
 
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4">
                           <button
-                            onClick={() => onToggleComments && onToggleComments(true)}
-                            className="bg-white border border-purple-600 text-purple-600 px-6 py-2.5 rounded-full hover:bg-purple-50 transition-colors font-medium shadow-sm hover:shadow"
+                            onClick={() => {
+                              handleLoadAllComments();
+                              if (onToggleComments) onToggleComments(true);
+                            }}
+                            className="bg-white border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:bg-purple-50 transition-colors font-medium shadow-sm"
+                            disabled={isLoadingComments}
                           >
-                            See more responses
+                            {isLoadingComments ? (
+                              <div className="flex items-center">
+                                <div className="animate-spin h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+                                Loading...
+                              </div>
+                            ) : (
+                              "See more responses"
+                            )}
                           </button>
                         </div>
                       </div>
@@ -1412,8 +1596,8 @@ const BlogPost = ({
                 )}
 
                 {!comments.length && (
-                  <div className="flex items-center justify-center p-10 text-center bg-gray-50 rounded-xl mt-4 border border-gray-100 shadow-sm">
-                    <p className="text-gray-600 font-medium">
+                  <div className="flex items-center justify-center p-8 text-center bg-gray-50 rounded-lg mt-4">
+                    <p className="text-gray-600">
                       Be the first one to share what you think.
                     </p>
                   </div>
@@ -1499,12 +1683,16 @@ const BlogPost = ({
                             <Button
                               onClick={handleAddComment}
                               disabled={!commentText.trim() || isSubmittingComment}
-                              className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-purple-300 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+                              className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-purple-300 disabled:cursor-not-allowed"
                             >
                               {isSubmittingComment ? (
-                                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                              ) : null}
-                              Respond
+                                <div className="flex items-center justify-center">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                  <span>Submitting...</span>
+                                </div>
+                              ) : (
+                                "Respond"
+                              )}
                             </Button>
                           </div>
                         </>
@@ -1513,8 +1701,16 @@ const BlogPost = ({
                           <Button
                             onClick={() => setShowUsernameModal(true)}
                             className="bg-purple-600 hover:bg-purple-700 text-white"
+                            disabled={isSubmittingComment}
                           >
-                            Sign in to respond
+                            {isSubmittingComment ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                <span>Submitting...</span>
+                              </div>
+                            ) : (
+                              "Sign in to respond"
+                            )}
                           </Button>
                         </div>
                       )}
@@ -1529,6 +1725,7 @@ const BlogPost = ({
                 <div className="px-5 flex-grow overflow-y-auto">
                   {comments.length > 0 ? (
                     <div className="divide-y divide-gray-100">
+                      <AnimatePresence>
                       {comments.map((comment) => (
                         <CommentItem
                           key={comment.id}
@@ -1543,11 +1740,13 @@ const BlogPost = ({
                           handleAddReply={handleAddReply}
                           replyTextAreaRef={replyTextAreaRef}
                           formatTimeAgo={formatTimeAgo}
-                          handleDeleteComment={handleDeleteComment}
-                          handleDeleteReply={handleDeleteReply}
-                          currentUserId={userId}
+                            handleDeleteComment={handleDeleteComment}
+                            handleDeleteReply={handleDeleteReply}
+                            currentUserId={userId}
+                            isSubmittingReply={isSubmittingReply}
                         />
                       ))}
+                      </AnimatePresence>
                     </div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500 min-h-[200px]">
@@ -1589,6 +1788,7 @@ const BlogPost = ({
                 <div className="overflow-y-auto flex-grow p-4">
                   {comments.length > 0 ? (
                     <div className="divide-y divide-gray-100">
+                      <AnimatePresence>
                       {comments.map((comment) => (
                         <CommentItem
                           key={comment.id}
@@ -1603,11 +1803,13 @@ const BlogPost = ({
                           handleAddReply={handleAddReply}
                           replyTextAreaRef={replyTextAreaRef}
                           formatTimeAgo={formatTimeAgo}
-                          handleDeleteComment={handleDeleteComment}
-                          handleDeleteReply={handleDeleteReply}
-                          currentUserId={userId}
+                            handleDeleteComment={handleDeleteComment}
+                            handleDeleteReply={handleDeleteReply}
+                            currentUserId={userId}
+                            isSubmittingReply={isSubmittingReply}
                         />
                       ))}
+                      </AnimatePresence>
                     </div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
@@ -1653,12 +1855,16 @@ const BlogPost = ({
                           <Button
                             onClick={handleAddComment}
                             disabled={!commentText.trim() || isSubmittingComment}
-                            className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-purple-300 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+                            className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-purple-300 disabled:cursor-not-allowed"
                           >
                             {isSubmittingComment ? (
-                              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                            ) : null}
-                            Respond
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                <span>Submitting...</span>
+                              </div>
+                            ) : (
+                              "Respond"
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -1667,8 +1873,16 @@ const BlogPost = ({
                         <Button
                           onClick={() => setShowUsernameModal(true)}
                           className="bg-purple-600 hover:bg-purple-700 text-white"
+                          disabled={isSubmittingComment}
                         >
-                          Sign in to respond
+                          {isSubmittingComment ? (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                              <span>Submitting...</span>
+                            </div>
+                          ) : (
+                            "Sign in to respond"
+                          )}
                         </Button>
                       </div>
                     )}
