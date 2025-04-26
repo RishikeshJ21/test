@@ -12,7 +12,7 @@ const MetricsGraph = ({ postTags, slug }: MetricsGraphProps) => {
   
   return (
     <motion.div
-      className="w-full bg-white rounded-xl border border-purple-200 p-6 shadow-md overflow-hidden relative"
+      className="w-full bg-white rounded-xl border border-purple-200 p-4 shadow-md overflow-hidden relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, type: "spring" }}
@@ -47,7 +47,7 @@ const MetricsGraph = ({ postTags, slug }: MetricsGraphProps) => {
         <div className="text-center mb-5">
           <div className="flex flex-col items-center">
             <div className="rounded-lg py-2 px-6 bg-gradient-to-r from-purple-500 to-purple-600 shadow-sm">
-              <h2 className="text-3xl font-bold text-white mb-0">21</h2>
+              <h2 className="text-2xl font-bold text-white mb-0">21</h2>
               <div className="flex items-center justify-center mt-1">
                 <span className="text-xs font-medium text-purple-100 uppercase tracking-wider">Days</span>
               </div>

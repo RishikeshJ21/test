@@ -539,7 +539,7 @@ const BlogPost = ({
         const formattedComment: Comment = {
           id: apiComment.id?.toString() || `comment-${Date.now()}`,
           author: {
-            name: apiComment.user?.username || userName,
+            name: apiComment.user?.name || userName,
             image: apiComment.user?.avatar || userAvatar,
             username: apiComment.user?.username || userName,
             user_id: apiComment.user?.id?.toString() || currentUserId
@@ -1461,7 +1461,7 @@ const BlogPost = ({
       </div>
 
       {/* Add clear spacing between content and responses */}
-      <div className="h-6 md:h-14"></div>
+      <div className="h-8 md:h-22"></div>
 
       {/* Responses section - full width */}
       <div className="w-full pt-10 border-t border-gray-200 bg-white">
