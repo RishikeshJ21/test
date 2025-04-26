@@ -539,7 +539,7 @@ const BlogPost = ({
         const formattedComment: Comment = {
           id: apiComment.id?.toString() || `comment-${Date.now()}`,
           author: {
-            name: apiComment.user?.username || userName,
+            name: apiComment.user?.name || userName,
             image: apiComment.user?.avatar || userAvatar,
             username: apiComment.user?.username || userName,
             user_id: apiComment.user?.id?.toString() || currentUserId
