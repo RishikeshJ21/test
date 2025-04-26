@@ -27,7 +27,7 @@ const HomePage = () => {
   const [howItWorksVisible, setHowItWorksVisible] = useState(false);
   const howItWorksRef = useRef<HTMLDivElement>(null);
 
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  // const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   // Initialize Google Analytics
   useEffect(() => {
@@ -40,7 +40,7 @@ const HomePage = () => {
     // Update path state when URL changes
     const handleLocationChange = () => {
       const newPath = window.location.pathname;
-      setCurrentPath(newPath);
+      // setCurrentPath(newPath);
       // Track page view on navigation
       pageView(newPath + window.location.search);
     };

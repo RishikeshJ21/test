@@ -149,14 +149,14 @@ export const FAQSection = (): JSX.Element => {
     setCaptchaLoaded(true);
     setError('');
     setCaptchaError(null);
-    
+
     // The simplest and most reliable solution is to reload the page
     window.location.reload();
   };
 
   return (
-    <section id="FAQs" className="w-full overflow-hidden">
-      <div className="max-w-8xl mx-auto px-6 md:px-27 3xl:px-29 3xl:pl-20 md:py-10 w-full">
+    <section id="FAQs" className="w-full overflow-hidden ">
+      <div className={`max-w-7xl lg:max-w-[98%]   mx-auto px-6 md:px-27 3xl:px-29 3xl:pl-20 md:py-10 w-full`}>
         {/* Header - Same structure as TrustByCreatorSection */}
         <div className="mb-1 md:mb-8 3xl:pl-28">
           <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
@@ -388,7 +388,7 @@ export const FAQSection = (): JSX.Element => {
                 ) : (
                   <div className="flex flex-col items-center gap-3 p-4 border border-red-200 rounded-md bg-red-50">
                     <p className="text-red-600 text-sm">Captcha failed to load.</p>
-                    <button 
+                    <button
                       type="button"
                       onClick={retryCaptcha}
                       className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"

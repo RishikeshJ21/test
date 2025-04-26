@@ -69,11 +69,11 @@ const MetricsGraph = ({ postTags, slug }: MetricsGraphProps) => {
             whileHover={{ scale: 1.03, backgroundColor: '#7e22ce' }}
             whileTap={{ scale: 0.98 }}
             className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium w-full transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
+            onClick={() => window.open("https://t.me/+dKB7kUlsbFFkMDM1", "_blank")}
           >
             <Calendar className="w-4 h-4 mr-2" />
             JOIN NOW
           </motion.button>
-          
           {/* Motivational text */}
           <p className="text-xs text-center text-purple-600 font-medium pt-1">
             Get motivated and start your transformation!
