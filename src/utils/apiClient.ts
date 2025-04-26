@@ -9,7 +9,6 @@
 //   timestamp: number;
 // }
 
-
 // Use environment detection
 // const isDev = import.meta.env.DEV;
 
@@ -132,45 +131,61 @@ export async function createOrUpdateBlogUser(userData: {
   return makeApiRequest(BLOG_USERS_ENDPOINT, userData, {
     method: "POST",
     fallbackSuccessMessage: "User profile created/updated successfully",
-    fallbackErrorMessage: "Failed to save user profile. Please try again later."
+    fallbackErrorMessage:
+      "Failed to save user profile. Please try again later.",
   });
 }
 
 // Blog comments endpoints
-export async function fetchCommentsByBlogId(blogId: string | number, limit?: number) {
+export async function fetchCommentsByBlogId(
+  blogId: string | number,
+  limit?: number
+) {
   // Use the correct endpoint format: /blogs/{blogId}/comment-data
-  const url = limit 
+  const url = limit
     ? `${BLOGS_ENDPOINT}/${blogId}/comment-data?limit=${limit}`
     : `${BLOGS_ENDPOINT}/${blogId}/comment-data`;
-    
-  const response = await makeApiRequest(url, {}, {
-    method: "GET",
-    fallbackErrorMessage: "Failed to fetch comments. Please try again later."
-  });
-  
+
+  const response = await makeApiRequest(
+    url,
+    {},
+    {
+      method: "GET",
+      fallbackErrorMessage: "Failed to fetch comments. Please try again later.",
+    }
+  );
+
   // Transform API response to match expected format
   if (response.success && response.data) {
     // The API returns { comments: [...], blog_id: ..., users: [...], etc }
     // But our components expect the comments array directly
     return {
       success: true,
-      data: response.data.comments || []
+      data: response.data.comments || [],
     };
   }
-  
+
   return response;
 }
 
-export async function fetchBlogCommentData(blogId: number | string, limit?: number) {
+export async function fetchBlogCommentData(
+  blogId: number | string,
+  limit?: number
+) {
   // Use the same URL but pass the full response (containing total_comments)
-  const url = limit 
+  const url = limit
     ? `${BLOGS_ENDPOINT}/${blogId}/comment-data?limit=${limit}`
     : `${BLOGS_ENDPOINT}/${blogId}/comment-data`;
-    
-  return makeApiRequest(url, {}, {
-    method: "GET",
-    fallbackErrorMessage: "Failed to fetch comment data. Please try again later."
-  });
+
+  return makeApiRequest(
+    url,
+    {},
+    {
+      method: "GET",
+      fallbackErrorMessage:
+        "Failed to fetch comment data. Please try again later.",
+    }
+  );
 }
 
 export async function addCommentToBlog(payload: {
@@ -181,16 +196,34 @@ export async function addCommentToBlog(payload: {
   // Use the comments endpoint directly instead of the nested URL
   return makeApiRequest(BLOG_COMMENTS_ENDPOINT, payload, {
     method: "POST",
-    fallbackErrorMessage: "Failed to add your comment. Please try again later."
+    fallbackErrorMessage: "Failed to add your comment. Please try again later.",
   });
 }
 
 export async function deleteComment(blogId: number, commentId: string) {
   // Use the comments endpoint with ID
-  return makeApiRequest(`${BLOG_COMMENTS_ENDPOINT}/${commentId}`, {}, {
-    method: "DELETE",
-    fallbackErrorMessage: "Failed to delete your comment. Please try again later."
-  });
+  return makeApiRequest(
+    `${BLOG_COMMENTS_ENDPOINT}/${commentId}`,
+    {},
+    {
+      method: "DELETE",
+      fallbackErrorMessage:
+        "Failed to delete your comment. Please try again later.",
+    }
+  );
+}
+
+export async function updateComment(commentId: string, newContent: string) {
+  // Use the comments endpoint with ID
+  return makeApiRequest(
+    `${BLOG_COMMENTS_ENDPOINT}/${commentId}`,
+    { content: newContent }, // Send only the updated content in the body
+    {
+      method: "PUT", // Use PUT method for updates
+      fallbackErrorMessage:
+        "Failed to update your comment. Please try again later.",
+    }
+  );
 }
 
 export async function addReplyToBlogComment(payload: {
@@ -202,16 +235,25 @@ export async function addReplyToBlogComment(payload: {
   // Use the replies endpoint directly
   return makeApiRequest(BLOG_REPLIES_ENDPOINT, payload, {
     method: "POST",
-    fallbackErrorMessage: "Failed to add your reply. Please try again later."
+    fallbackErrorMessage: "Failed to add your reply. Please try again later.",
   });
 }
 
-export async function deleteReply(blogId: number, commentId: string, replyId: string) {
+export async function deleteReply(
+  blogId: number,
+  commentId: string,
+  replyId: string
+) {
   // Use the replies endpoint with ID
-  return makeApiRequest(`${BLOG_REPLIES_ENDPOINT}/${replyId}`, {}, {
-    method: "DELETE",
-    fallbackErrorMessage: "Failed to delete your reply. Please try again later."
-  });
+  return makeApiRequest(
+    `${BLOG_REPLIES_ENDPOINT}/${replyId}`,
+    {},
+    {
+      method: "DELETE",
+      fallbackErrorMessage:
+        "Failed to delete your reply. Please try again later.",
+    }
+  );
 }
 
 export async function toggleLikeComment(payload: {
@@ -220,14 +262,19 @@ export async function toggleLikeComment(payload: {
   user_id: string;
 }) {
   // Use the like endpoint directly with the payload
-  return makeApiRequest(BLOG_LIKES_ENDPOINT, {
-    target_type: "comment",
-    target_id: payload.comment_id,
-    user_id: payload.user_id
-  }, {
-    method: "POST",
-    fallbackErrorMessage: "Failed to like the comment. Please try again later."
-  });
+  return makeApiRequest(
+    BLOG_LIKES_ENDPOINT,
+    {
+      target_type: "comment",
+      target_id: payload.comment_id,
+      user_id: payload.user_id,
+    },
+    {
+      method: "POST",
+      fallbackErrorMessage:
+        "Failed to like the comment. Please try again later.",
+    }
+  );
 }
 
 export async function toggleLikeReply(payload: {
@@ -236,14 +283,53 @@ export async function toggleLikeReply(payload: {
   user_id: string;
 }) {
   // Use the like endpoint directly with the payload for replies
-  return makeApiRequest(BLOG_LIKES_ENDPOINT, {
-    target_type: "reply",
-    target_id: payload.reply_id,
-    user_id: payload.user_id
-  }, {
-    method: "POST",
-    fallbackErrorMessage: "Failed to like the reply. Please try again later."
-  });
+  return makeApiRequest(
+    BLOG_LIKES_ENDPOINT,
+    {
+      target_type: "reply",
+      target_id: payload.reply_id,
+      user_id: payload.user_id,
+    },
+    {
+      method: "POST",
+      fallbackErrorMessage: "Failed to like the reply. Please try again later.",
+    }
+  );
+}
+
+// Add function to toggle like for a blog post
+export async function toggleLikeBlog(payload: {
+  blog_id: number;
+  user_id: string;
+}) {
+  return makeApiRequest(
+    BLOG_LIKES_ENDPOINT,
+    {
+      target_type: "blog", // Specify target_type as "blog"
+      target_id: payload.blog_id.toString(), // Ensure target_id is a string if API expects it
+      user_id: payload.user_id,
+    },
+    {
+      method: "POST",
+      fallbackErrorMessage:
+        "Failed to update like status. Please try again later.",
+    }
+  );
+}
+
+// Add function to fetch likes for a specific blog post
+export async function fetchLikesForBlog(blogId: number | string) {
+  // Endpoint: /v0/api/blogs/{blog_id}/likes
+  const url = `${BLOGS_ENDPOINT}/${blogId}/likes`;
+
+  return makeApiRequest(
+    url,
+    {},
+    {
+      method: "GET",
+      fallbackErrorMessage: "Failed to fetch likes. Please try again later.",
+    }
+  );
 }
 
 // Rest of the file remains the same
@@ -297,14 +383,19 @@ export async function fetchAllBlogs() {
   // Try up to 3 times with increasing timeouts
   let attempts = 0;
   const maxAttempts = 3;
-  
+
   while (attempts < maxAttempts) {
     try {
-      const result = await makeApiRequest(BLOGS_ENDPOINT, {}, {
-        method: "GET",
-        fallbackErrorMessage: "Failed to fetch blogs. Please try again later.",
-      });
-      
+      const result = await makeApiRequest(
+        BLOGS_ENDPOINT,
+        {},
+        {
+          method: "GET",
+          fallbackErrorMessage:
+            "Failed to fetch blogs. Please try again later.",
+        }
+      );
+
       if (result.success) {
         return result.data;
       } else {
@@ -316,16 +407,21 @@ export async function fetchAllBlogs() {
         throw error;
       }
       // Wait before retrying (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempts));
     }
   }
 }
 
 export async function fetchBlogById(blogId: number | string) {
-  const result = await makeApiRequest(`${BLOGS_ENDPOINT}/${blogId}`, {}, {
-    method: "GET",
-    fallbackErrorMessage: "Failed to fetch blog details. Please try again later.",
-  });
+  const result = await makeApiRequest(
+    `${BLOGS_ENDPOINT}/${blogId}`,
+    {},
+    {
+      method: "GET",
+      fallbackErrorMessage:
+        "Failed to fetch blog details. Please try again later.",
+    }
+  );
 
   if (result.success) {
     return result.data;
@@ -337,10 +433,10 @@ export async function fetchBlogById(blogId: number | string) {
 export async function fetchBlogBySlug(slug: string) {
   // First fetch all blogs
   const blogs = await fetchAllBlogs();
-  
+
   // Find the blog with the matching slug
   const blog = blogs.find((blog: any) => blog.slug === slug);
-  
+
   if (blog) {
     // If found, fetch the complete blog
     return await fetchBlogById(blog.id);

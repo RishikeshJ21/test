@@ -56,7 +56,8 @@ export default function Hero({ title, description, buttonText }: { title: { t1: 
           left: '50%',
           bottom: '30px',
           x: `calc(50% + ${mousePosition.x * 0.02}px)`,
-          y: `calc(25% + ${mousePosition.y * 0.02}px)`
+          y: `calc(25% + ${mousePosition.y * 0.02}px)`,
+          willChange: 'filter, transform'
         }}
       />
       <motion.div
@@ -65,7 +66,8 @@ export default function Hero({ title, description, buttonText }: { title: { t1: 
           left: 'calc(4/7 * 100%)',
           bottom: 'calc(3/8 * 100%)',
           x: `calc(-50% + ${mousePosition.x * -0.02}px)`,
-          y: `calc(25% + ${mousePosition.y * -0.02}px)`
+          y: `calc(25% + ${mousePosition.y * -0.02}px)`,
+          willChange: 'filter, transform'
         }}
       />
 
