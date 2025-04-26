@@ -22,7 +22,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Number of posts to display per page
-  const postsPerPage = 2;
+  const postsPerPage = 3;
   
   // Calculate total number of pages
   const totalPages = Math.ceil(relatedPosts.length / postsPerPage);
