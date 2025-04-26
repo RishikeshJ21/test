@@ -693,7 +693,7 @@ const BlogPost = ({
     let currentUserId = userId;
     let currentBlogId = blogId;
 
-    if (!currentUserId) {
+    if (!currentUserId) { 
       try {
         const storedUserData = localStorage.getItem("blog-user-data");
         if (storedUserData) {
