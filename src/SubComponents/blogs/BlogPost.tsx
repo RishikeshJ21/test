@@ -9,7 +9,7 @@ import CommentItem from "./CommentItem";
 import RelatedArticles from "./Most_View";
 import MetricsGraph from "./MetricsGraph";
 import { formatTimeAgo } from "./utils";
- 
+
 import { fetchRelatedBlogs, RelatedPost } from "./api";
 import {
   fetchCommentsByBlogId,
@@ -40,6 +40,7 @@ const blogContentStyles = `
 const BlogPost = ({
   title,
   tags,
+  blogId,
   content,
   imageSrc,
   slug,
@@ -61,7 +62,7 @@ const BlogPost = ({
   const [userAvatar, setUserAvatar] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
-  const [blogId, setBlogId] = useState<number | null>(null);
+  // const [blogId, setBlogId] = useState<number | null>(null);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [hasLoadedAllComments, setHasLoadedAllComments] = useState(false);
   const [isRespondAnimating, setIsRespondAnimating] = useState(false);
@@ -96,28 +97,6 @@ const BlogPost = ({
     };
   }, []);
 
-  // First, get the actual blog ID from the slug
-  useEffect(() => {
-    const getBlogId = async () => {
-      // Skip if we already have the blog ID
-      if (blogIdLoadedRef.current || blogId) return;
-
-      try {
-        // Fetch blog details to get the ID
-        const blog = await fetchBlogBySlug(slug);
-
-        // Check if component is still mounted before updating state
-        if (isMountedRef.current && blog && blog.id) {
-          setBlogId(blog.id);
-          blogIdLoadedRef.current = true;
-        }
-      } catch (error) {
-        // Error is already handled by API client
-      }
-    };
-
-    getBlogId();
-  }, [slug, blogId]);
 
   // Then use that ID to fetch comments and load user data
   useEffect(() => {
@@ -304,7 +283,7 @@ const BlogPost = ({
       // Get viewport metrics
       const viewportTop = window.scrollY;
       const viewportHeight = window.innerHeight;
- 
+
 
       // Find which section has its heading closest to 1/4 of the viewport
       // This prioritizes sections near the top of the viewport
@@ -349,21 +328,12 @@ const BlogPost = ({
   // Fetch Related/Recommended Posts
   useEffect(() => {
     const getPosts = async () => {
-      // Fetch related posts (same category) for the sidebar
-      try {
-        setIsLoadingRelated(true);
-        const related = await fetchRelatedBlogs(slug, currentCategory, 6, false);
-        setRelatedPosts(related);
-      } catch (error) {
-        // Error handled in API client
-      } finally {
-        setIsLoadingRelated(false);
-      }
+
 
       // Fetch recommended posts (different category or any) for the bottom section
       try {
         // Try fetching different category first, limit 3
-        const recommended = await fetchRelatedBlogs(slug, currentCategory, 8, true);
+        const recommended = await fetchRelatedBlogs(slug, currentCategory, 4, true);
         setRecommendedPosts(recommended);
       } catch (error) {
         // Error handled in API client
@@ -372,6 +342,78 @@ const BlogPost = ({
 
     getPosts();
   }, [slug, currentCategory]);
+
+  // Check for preloaded comments in localStorage when comments section is opened
+  useEffect(() => {
+    if (isCommentsOpen && blogId && !hasLoadedAllComments && !isLoadingComments) {
+      // Check if there are preloaded comments in localStorage
+      const storedComments = localStorage.getItem(`blog-${slug}-comments`);
+
+      if (storedComments) {
+        try {
+          const commentsData = JSON.parse(storedComments);
+
+          if (Array.isArray(commentsData) && commentsData.length > 0) {
+            console.log(`[BlogPost] Found ${commentsData.length} preloaded comments in localStorage`);
+
+            // Format comments as before
+            const formattedComments = commentsData.map((c: any) => {
+              const author = {
+                name: c.user?.username || "Anonymous",
+                image: c.user?.avatar || "/testimonial/1.webp",
+                username: c.user?.username || "",
+                user_id: c.user?.id?.toString() || ""
+              };
+
+              const replies = Array.isArray(c.replies)
+                ? c.replies.map((r: any) => ({
+                  id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
+                  author: {
+                    name: r.user?.username || "Anonymous",
+                    image: r.user?.avatar || "/testimonial/1.webp",
+                    username: r.user?.username || "",
+                    user_id: r.user?.id?.toString() || ""
+                  },
+                  text: r.content || "",
+                  date: r.created_at || new Date().toISOString(),
+                  likes: r.likes_count || 0,
+                  isLiked: Array.isArray(r.likes) && userId && r.likes.some((like: any) =>
+                    like.user_id?.toString() === userId || like.username === userId
+                  )
+                }))
+                : [];
+
+              return {
+                id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
+                author,
+                text: c.content || "",
+                date: c.created_at || new Date().toISOString(),
+                likes: c.likes_count || 0,
+                isLiked: Array.isArray(c.likes) && userId && c.likes.some((like: any) =>
+                  like.user_id?.toString() === userId || like.username === userId
+                ),
+                showReplies: true,
+                replies
+              };
+            });
+
+            setComments(formattedComments);
+            setTotalCommentsAvailable(commentsData.length);
+            setHasLoadedAllComments(true);
+
+            // Remove from localStorage after using to avoid stale data
+            localStorage.removeItem(`blog-${slug}-comments`);
+            return;
+          }
+        } catch (error) {
+          console.error("[BlogPost] Error parsing comments from localStorage:", error);
+        }
+      }
+
+      // If no stored comments or error parsing, fall back to loading all comments
+      handleLoadAllComments();
+    }
+  }, [isCommentsOpen, blogId, slug, userId, hasLoadedAllComments, isLoadingComments]);
 
   // Function to load all comments when "See more responses" is clicked
   const handleLoadAllComments = async () => {
@@ -494,17 +536,17 @@ const BlogPost = ({
     }
 
     // Get blogId if missing by fetching from API
-    if (!currentBlogId) {
-      try {
-        const blog = await fetchBlogBySlug(slug);
-        if (blog && blog.id) {
-          currentBlogId = blog.id;
-          setBlogId(currentBlogId); // Update state for future requests
-        }
-      } catch (error) {
-        // Error fetching blog ID
-      }
-    }
+    // if (!currentBlogId) {
+    //   try {
+    //     const blog = await fetchBlogBySlug(slug);
+    //     if (blog && blog.id) {
+    //       currentBlogId = blog.id;
+    //       setBlogId(currentBlogId); // Update state for future requests
+    //     }
+    //   } catch (error) {
+    //     // Error fetching blog ID
+    //   }
+    // }
 
     // Final check if we have the required IDs
     if (!currentUserId || !currentBlogId) {
@@ -636,17 +678,17 @@ const BlogPost = ({
     }
 
     // Get blogId if missing by fetching from API
-    if (!currentBlogId) {
-      try {
-        const blog = await fetchBlogBySlug(slug);
-        if (blog && blog.id) {
-          currentBlogId = blog.id;
-          setBlogId(currentBlogId); // Update state for future requests
-        }
-      } catch (error) {
-        // Error fetching blog ID
-      }
-    }
+    // if (!currentBlogId) {
+    //   try {
+    //     const blog = await fetchBlogBySlug(slug);
+    //     if (blog && blog.id) {
+    //       currentBlogId = blog.id;
+    //       setBlogId(currentBlogId); // Update state for future requests
+    //     }
+    //   } catch (error) {
+    //     // Error fetching blog ID
+    //   }
+    // }
 
     // Then update the server
     try {
@@ -693,7 +735,7 @@ const BlogPost = ({
     let currentUserId = userId;
     let currentBlogId = blogId;
 
-    if (!currentUserId) { 
+    if (!currentUserId) {
       try {
         const storedUserData = localStorage.getItem("blog-user-data");
         if (storedUserData) {
@@ -709,17 +751,17 @@ const BlogPost = ({
     }
 
     // Get blogId if missing by fetching from API
-    if (!currentBlogId) {
-      try {
-        const blog = await fetchBlogBySlug(slug);
-        if (blog && blog.id) {
-          currentBlogId = blog.id;
-          setBlogId(currentBlogId); // Update state for future requests
-        }
-      } catch (error) {
-        // Error fetching blog ID
-      }
-    }
+    // if (!currentBlogId) {
+    //   try {
+    //     const blog = await fetchBlogBySlug(slug);
+    //     if (blog && blog.id) {
+    //       currentBlogId = blog.id;
+    //       setBlogId(currentBlogId); // Update state for future requests
+    //     }
+    //   } catch (error) {
+    //     // Error fetching blog ID
+    //   }
+    // }
 
     // Then update the server
     try {
@@ -828,17 +870,17 @@ const BlogPost = ({
     }
 
     // Get blogId if missing by fetching from API
-    if (!currentBlogId) {
-      try {
-        const blog = await fetchBlogBySlug(slug);
-        if (blog && blog.id) {
-          currentBlogId = blog.id;
-          setBlogId(currentBlogId); // Update state for future requests
-        }
-      } catch (error) {
-        // Error fetching blog ID
-      }
-    }
+    // if (!currentBlogId) {
+    //   try {
+    //     const blog = await fetchBlogBySlug(slug);
+    //     if (blog && blog.id) {
+    //       currentBlogId = blog.id;
+    //       setBlogId(currentBlogId); // Update state for future requests
+    //     }
+    //   } catch (error) {
+    //     // Error fetching blog ID
+    //   }
+    // }
 
     // Final check if we have the required IDs
     if (!currentUserId || !currentBlogId) {
@@ -1122,17 +1164,17 @@ const BlogPost = ({
     }
 
     // Get blogId if missing by fetching from API
-    if (!currentBlogId) {
-      try {
-        const blog = await fetchBlogBySlug(slug);
-        if (blog && blog.id) {
-          currentBlogId = blog.id;
-          setBlogId(currentBlogId); // Update state for future requests
-        }
-      } catch (error) {
-        // Error fetching blog ID
-      }
-    }
+    // if (!currentBlogId) {
+    //   try {
+    //     const blog = await fetchBlogBySlug(slug);
+    //     if (blog && blog.id) {
+    //       currentBlogId = blog.id;
+    //       setBlogId(currentBlogId); // Update state for future requests
+    //     }
+    //   } catch (error) {
+    //     // Error fetching blog ID
+    //   }
+    // }
 
     // Make sure we have blog ID
     if (!currentBlogId) {
@@ -1178,17 +1220,17 @@ const BlogPost = ({
     }
 
     // Get blogId if missing by fetching from API
-    if (!currentBlogId) {
-      try {
-        const blog = await fetchBlogBySlug(slug);
-        if (blog && blog.id) {
-          currentBlogId = blog.id;
-          setBlogId(currentBlogId); // Update state for future requests
-        }
-      } catch (error) {
-        // Error fetching blog ID
-      }
-    }
+    // if (!currentBlogId) {
+    //   try {
+    //     const blog = await fetchBlogBySlug(slug);
+    //     if (blog && blog.id) {
+    //       currentBlogId = blog.id;
+    //       setBlogId(currentBlogId); // Update state for future requests
+    //     }
+    //   } catch (error) {
+    //     // Error fetching blog ID
+    //   }
+    // }
 
     // Make sure we have blog ID
     if (!currentBlogId) {
@@ -1404,7 +1446,7 @@ const BlogPost = ({
             <div className="hidden lg:block space-y-6">
               <MetricsGraph postTags={tags} slug={slug} />
 
- 
+
               {/* --- ADD RECOMMENDED READS SIDEBAR SECTION HERE --- */}
               {recommendedPosts.length > 0 && (
                 <div> {/* Added a wrapping div for spacing */}
@@ -1416,7 +1458,7 @@ const BlogPost = ({
                 </div>
               )}
               {/* --- RECOMMENDED READS SIDEBAR SECTION END --- */}
- 
+
             </div>
 
             {/* Mobile version of Related Articles - show below content */}
@@ -1461,7 +1503,7 @@ const BlogPost = ({
       </div>
 
       {/* Add clear spacing between content and responses */}
-      <div className="h-6 md:h-14"></div>
+      <div className={`h-6 md:h-24 `}></div>
 
       {/* Responses section - full width */}
       <div className="w-full pt-10 border-t border-gray-200 bg-white">
@@ -1642,7 +1684,7 @@ const BlogPost = ({
           <>
             <motion.div
               ref={commentsRefLg}
-              className="fixed top-0 right-0 bottom-0 w-[450px] bg-white shadow-lg hidden lg:flex flex-col z-40 border-l border-gray-200 overflow-y-auto"
+              className="fixed top-0 right-0  bottom-0 w-[450px] bg-white shadow-lg hidden lg:flex flex-col z-99 border-l border-gray-200 overflow-y-auto"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}

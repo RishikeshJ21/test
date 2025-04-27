@@ -96,7 +96,7 @@ const HomePage = () => {
       <main className="overflow-x-hidden">
         {/* Navigation */}
         <div
-          className={`fixed top-0 left-0 right-0 z-50 md:bg-gray-50/100 md:backdrop-blur-md transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'
+          className={`fixed top-0 left-0 right-0 z-5 md:bg-gray-50/100 md:backdrop-blur-md transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'
             }`}
         >
           <NavigationSection />

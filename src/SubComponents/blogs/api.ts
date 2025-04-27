@@ -71,6 +71,7 @@ export async function fetchBlog(id: number): Promise<BlogAPIResponse | null> {
 export async function fetchBlogBySlugName(
   slug: string
 ): Promise<BlogAPIResponse | null> {
+  console.log(`@@@ fetchBlogBySlugName called for slug: ${slug}`);
   try {
     const data = await fetchBlogBySlug(slug);
     return data as BlogAPIResponse;
@@ -93,6 +94,9 @@ export async function fetchRelatedBlogs(
   limit: number = 5,
   excludeCurrentCategory: boolean = false
 ): Promise<RelatedPost[]> {
+  console.log(
+    `@@@ fetchRelatedBlogs called for slug: ${currentSlug}, category: ${category}`
+  );
   try {
     // Get all blogs
     const allBlogs = await fetchBlogs();

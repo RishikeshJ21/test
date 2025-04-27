@@ -46,71 +46,81 @@ export async function makeApiRequest(
     fallbackErrorMessage?: string;
     submissionType?: "contact" | "newsletter";
     method?: string;
+    signal?: AbortSignal;
   } = {}
 ) {
   const url = `${API_BASE_URL}${endpoint}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT); // 30 second timeout
+  const internalController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.warn(
+      `[API Client] Request timed out after ${REQUEST_TIMEOUT / 1000}s: ${
+        options.method || "POST"
+      } ${url}`
+    );
+    internalController.abort();
+  }, REQUEST_TIMEOUT);
+
+  const combinedSignal = options.signal
+    ? AbortSignal.any([options.signal, internalController.signal])
+    : internalController.signal;
 
   try {
-    // First attempt - with full credentials/CORS settings
-    try {
-      const response = await fetch(url, {
-        method: options.method || "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Origin: window.location.origin,
-        },
-        credentials: "include",
-        mode: "cors",
-        body: options.method === "GET" ? undefined : JSON.stringify(data),
-        signal: controller.signal,
-      });
+    console.log(`[API Client] Attempt 1: ${options.method || "POST"} ${url}`);
+    const response = await fetch(url, {
+      method: options.method || "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Origin: window.location.origin,
+      },
+      credentials: "include",
+      mode: "cors",
+      body: options.method === "GET" ? undefined : JSON.stringify(data),
+      signal: combinedSignal,
+    });
 
-      clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
 
-      if (response.ok) {
-        return { success: true, data: await response.json() };
-      }
+    if (response.ok) {
+      console.log(
+        `[API Client] Attempt 1 Success: ${options.method || "POST"} ${url}`
+      );
+      return { success: true, data: await response.json() };
+    }
 
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Server error: ${response.status}`);
-    } catch (firstError: unknown) {
-      // Try again with simpler fetch options
-      if (firstError instanceof Error && firstError.name !== "AbortError") {
-        try {
-          const response = await fetch(url, {
-            method: options.method || "POST",
-            headers: { "Content-Type": "application/json" },
-            mode: "cors",
-            body: options.method === "GET" ? undefined : JSON.stringify(data),
-          });
+    const errorData = await response.json().catch(() => ({}));
+    console.warn(
+      `[API Client] Attempt 1 Failed (${response.status}): ${
+        options.method || "POST"
+      } ${url}`,
+      errorData
+    );
+    throw new Error(errorData.message || `Server error: ${response.status}`);
+  } catch (error: unknown) {
+    clearTimeout(timeoutId);
 
-          if (response.ok) {
-            return { success: true, data: await response.json() };
-          }
-
-          throw new Error("Server returned an error response");
-        } catch (secondError) {
-          // Always simulate success in any environment since isDev is true
-          return {
-            success: true,
-            data: {
-              message:
-                options.fallbackSuccessMessage ||
-                "Action completed successfully (simulated)",
-              simulated: true,
-            },
-          };
-        }
+    if (error instanceof Error && error.name === "AbortError") {
+      if (options.signal?.aborted) {
+        console.log(
+          `[API Client] Request aborted by caller: ${
+            options.method || "POST"
+          } ${url}`
+        );
       } else {
-        throw new Error(
-          "Request timed out. Please check your connection and try again."
+        console.warn(
+          `[API Client] Request aborted (likely timeout): ${
+            options.method || "POST"
+          } ${url}`
         );
       }
+      throw error;
     }
-  } catch (error) {
+
+    console.error(
+      `[API Client] Error during fetch: ${options.method || "POST"} ${url}`,
+      error
+    );
+
     return {
       success: false,
       error:
@@ -139,53 +149,48 @@ export async function createOrUpdateBlogUser(userData: {
 // Blog comments endpoints
 export async function fetchCommentsByBlogId(
   blogId: string | number,
-  limit?: number
+  limit?: number,
+  signal?: AbortSignal
 ) {
-  // Use the correct endpoint format: /blogs/{blogId}/comment-data
   const url = limit
     ? `${BLOGS_ENDPOINT}/${blogId}/comment-data?limit=${limit}`
     : `${BLOGS_ENDPOINT}/${blogId}/comment-data`;
 
-  const response = await makeApiRequest(
-    url,
-    {},
-    {
-      method: "GET",
-      fallbackErrorMessage: "Failed to fetch comments. Please try again later.",
-    }
-  );
+  try {
+    const response = await makeApiRequest(
+      url,
+      {},
+      {
+        method: "GET",
+        fallbackErrorMessage:
+          "Failed to fetch comments. Please try again later.",
+        signal,
+      }
+    );
 
-  // Transform API response to match expected format
-  if (response.success && response.data) {
-    // The API returns { comments: [...], blog_id: ..., users: [...], etc }
-    // But our components expect the comments array directly
+    if (response.success && response.data) {
+      return {
+        success: true,
+        data: Array.isArray(response.data.comments)
+          ? response.data.comments
+          : [],
+      };
+    }
+    return response;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log(`[API Client] fetchCommentsByBlogId aborted.`);
+      throw error;
+    }
+    console.error(
+      "[API Client] Error in fetchCommentsByBlogId wrapper:",
+      error
+    );
     return {
-      success: true,
-      data: response.data.comments || [],
+      success: false,
+      error: "Failed to fetch comments due to an unexpected error",
     };
   }
-
-  return response;
-}
-
-export async function fetchBlogCommentData(
-  blogId: number | string,
-  limit?: number
-) {
-  // Use the same URL but pass the full response (containing total_comments)
-  const url = limit
-    ? `${BLOGS_ENDPOINT}/${blogId}/comment-data?limit=${limit}`
-    : `${BLOGS_ENDPOINT}/${blogId}/comment-data`;
-
-  return makeApiRequest(
-    url,
-    {},
-    {
-      method: "GET",
-      fallbackErrorMessage:
-        "Failed to fetch comment data. Please try again later.",
-    }
-  );
 }
 
 export async function addCommentToBlog(payload: {
@@ -193,7 +198,6 @@ export async function addCommentToBlog(payload: {
   content: string;
   user_id: string;
 }) {
-  // Use the comments endpoint directly instead of the nested URL
   return makeApiRequest(BLOG_COMMENTS_ENDPOINT, payload, {
     method: "POST",
     fallbackErrorMessage: "Failed to add your comment. Please try again later.",
@@ -201,7 +205,6 @@ export async function addCommentToBlog(payload: {
 }
 
 export async function deleteComment(blogId: number, commentId: string) {
-  // Use the comments endpoint with ID
   return makeApiRequest(
     `${BLOG_COMMENTS_ENDPOINT}/${commentId}`,
     {},
@@ -214,12 +217,11 @@ export async function deleteComment(blogId: number, commentId: string) {
 }
 
 export async function updateComment(commentId: string, newContent: string) {
-  // Use the comments endpoint with ID
   return makeApiRequest(
     `${BLOG_COMMENTS_ENDPOINT}/${commentId}`,
-    { content: newContent }, // Send only the updated content in the body
+    { content: newContent },
     {
-      method: "PUT", // Use PUT method for updates
+      method: "PUT",
       fallbackErrorMessage:
         "Failed to update your comment. Please try again later.",
     }
@@ -232,7 +234,6 @@ export async function addReplyToBlogComment(payload: {
   content: string;
   user_id: string;
 }) {
-  // Use the replies endpoint directly
   return makeApiRequest(BLOG_REPLIES_ENDPOINT, payload, {
     method: "POST",
     fallbackErrorMessage: "Failed to add your reply. Please try again later.",
@@ -244,7 +245,6 @@ export async function deleteReply(
   commentId: string,
   replyId: string
 ) {
-  // Use the replies endpoint with ID
   return makeApiRequest(
     `${BLOG_REPLIES_ENDPOINT}/${replyId}`,
     {},
@@ -261,7 +261,6 @@ export async function toggleLikeComment(payload: {
   comment_id: string;
   user_id: string;
 }) {
-  // Use the like endpoint directly with the payload
   return makeApiRequest(
     BLOG_LIKES_ENDPOINT,
     {
@@ -282,7 +281,6 @@ export async function toggleLikeReply(payload: {
   reply_id: string;
   user_id: string;
 }) {
-  // Use the like endpoint directly with the payload for replies
   return makeApiRequest(
     BLOG_LIKES_ENDPOINT,
     {
@@ -297,7 +295,6 @@ export async function toggleLikeReply(payload: {
   );
 }
 
-// Add function to toggle like for a blog post
 export async function toggleLikeBlog(payload: {
   blog_id: number;
   user_id: string;
@@ -305,8 +302,8 @@ export async function toggleLikeBlog(payload: {
   return makeApiRequest(
     BLOG_LIKES_ENDPOINT,
     {
-      target_type: "blog", // Specify target_type as "blog"
-      target_id: payload.blog_id.toString(), // Ensure target_id is a string if API expects it
+      target_type: "blog",
+      target_id: payload.blog_id.toString(),
       user_id: payload.user_id,
     },
     {
@@ -317,22 +314,35 @@ export async function toggleLikeBlog(payload: {
   );
 }
 
-// Add function to fetch likes for a specific blog post
-export async function fetchLikesForBlog(blogId: number | string) {
-  // Endpoint: /v0/api/blogs/{blog_id}/likes
+export async function fetchLikesForBlog(
+  blogId: number | string,
+  signal?: AbortSignal
+) {
   const url = `${BLOGS_ENDPOINT}/${blogId}/likes`;
 
-  return makeApiRequest(
-    url,
-    {},
-    {
-      method: "GET",
-      fallbackErrorMessage: "Failed to fetch likes. Please try again later.",
+  try {
+    return await makeApiRequest(
+      url,
+      {},
+      {
+        method: "GET",
+        fallbackErrorMessage: "Failed to fetch likes. Please try again later.",
+        signal,
+      }
+    );
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log(`[API Client] fetchLikesForBlog aborted.`);
+      throw error;
     }
-  );
+    console.error("[API Client] Error in fetchLikesForBlog wrapper:", error);
+    return {
+      success: false,
+      error: "Failed to fetch likes due to an unexpected error",
+    };
+  }
 }
 
-// Rest of the file remains the same
 export async function submitContactForm(
   formData: any,
   captchaToken: string | null
@@ -340,7 +350,7 @@ export async function submitContactForm(
   const payload = {
     subject: "Contact Form Submission",
     message: `First Name: ${formData.firstName}\nLast Name: ${formData.lastName}\nEmail: ${formData.email}\nMessage: ${formData.message}`,
-    to_email: "createathon@persistventures.com", // Fixed recipient
+    to_email: "createathon@persistventures.com",
     captcha_response: captchaToken,
   };
 
@@ -378,69 +388,96 @@ export async function unsubscribeFromNewsletter(email: string) {
   });
 }
 
-// Blog API functions with improved error handling and retry logic
-export async function fetchAllBlogs() {
-  // Try up to 3 times with increasing timeouts
-  let attempts = 0;
-  const maxAttempts = 3;
-
-  while (attempts < maxAttempts) {
-    try {
-      const result = await makeApiRequest(
-        BLOGS_ENDPOINT,
-        {},
-        {
-          method: "GET",
-          fallbackErrorMessage:
-            "Failed to fetch blogs. Please try again later.",
-        }
-      );
-
-      if (result.success) {
-        return result.data;
-      } else {
-        throw new Error(result.error);
+export async function fetchAllBlogs(signal?: AbortSignal) {
+  console.log("@@@ fetchAllBlogs called");
+  try {
+    const result = await makeApiRequest(
+      BLOGS_ENDPOINT,
+      {},
+      {
+        method: "GET",
+        fallbackErrorMessage: "Failed to fetch blogs. Please try again later.",
+        signal,
       }
-    } catch (error) {
-      attempts++;
-      if (attempts >= maxAttempts) {
-        throw error;
-      }
-      // Wait before retrying (exponential backoff)
-      await new Promise((resolve) => setTimeout(resolve, 1000 * attempts));
+    );
+
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(result.error || "Failed to fetch blogs");
     }
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log(`[API Client] fetchAllBlogs aborted.`);
+      throw error;
+    }
+    console.error("[API Client] Error fetching all blogs:", error);
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "An unknown error occurred fetching blogs"
+    );
   }
 }
 
-export async function fetchBlogById(blogId: number | string) {
-  const result = await makeApiRequest(
-    `${BLOGS_ENDPOINT}/${blogId}`,
-    {},
-    {
-      method: "GET",
-      fallbackErrorMessage:
-        "Failed to fetch blog details. Please try again later.",
-    }
-  );
+export async function fetchBlogById(
+  blogId: number | string,
+  signal?: AbortSignal
+) {
+  console.log(`@@@ fetchBlogById called for ID: ${blogId}`);
+  try {
+    const result = await makeApiRequest(
+      `${BLOGS_ENDPOINT}/${blogId}`,
+      {},
+      {
+        method: "GET",
+        fallbackErrorMessage:
+          "Failed to fetch blog details. Please try again later.",
+        signal,
+      }
+    );
 
-  if (result.success) {
-    return result.data;
-  } else {
-    throw new Error(result.error);
+    if (result.success) {
+      return result.data;
+    } else {
+      throw new Error(result.error || "Failed to fetch blog details");
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log(`[API Client] fetchBlogById aborted.`);
+      throw error;
+    }
+    console.error("[API Client] Error fetching blog by ID:", error);
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "An unknown error occurred fetching blog details"
+    );
   }
 }
 
-export async function fetchBlogBySlug(slug: string) {
-  // First fetch all blogs
-  const blogs = await fetchAllBlogs();
+export async function fetchBlogBySlug(slug: string, signal?: AbortSignal) {
+  console.log(`@@@ fetchBlogBySlug called for slug: ${slug}`);
+  try {
+    const blogs = await fetchAllBlogs(signal);
 
-  // Find the blog with the matching slug
-  const blog = blogs.find((blog: any) => blog.slug === slug);
+    const blog = blogs.find((blog: any) => blog.slug === slug);
 
-  if (blog) {
-    // If found, fetch the complete blog
-    return await fetchBlogById(blog.id);
-  } else {
-    throw new Error(`Blog with slug "${slug}" not found`);
+    if (blog) {
+      return await fetchBlogById(blog.id, signal);
+    } else {
+      throw new Error(`Blog with slug "${slug}" not found`);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log(`[API Client] fetchBlogBySlug aborted.`);
+      throw error;
+    }
+    console.error("[API Client] Error fetching blog by slug:", error);
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "An unknown error occurred fetching blog by slug"
+    );
   }
 }

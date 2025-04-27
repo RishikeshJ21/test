@@ -44,6 +44,7 @@ export interface BlogPostProps {
   content: string[];
   imageSrc: string;
   slug: string;
+  blogId: number | null;
   author: BlogPostAuthor;
   initialComments?: Comment[];
   tocSections?: TocSection[];

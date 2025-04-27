@@ -14,6 +14,7 @@ interface BlogCardProps {
     image: string;
   };
   slug: string;
+  id: number;
   index: number;
   // Removing onReadMore prop as we'll always use React Router navigation
 }
@@ -26,6 +27,7 @@ export default function BlogCard({
   date,
   author,
   slug,
+  id,
   index,
 }: BlogCardProps) {
   return (
@@ -37,7 +39,7 @@ export default function BlogCard({
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -8 }}
     >
-      <Link to={`/blog/${slug}`} className="block h-52 md:h-60 overflow-hidden relative">
+      <Link to={`/blog/${slug}?id=${id}`} className="block h-52 md:h-60 overflow-hidden relative">
         <img
           src={imageSrc}
           alt={title}
@@ -57,7 +59,7 @@ export default function BlogCard({
           </div>
         </div>
 
-        <Link to={`/blog/${slug}`} className="block group">
+        <Link to={`/blog/${slug}?id=${id}`} state={{ id }} className="block group">
           <h3 className="text-xl font-semibold mb-2 text-black group-hover:text-purple-700 transition-colors">
             {title}
           </h3>

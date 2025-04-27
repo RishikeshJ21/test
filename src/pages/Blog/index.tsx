@@ -512,6 +512,7 @@ export default function BlogPage() {
               ) : filteredBlogs.length > 0 ? (
                 filteredBlogs.map((blog, index) => (
                   <BlogCard
+                    id={blog.id}
                     key={blog.id}
                     title={blog.title}
                     excerpt={blog.excerpt}

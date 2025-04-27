@@ -11,11 +11,11 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
     const root = createRoot(rootElement);
     root.render(
-        <React.StrictMode>
+        // <React.StrictMode>
             <BrowserRouter>
                 <App />
                 <ToastContainer />
             </BrowserRouter>
-        </React.StrictMode>
+        // </React.StrictMode>
     );
 }

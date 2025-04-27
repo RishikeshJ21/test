@@ -1,9 +1,9 @@
 import BlogPost from "../../SubComponents/blogDetails";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { blogPosts } from "../../data/blog";
-import { fetchBlogBySlugName, BlogAPIResponse } from "../../SubComponents/blogs/api";
-import { fetchCommentsByBlogId, fetchBlogBySlug, toggleLikeBlog, fetchLikesForBlog } from "../../utils/apiClient";
+import { BlogAPIResponse, fetchBlogBySlugName } from "../../SubComponents/blogs/api";
+import { fetchCommentsByBlogId, fetchBlogById, toggleLikeBlog, fetchLikesForBlog } from "../../utils/apiClient";
 import Loader from "../../SubComponents/Loader";
 import { NavigationSection } from "../../Components/NavigationSection/NavigationSection";
 import { motion } from "framer-motion";
@@ -19,36 +19,44 @@ const BlogDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [showNavbar, setShowNavbar] = useState(true);
   const lastScrollY = useRef(0);
-  // @ts-ignore TS6133: 'activeTocId' is declared but its value is never read
   const [activeTocId, setActiveTocId] = useState<string | null>(null);
-
-  // Add state for likes and comments functionality
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [commentsCount, setCommentsCount] = useState(0);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userData, setUserData] = useState<any>(null);
-
-  // Add state for theme colors
-  // @ts-ignore TS6133: 'themeColors' is declared but its value is never read
   const [themeColors, setThemeColors] = useState(() => getMatchedColors(slug));
 
-  // Add refs to prevent duplicate API calls
-  const commentCountLoadedRef = useRef(false);
-  const isMountedRef = useRef(true);
-  const likesLoadedRef = useRef(false);
+  // Get blog ID from location state or URL query parameters
+  const [searchParams] = useSearchParams();
+  const idFromQuery = searchParams.get('id');
+  const idFromState = useLocation().state?.id;
+  const blogIdFromParams = idFromQuery || idFromState;
 
-  // Set isMounted on component initialization and cleanup
+  // Strict control flags for API calls
+  const fetchInitiated = useRef(false);
+  const commentsLoaded = useRef(false);
+  const blogDataLoaded = useRef(false);
+  const likesLoaded = useRef(false);
+  const isMountedRef = useRef(true);
+
+  // Effect for mounting/unmounting
   useEffect(() => {
+    console.log(`[Blog Details] Component Mounted, ID:`, blogIdFromParams);
     isMountedRef.current = true;
+    fetchInitiated.current = false;
+    commentsLoaded.current = false;
+    blogDataLoaded.current = false;
+    likesLoaded.current = false;
 
     return () => {
+      console.log(`[Blog Details] Component Unmounting`);
       isMountedRef.current = false;
     };
   }, []);
 
-  // Check if user is logged in from localStorage
+  // Load user data - runs once
   useEffect(() => {
     const storedUserData = localStorage.getItem("blog-user-data");
     if (storedUserData) {
@@ -75,158 +83,285 @@ const BlogDetails = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Load like status from localStorage first for fast UI response
+  // Load like status from localStorage first for immediate UI feedback
   useEffect(() => {
     if (!slug) return;
-
-    // Check localStorage first for immediate UI update
     const storedLikeStatus = localStorage.getItem(`blog-${slug}-liked`);
     const storedLikeCount = localStorage.getItem(`blog-${slug}-likes`);
-
     if (storedLikeStatus) setIsLiked(storedLikeStatus === "true");
     if (storedLikeCount) setLikes(parseInt(storedLikeCount));
   }, [slug]);
 
-  // Load like status and comment count from API
+  // Main data fetch effect - STRICTLY controlled
   useEffect(() => {
-    if (!slug || !isMountedRef.current || (commentCountLoadedRef.current && likesLoadedRef.current)) return;
+    console.log(`[Blog] Main Fetch Effect Triggered. blogId: ${blogIdFromParams}, fetchInitiated: ${fetchInitiated.current}`);
 
-    // First get the blog ID, then fetch comment count and likes
-    const fetchBlogDataAndLikes = async () => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    // Primary Guard: Only run if we have an ID and haven't started fetching for this ID yet.
+    if (!blogIdFromParams || fetchInitiated.current) {
+      console.log(`[Blog] Skipping main fetch (no ID or already initiated).`);
+      return;
+    }
+
+    const fetchBlogData = async () => {
+      // Mark fetch as initiated *immediately* for this ID
+      fetchInitiated.current = true;
+      setIsLoading(true);
+      console.log(`⚡ [Blog] STARTING blog fetch for ID: ${blogIdFromParams}`);
+
       try {
-        // Get the blog ID from the slug
-        const blogData = await fetchBlogBySlug(slug);
+        // Use the efficient fetchBlogById since we have the ID
+        const blogResponse = await fetchBlogById(blogIdFromParams, signal);
 
-        if (!isMountedRef.current) return;
-        if (blogData && blogData.id) {
-          // Fetch comments
-          if (!commentCountLoadedRef.current) {
-            const commentsResponse = await fetchCommentsByBlogId(blogData.id);
-
-            if (!isMountedRef.current) return;
-
-            if (commentsResponse.success && commentsResponse.data) {
-              // API returns comments array, but we want to use total_comments if available
-              if (commentsResponse.data && typeof commentsResponse.data === 'object' && 'total_comments' in commentsResponse.data) {
-                setCommentsCount(commentsResponse.data.total_comments || 0);
-              } else {
-                // Fallback to comments array length if needed
-                const commentsData = Array.isArray(commentsResponse.data) ? commentsResponse.data : [];
-                setCommentsCount(commentsData.length || 0);
-              }
-              commentCountLoadedRef.current = true;
-            }
-          }
-
-          // Fetch likes for the blog if user is logged in
-          if ( userData && userData.id) {
-            console.log("userData", blogData.id);
-            const likesResponse = await fetchLikesForBlog(blogData.id);
-            console.log("likesResponse", likesResponse);
-
-            if (!isMountedRef.current) return;
-
-            if (likesResponse.success && likesResponse.data) {
-              // Set total likes count
-              setLikes(likesResponse.data.total_likes || 0);
-
-              // Check if current user has liked the blog
-              const userLiked = likesResponse.data.user_likes &&
-                likesResponse.data.user_likes.some((like: any) => like.user_id === userData.id);
-
-              setIsLiked(userLiked);
-
-              // Update localStorage with latest data from API
-              localStorage.setItem(`blog-${slug}-liked`, String(userLiked));
-              localStorage.setItem(`blog-${slug}-likes`, String(likesResponse.data.total_likes || 0));
-
-              likesLoadedRef.current = true;
-            }
-          }
+        if (signal.aborted) {
+          console.log("[Blog] Blog fetch aborted.");
+          return;
         }
-      } catch (error) {
-        console.error("Failed to fetch blog data:", error);
+
+        if (blogResponse) {
+          console.log(`✅ [Blog] <-- fetchBlogById SUCCESS`);
+          setBlogData(blogResponse);
+          blogDataLoaded.current = true; // Mark blog data as loaded
+
+          const blogId = blogResponse.id;
+
+          // Fetch comments if needed (only once)
+          // if (blogId && !commentsLoaded.current) {
+          //   console.log(`⚡ [Blog] Triggering comments fetch (only once)`);
+          //   commentsLoaded.current = true; // Mark as initiated *before* async call
+          //   try {
+          //     const commentsResponse = await fetchCommentsByBlogId(blogId, 4, signal);
+          //     if (signal.aborted) return; // Check abort after await
+          //     if (commentsResponse.success) {
+          //       console.log(`✅ [Blog] <-- fetchCommentsByBlogId SUCCESS`);
+          //       const commentsData = commentsResponse.data;
+          //       if (Array.isArray(commentsData)) {
+          //         setCommentsCount(commentsData.length || 0);
+          //       } else {
+          //         setCommentsCount(0);
+          //       }
+          //     } else {
+          //       console.error(`❌ [Blog] Failed to fetch comments: ${commentsResponse.error}`);
+          //     }
+          //   } catch (commentError) {
+          //     if (!(commentError instanceof Error && commentError.name === 'AbortError')) {
+          //       console.error(`❌ [Blog] Error during comments fetch:`, commentError);
+          //     }
+          //   }
+          // }
+
+          // Fetch likes if needed (only once, depends on user)
+          if (blogId && userData?.id && !likesLoaded.current) {
+            console.log(`⚡ [Blog] Triggering likes fetch (user logged in, only once)`);
+            likesLoaded.current = true; // Mark as initiated *before* async call
+            try {
+              const likesResponse = await fetchLikesForBlog(blogId, signal);
+              if (signal.aborted) return; // Check abort after await
+              if (likesResponse.success) {
+                console.log(`✅ [Blog] <-- fetchLikesForBlog SUCCESS`);
+                const likesData = likesResponse.data;
+                // @ts-ignore
+                const totalLikes = likesData?.total_likes || 0;
+                setLikes(totalLikes);
+                let userLiked = false;
+                // @ts-ignore
+                if (Array.isArray(likesData)) {
+                  // @ts-ignore
+                  userLiked = likesData.some((like: { user_id: string | number }) => like.user_id === userData.id);
+                  // @ts-ignore
+                } else if (likesData?.user_likes && Array.isArray(likesData.user_likes)) {
+                  // @ts-ignore
+                  userLiked = likesData.user_likes.some((like: { user_id: string | number }) => like.user_id === userData.id);
+                }
+                setIsLiked(userLiked);
+                localStorage.setItem(`blog-${slug}-liked`, String(userLiked));
+                localStorage.setItem(`blog-${slug}-likes`, String(totalLikes));
+              } else {
+                console.error(`❌ [Blog] Failed to fetch likes: ${likesResponse.error}`);
+              }
+            } catch (likesError) {
+              if (!(likesError instanceof Error && likesError.name === 'AbortError')) {
+                console.error(`❌ [Blog] Error during likes fetch:`, likesError);
+              }
+            }
+          }
+        } else {
+          // Handle case where fetchBlogById returns null/undefined
+          console.warn(`⚠️ [Blog] fetchBlogById returned no data for ID: ${blogIdFromParams}. Falling back to slug.`);
+          // ---- Fallback to SLUG (only if ID fetch failed) ----
+          if (slug) {
+            console.log(`⚡ [Blog] Attempting fallback fetch by SLUG: ${slug}`);
+            try {
+              const fallbackResponse = await fetchBlogBySlugName(slug); // This one uses fetchBlogBySlug internally
+              if (signal.aborted) return;
+              if (fallbackResponse) {
+                console.log(`✅ [Blog] Fallback fetch by SLUG succeeded.`);
+                setBlogData(fallbackResponse);
+                blogDataLoaded.current = true;
+                // Trigger comments/likes fetch based on this new data if needed (similar logic as above)
+                // This part might need careful handling to avoid duplicate comment/like fetches if the ID was actually the same
+              } else {
+                console.error(`❌ [Blog] Fallback fetch by SLUG failed.`);
+                setError("Blog post not found");
+                if (!signal.aborted) setTimeout(() => navigate("/blog"), 2000);
+              }
+            } catch (fallbackError) {
+              if (!(fallbackError instanceof Error && fallbackError.name === 'AbortError')) {
+                console.error(`❌ [Blog] Error during fallback fetch by slug:`, fallbackError);
+                setError("Failed to load blog post");
+              }
+            }
+          } else {
+            setError("Blog post not found"); // No ID and no slug
+          }
+          // ---- End Fallback ----
+        }
+      } catch (err) {
+        // Catch errors from fetchBlogById (including AbortError)
+        if (!(err instanceof Error && err.name === 'AbortError')) {
+          console.error(`❌ [Blog] Error during initial fetchBlogById:`, err);
+          setError("An unexpected error occurred.");
+        }
+      } finally {
+        if (isMountedRef.current && !signal.aborted) {
+          console.log(`🏁 [Blog] Data fetch completed`);
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchBlogDataAndLikes();
+    fetchBlogData();
 
     return () => {
-      commentCountLoadedRef.current = false;
-      likesLoadedRef.current = false;
+      console.log("[Blog] Cleanup: Aborting controller for main fetch.");
+      controller.abort();
     };
-  }, [slug, userData]);
 
-  // Handler functions
+    // DEPENDENCIES: Only re-run if the ID we intend to fetch changes.
+  }, [blogIdFromParams]);
+
+  // Separate Effect for Likes triggered by User Change (if blog data already loaded)
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const currentBlogId = blogData?.id; // Get ID from state
+
+    console.log(`[Blog] User/Likes Effect Triggered. UserID: ${userData?.id}, BlogID: ${currentBlogId}, BlogLoaded: ${blogDataLoaded.current}, LikesLoaded: ${likesLoaded.current}`);
+
+    // Only fetch likes if: blog data IS loaded, likes ARE NOT loaded, we HAVE a user, and we HAVE a blog ID.
+    if (blogDataLoaded.current && !likesLoaded.current && userData?.id && currentBlogId) {
+      console.log(`⚡ [Blog] Triggering likes fetch due to user/blog state change.`);
+      likesLoaded.current = true; // Mark as initiated
+      const fetchLikesData = async () => {
+        try {
+          const likesResponse = await fetchLikesForBlog(currentBlogId, signal);
+          if (signal.aborted) return;
+          if (likesResponse.success) {
+            console.log(`✅ [Blog] <-- fetchLikesForBlog SUCCESS (User Effect)`);
+            const likesData = likesResponse.data;
+            // @ts-ignore
+            const totalLikes = likesData?.total_likes || 0;
+            setLikes(totalLikes);
+            let userLiked = false;
+            // @ts-ignore
+            if (Array.isArray(likesData)) {
+              // @ts-ignore
+              userLiked = likesData.some((like: { user_id: string | number }) => like.user_id === userData.id);
+              // @ts-ignore
+            } else if (likesData?.user_likes && Array.isArray(likesData.user_likes)) {
+              // @ts-ignore
+              userLiked = likesData.user_likes.some((like: { user_id: string | number }) => like.user_id === userData.id);
+            }
+            setIsLiked(userLiked);
+            localStorage.setItem(`blog-${slug}-liked`, String(userLiked));
+            localStorage.setItem(`blog-${slug}-likes`, String(totalLikes));
+          } else {
+            console.error(`❌ [Blog] Failed to fetch likes (User Effect): ${likesResponse.error}`);
+          }
+        } catch (error) {
+          if (!(error instanceof Error && error.name === 'AbortError')) {
+            console.error(`❌ [Blog] Error fetching likes (User Effect):`, error);
+          }
+        }
+      };
+      fetchLikesData();
+    }
+
+    return () => {
+      console.log("[Blog] Cleanup: Aborting controller for user/likes effect.");
+      controller.abort();
+    };
+    // DEPENDENCIES: Re-run only if user ID or blog ID (from state) changes.
+  }, [userData?.id, blogData?.id, slug]);
+
+  // Handler for like button click
   const handleLike = async () => {
-    if (!slug) return;
+    const blogId = blogData?.id;
 
-    // Check if user is logged in
-    if (!userData || !userData.id) {
-      // Show login modal if user is not logged in
+    if (!slug || !blogId) {
+      console.warn(`[Blog] Cannot like: Missing blogId`);
+      return;
+    }
+
+    if (!userData?.id) {
       setShowLoginModal(true);
       return;
     }
 
+    // Optimistic UI updates
+    const newLikeStatus = !isLiked;
+    const newLikeCount = newLikeStatus ? likes + 1 : likes - 1;
+    setIsLiked(newLikeStatus);
+    setLikes(newLikeCount);
+    localStorage.setItem(`blog-${slug}-liked`, String(newLikeStatus));
+    localStorage.setItem(`blog-${slug}-likes`, String(newLikeCount));
+
     try {
-      // Optimistically update UI immediately for better UX
-      const newLikeStatus = !isLiked;
-      const newLikeCount = newLikeStatus ? likes + 1 : likes - 1;
+      console.log(`⚡ [Blog] Toggling like for blog ID: ${blogId}`);
+      const response = await toggleLikeBlog({ blog_id: blogId, user_id: userData.id });
+      console.log(`✅ [Blog] Like response:`, response);
 
-      setIsLiked(newLikeStatus);
-      setLikes(newLikeCount);
-
-      // Update localStorage immediately
-      localStorage.setItem(`blog-${slug}-liked`, String(newLikeStatus));
-      localStorage.setItem(`blog-${slug}-likes`, String(newLikeCount));
-
-      // Get blog ID from slug if not already available
-      let blogId;
-      if (blogData && blogData.id) {
-        blogId = blogData.id;
-      } else {
-        const fetchedBlogData = await fetchBlogBySlug(slug);
-        if (fetchedBlogData && fetchedBlogData.id) {
-          blogId = fetchedBlogData.id;
-        } else {
-          throw new Error("Could not determine blog ID");
-        }
-      }
-
-      // Toggle like in the API
-      const response = await toggleLikeBlog({
-        blog_id: blogId,
-        user_id: userData.id
-      });
-
+      // If API call fails, revert the optimistic updates
       if (!response.success) {
-        // Revert changes if API call fails
-        console.error("Failed to toggle like:", response.error);
+        console.error(`❌ [Blog] Failed to toggle like:`, response.error);
         setIsLiked(!newLikeStatus);
         setLikes(newLikeStatus ? newLikeCount - 1 : newLikeCount + 1);
-
         localStorage.setItem(`blog-${slug}-liked`, String(!newLikeStatus));
         localStorage.setItem(`blog-${slug}-likes`, String(newLikeStatus ? newLikeCount - 1 : newLikeCount + 1));
       }
     } catch (error) {
-      console.error("Error toggling like:", error);
+      console.error(`❌ [Blog] Error toggling like:`, error);
+      // Revert optimistic updates on error
+      setIsLiked(!newLikeStatus);
+      setLikes(newLikeStatus ? newLikeCount - 1 : newLikeCount + 1);
+      localStorage.setItem(`blog-${slug}-liked`, String(!newLikeStatus));
+      localStorage.setItem(`blog-${slug}-likes`, String(newLikeStatus ? newLikeCount - 1 : newLikeCount + 1));
     }
   };
 
+  // Handler for share button click
   const handleShare = async () => {
-    if (!currentBlogData) return;
+    if (!blogData) return;
+
+    // Include the ID in the shared URL to ensure it works when shared
+    const shareUrl = new URL(window.location.href);
+    if (blogData.id && !shareUrl.searchParams.has('id')) {
+      shareUrl.searchParams.set('id', blogData.id.toString());
+    }
 
     const shareData = {
-      title: currentBlogData.title,
-      text: `Check out this article: ${currentBlogData.title}`,
-      url: window.location.href,
+      title: blogData.title,
+      text: `Check out this article: ${blogData.title}`,
+      url: shareUrl.toString(),
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl.toString());
         alert("Link copied to clipboard!");
       }
     } catch (err) {
@@ -234,123 +369,124 @@ const BlogDetails = () => {
     }
   };
 
+  // Handler for comment button click - Only fetch full comments when needed
   const handleCommentClick = () => {
+    const blogId = blogData?.id;
+
+    // Only fetch if comments are NOT loaded and we have an ID
+    if (!isCommentsOpen && blogId && !commentsLoaded.current) {
+      console.log(`⚡ [Blog] Fetching full comments for blog ID: ${blogId}`);
+      commentsLoaded.current = true; // Mark as attempting load here
+
+      const fetchFullComments = async () => {
+        // Note: No AbortController here as it's a direct user interaction
+        try {
+          // Fetch all comments without limit
+          const commentsResponse = await fetchCommentsByBlogId(blogId);
+          console.log(`✅ [Blog] Total comments response: `, commentsResponse);
+
+          if (commentsResponse?.success) {
+            console.log(`✅ [Blog] Successfully fetched full comments`);
+            const commentsData = commentsResponse.data; // Already guaranteed array by API client
+
+            if (Array.isArray(commentsData)) {
+              setCommentsCount(commentsData.length || 0);
+
+              // Store the full comments data in localStorage to be used by the BlogPost component
+              if (blogData) {
+                // This allows the BlogPost component to access the full comments data
+                localStorage.setItem(`blog-${slug}-comments`, JSON.stringify(commentsData));
+                console.log(`✅ [Blog] Processed ${commentsData.length} comments for display`);
+              }
+            } else {
+              setCommentsCount(0);
+            }
+          } else {
+            console.error(`❌ [Blog] Failed to fetch full comments: ${commentsResponse.error}`);
+            commentsLoaded.current = false; // Allow retry if fetch failed
+          }
+        } catch (error) {
+          console.error(`❌ [Blog] Error fetching full comments:`, error);
+          commentsLoaded.current = false; // Allow retry if fetch failed
+        }
+      };
+      fetchFullComments();
+    } else if (commentsLoaded.current) {
+      console.log(`[Blog] Comments already loaded or fetch in progress, skipping fetch`);
+    }
+
     setIsCommentsOpen(true);
   };
 
+  // Handler for login success
   const handleLoginSuccess = (name: string) => {
-    // Refresh user data after login
+    console.log(`[Blog] User logged in: ${name}`);
     const storedUserData = localStorage.getItem("blog-user-data");
     if (storedUserData) {
       try {
         const parsedUserData = JSON.parse(storedUserData);
-        setUserData(parsedUserData);
+        setUserData(parsedUserData); // This will trigger the useEffect to fetch likes
         setShowLoginModal(false);
-
-        // Reset likes loaded flag to fetch fresh data
-        likesLoadedRef.current = false;
       } catch (error) {
-        console.error("Error parsing user data:", error);
+        console.error("Error parsing user data after login:", error);
       }
     }
   };
 
-  // Fetch blog data from API
-  useEffect(() => {
-    const fetchBlogData = async () => {
-      if (!slug) {
-        navigate("/blog");
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const data = await fetchBlogBySlugName(slug);
-
-        if (data) {
-          setBlogData(data);
-        } else {
-          // Fallback to static data if API fails
-          const staticBlogData = blogPosts.find((post) => post.slug === slug);
-          if (staticBlogData) {
-            console.warn("Using static blog data as fallback");
-            // We'll continue using the old format since BlogPost component expects it
-          } else {
-            setError("Blog post not found");
-            setTimeout(() => navigate("/blog"), 2000);
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching blog:", err);
-        setError("Failed to load blog post");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBlogData();
-  }, [slug, navigate]);
-
-  // Transform API data format to match what BlogPost component expects
+  // Transform blog data for rendering
   let content: string[] = [];
   let tags: string[] = [];
   let imageSrc: string = '';
-  let sections: { id: string; title: string }[] = [];
+  const sections: { id: string; title: string }[] = [];
 
   if (blogData) {
-    // If we have API data, transform the format
+    // Process API blog data
     content = blogData.content.flatMap((section, index) => {
-      // Create a section ID for the table of contents
       const sectionId = `section-${index + 1}`;
-
-      // Add this section to our sections array for table of contents
       sections.push({
         id: sectionId,
         title: section.sub_title
       });
-
-      // Return subtitle with section ID and content
       return [`<h2 id="${sectionId}" class="text-xl md:text-2xl font-bold mb-4 mt-8">${section.sub_title}</h2>`, ...section.des];
     });
-
-    // Use category as a tag
     tags = [blogData.category];
     imageSrc = blogData.image;
   } else {
-    // If using static data, use the existing format
+    // Fallback to static data if needed
     const staticBlogData = blogPosts.find((post) => post.slug === slug);
-
-    // Create sections from the first lines of each content section
-    // for a basic table of contents from static data
-    // @ts-ignore - Ignoring type errors for static data fallback
-    staticBlogData?.fullContent?.forEach((paragraph, index) => {
-      if (index % 2 === 0 && paragraph.trim()) { // Assume every other item is a heading
-        const sectionId = `static-section-${Math.floor(index / 2) + 1}`;
-        sections.push({
-          id: sectionId,
-          title: paragraph
+    if (staticBlogData) {
+      // Handle static data (fix TypeError: staticBlogData.fullContent is undefined)
+      // @ts-ignore - Ignoring the fullContent property not existing on type - this is static fallback
+      if (staticBlogData.fullContent) {
+        // @ts-ignore
+        staticBlogData.fullContent.forEach((paragraph: string, index: number) => {
+          if (index % 2 === 0 && paragraph.trim()) {
+            const sectionId = `static-section-${Math.floor(index / 2) + 1}`;
+            sections.push({
+              id: sectionId,
+              title: paragraph
+            });
+            content.push(`<h2 id="${sectionId}" class="text-xl md:text-2xl font-bold mb-4 mt-8">${paragraph}</h2>`);
+          } else {
+            content.push(paragraph);
+          }
         });
-
-        // Replace the plain text with an HTML heading
-        content.push(`<h2 id="${sectionId}" class="text-xl md:text-2xl font-bold mb-4 mt-8">${paragraph}</h2>`);
-      } else {
-        content.push(paragraph);
       }
-    });
 
-    // If no content was processed, use the fallback
-    if (content.length === 0) {
-      content = [
-        `<p>${staticBlogData?.excerpt || "No excerpt available"}</p>`,
-        "<p>No detailed content available for this post yet.</p>",
-      ];
+      // If no content was processed, use a fallback
+      if (content.length === 0) {
+        content = [
+          `<p>${staticBlogData?.excerpt || "No excerpt available"}</p>`,
+          "<p>No detailed content available for this post yet.</p>",
+        ];
+      }
+
+      tags = staticBlogData?.tags || [];
+      imageSrc = staticBlogData?.imageSrc || "";
     }
-
-    tags = staticBlogData?.tags || [];
-    imageSrc = staticBlogData?.imageSrc || "";
   }
 
-  // Default author for demonstration purposes
+  // Default author information
   const author = {
     name: "Muhammad Faeez Shabbir",
     image: "/testimonial/1.webp",
@@ -364,8 +500,6 @@ const BlogDetails = () => {
       g: parseInt(baseColor.substring(2, 4), 16),
       b: parseInt(baseColor.substring(4, 6), 16)
     };
-
-    // Create slightly different shades for gradient
     const lighterShade = `rgba(${baseColorRgb.r + 15}, ${baseColorRgb.g + 15}, ${baseColorRgb.b + 20}, 0.8)`;
     const darkerShade = `rgba(${Math.max(baseColorRgb.r - 15, 0)}, ${Math.max(baseColorRgb.g - 15, 0)}, ${Math.max(baseColorRgb.b - 10, 0)}, 0.9)`;
 
@@ -377,33 +511,22 @@ const BlogDetails = () => {
 
   const gradientColors = getGradientColors();
 
-  // Handle scroll to highlight active TOC item - moved after sections is defined
+  // Handle TOC highlighting on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (sections.length === 0) return;
-
-      // Get viewport metrics
       const viewportTop = window.scrollY;
       const viewportHeight = window.innerHeight;
-
-
-      // Find which section has its heading closest to 1/4 of the viewport
       const targetPosition = viewportTop + (viewportHeight * 0.25);
 
       let bestSection = null;
       let bestDistance = Infinity;
 
-      // Find the section with heading closest to our target position
       for (const section of sections) {
         const element = document.getElementById(section.id);
         if (element) {
-          // Get the position of the section heading
           const elemTop = element.getBoundingClientRect().top + window.scrollY;
-
-          // Calculate the distance from our target position
           const distance = Math.abs(elemTop - targetPosition);
-
-          // Update best section if this one is closer to target
           if (distance < bestDistance) {
             bestDistance = distance;
             bestSection = section.id;
@@ -411,7 +534,7 @@ const BlogDetails = () => {
         }
       }
 
-      // Special case: if we're at the very top, select the first section
+      // If at the top, select the first section
       if (window.scrollY < 50 && sections.length > 0) {
         bestSection = sections[0].id;
       }
@@ -419,14 +542,12 @@ const BlogDetails = () => {
       setActiveTocId(bestSection);
     };
 
-    // Initial call to set the active section on component mount
     setTimeout(handleScroll, 100);
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [sections]);
 
-  // Show loading state
+  // Loading state
   if (isLoading) {
     return (
       <>
@@ -451,7 +572,7 @@ const BlogDetails = () => {
     );
   }
 
-  // Show error state
+  // Error state
   if (error) {
     return (
       <>
@@ -479,7 +600,7 @@ const BlogDetails = () => {
     );
   }
 
-  // If API data is available, use it. Otherwise, fallback to static data
+  // Get current blog data (API or static fallback)
   const currentBlogData = blogData || blogPosts.find((post) => post.slug === slug);
 
   // Show nothing if no data is available
@@ -504,7 +625,6 @@ const BlogDetails = () => {
         />
       </motion.div>
 
-      {/* Login Modal */}
       <UsernameModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
@@ -512,24 +632,20 @@ const BlogDetails = () => {
       />
 
       <main className="min-h-screen bg-white pt-16 lg:pt-20">
-        {/* Blog Title Section - Updated with gradient and decorative elements */}
         <div className="w-full py-12 md:py-16 lg:py-20 mt-1 relative overflow-hidden"
           style={{ background: gradientColors.gradient }}>
-          {/* Left decorative element */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 opacity-40 hidden md:block">
             <svg width="280" height="560" viewBox="0 0 280 560" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="0" cy="280" r="280" fill={themeColors.badge} />
             </svg>
           </div>
 
-          {/* Right decorative element */}
           <div className="absolute right-0 top-1/4 transform -translate-y-1/4 opacity-40 hidden md:block">
             <svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="240" cy="120" r="120" fill={themeColors.badge} />
             </svg>
           </div>
 
-          {/* Floating dots pattern - left side */}
           <div className="absolute left-10 top-1/3 hidden lg:block">
             <div className="grid grid-cols-3 gap-2">
               {[...Array(9)].map((_, i) => (
@@ -538,7 +654,6 @@ const BlogDetails = () => {
             </div>
           </div>
 
-          {/* Floating dots pattern - right side */}
           <div className="absolute right-10 bottom-1/4 hidden lg:block">
             <div className="grid grid-cols-3 gap-2">
               {[...Array(9)].map((_, i) => (
@@ -550,7 +665,6 @@ const BlogDetails = () => {
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex justify-center">
               <div className="w-full md:w-[85%] lg:w-[70%] text-center">
-                {/* Category Badge */}
                 <div className="mb-4 md:mb-5">
                   <span className="inline-block text-[#0f172a] text-sm font-medium px-4 py-1.5 rounded-full"
                     style={{ backgroundColor: themeColors.badge }}>
@@ -558,12 +672,10 @@ const BlogDetails = () => {
                   </span>
                 </div>
 
-                {/* Title */}
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#0f172a] mb-4 md:mb-6 leading-tight">
                   {currentBlogData.title}
                 </h1>
 
-                {/* Author and date section */}
                 <div className="flex items-center justify-center mb-6 md:mb-8">
                   <div className="flex items-center space-x-4">
                     <div className="text-left">
@@ -575,7 +687,6 @@ const BlogDetails = () => {
                   </div>
                 </div>
 
-                {/* Like, Comment, Share buttons */}
                 <div className="flex items-center justify-center space-x-8 mb-10">
                   <button
                     onClick={handleLike}
@@ -595,7 +706,7 @@ const BlogDetails = () => {
                         : "text-gray-500 group-hover:text-red-500"
                         }`}
                     >
-                      {likes}
+                      {likes + 1}
                     </span>
                   </button>
 
@@ -626,13 +737,13 @@ const BlogDetails = () => {
 
         <div className="w-full max-w-[1700px] mx-auto px-2 sm:px-4 lg:px-6 py-8">
           <div className="lg:grid lg:grid-cols-12 lg:gap-0">
-            {/* Main content area spans all 12 columns */}
             <div className="lg:col-span-12 bg-white rounded-lg p-0">
               <BlogPost
                 title={currentBlogData.title}
                 date={currentBlogData.date}
                 tags={tags}
                 content={content}
+                blogId={currentBlogData.id}
                 imageSrc={imageSrc}
                 slug={slug || ""}
                 author={author}
