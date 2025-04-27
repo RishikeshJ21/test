@@ -20,6 +20,8 @@ export interface BlogAPIResponse {
   category: string;
   slug: string;
   author_id: number | null;
+  comments_count: number;
+  likes_count: number;
 }
 
 // Related post simplified format for Most View component
