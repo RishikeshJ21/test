@@ -74,6 +74,10 @@ const BlogPost = ({
   const [visibleCommentCount, setVisibleCommentCount] = useState(3);
   const [totalCommentsAvailable, setTotalCommentsAvailable] = useState(0);
   const [recommendedPosts, setRecommendedPosts] = useState<RelatedPost[]>([]);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteType, setDeleteType] = useState<'comment' | 'reply'>('comment');
+  const [deleteIds, setDeleteIds] = useState<{commentId: string, replyId?: string}>({commentId: ''});
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Use refs to prevent duplicate API calls
   const commentsLoadedRef = useRef(false);
@@ -157,7 +161,6 @@ const BlogPost = ({
 
           // Map API response to Comment interface format with safety checks
           const formattedComments = commentsData.map((c: any) => {
-            // Always create a safe author object with fallbacks
             const author = {
               name: c.user?.username || "Anonymous",
               image: c.user?.avatar || "/testimonial/1.webp",
@@ -165,7 +168,6 @@ const BlogPost = ({
               user_id: c.user?.id?.toString() || ""
             };
 
-            // Handle replies with safety checks
             const replies = Array.isArray(c.replies)
               ? c.replies.map((r: any) => ({
                 id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
@@ -178,9 +180,13 @@ const BlogPost = ({
                 text: r.content || "",
                 date: r.created_at || new Date().toISOString(),
                 likes: r.likes_count || 0,
-                isLiked: Array.isArray(r.likes) && userId && r.likes.some((like: any) =>
-                  like.user_id?.toString() === userId || like.username === userId
-                )
+                isLiked: Array.isArray(r.likes) && userId 
+                  ? r.likes.some((like: any) => 
+                      like.user_id?.toString() === userId || 
+                      like.user_id === userId ||
+                      like.username === userId
+                    )
+                  : false
               }))
               : [];
 
@@ -190,9 +196,13 @@ const BlogPost = ({
               text: c.content || "",
               date: c.created_at || new Date().toISOString(),
               likes: c.likes_count || 0,
-              isLiked: Array.isArray(c.likes) && userId && c.likes.some((like: any) =>
-                like.user_id?.toString() === userId || like.username === userId
-              ),
+              isLiked: Array.isArray(c.likes) && userId 
+                ? c.likes.some((like: any) => 
+                    like.user_id?.toString() === userId || 
+                    like.user_id === userId ||
+                    like.username === userId
+                  )
+                : false,
               showReplies: true,
               replies
             };
@@ -377,9 +387,13 @@ const BlogPost = ({
                   text: r.content || "",
                   date: r.created_at || new Date().toISOString(),
                   likes: r.likes_count || 0,
-                  isLiked: Array.isArray(r.likes) && userId && r.likes.some((like: any) =>
-                    like.user_id?.toString() === userId || like.username === userId
-                  )
+                  isLiked: Array.isArray(r.likes) && userId 
+                    ? r.likes.some((like: any) => 
+                        like.user_id?.toString() === userId || 
+                        like.user_id === userId ||
+                        like.username === userId
+                      )
+                    : false
                 }))
                 : [];
 
@@ -389,9 +403,13 @@ const BlogPost = ({
                 text: c.content || "",
                 date: c.created_at || new Date().toISOString(),
                 likes: c.likes_count || 0,
-                isLiked: Array.isArray(c.likes) && userId && c.likes.some((like: any) =>
-                  like.user_id?.toString() === userId || like.username === userId
-                ),
+                isLiked: Array.isArray(c.likes) && userId 
+                  ? c.likes.some((like: any) => 
+                      like.user_id?.toString() === userId || 
+                      like.user_id === userId ||
+                      like.username === userId
+                    )
+                  : false,
                 showReplies: true,
                 replies
               };
@@ -449,9 +467,13 @@ const BlogPost = ({
               text: r.content || "",
               date: r.created_at || new Date().toISOString(),
               likes: r.likes_count || 0,
-              isLiked: Array.isArray(r.likes) && userId && r.likes.some((like: any) =>
-                like.user_id?.toString() === userId || like.username === userId
-              )
+              isLiked: Array.isArray(r.likes) && userId 
+                ? r.likes.some((like: any) => 
+                    like.user_id?.toString() === userId || 
+                    like.user_id === userId ||
+                    like.username === userId
+                  )
+                : false
             }))
             : [];
 
@@ -461,9 +483,13 @@ const BlogPost = ({
             text: c.content || "",
             date: c.created_at || new Date().toISOString(),
             likes: c.likes_count || 0,
-            isLiked: Array.isArray(c.likes) && userId && c.likes.some((like: any) =>
-              like.user_id?.toString() === userId || like.username === userId
-            ),
+            isLiked: Array.isArray(c.likes) && userId 
+              ? c.likes.some((like: any) => 
+                  like.user_id?.toString() === userId || 
+                  like.user_id === userId ||
+                  like.username === userId
+                )
+              : false,
             showReplies: true,
             replies
           };
@@ -1144,62 +1170,26 @@ const BlogPost = ({
   }, []);
 
   const handleDeleteComment = async (commentId: string) => {
-    // Get userId from state or try to get it from localStorage if missing
-    let currentUserId = userId;
-    let currentBlogId = blogId;
-
-    if (!currentUserId) {
-      try {
-        const storedUserData = localStorage.getItem("blog-user-data");
-        if (storedUserData) {
-          const userData = JSON.parse(storedUserData);
-          currentUserId = (userData.id || userData.user_id)?.toString();
-          if (currentUserId) {
-            setUserId(currentUserId); // Update state for future requests
-          }
-        }
-      } catch (error) {
-        // Error getting user ID from localStorage
-      }
-    }
-
-    // Get blogId if missing by fetching from API
-    // if (!currentBlogId) {
-    //   try {
-    //     const blog = await fetchBlogBySlug(slug);
-    //     if (blog && blog.id) {
-    //       currentBlogId = blog.id;
-    //       setBlogId(currentBlogId); // Update state for future requests
-    //     }
-    //   } catch (error) {
-    //     // Error fetching blog ID
-    //   }
-    // }
-
-    // Make sure we have blog ID
-    if (!currentBlogId) {
-      return;
-    }
-
-    // First update the UI optimistically
-    const updatedComments = comments.filter(comment => comment.id !== commentId);
-    setComments(updatedComments);
-
-    try {
-      // Call API to delete the comment
-      const response = await deleteComment(currentBlogId, commentId);
-
-      if (!response.success) {
-        // Revert the optimistic update
-        setComments(comments);
-      }
-    } catch (error) {
-      // Revert the optimistic update
-      setComments(comments);
-    }
+    // Show confirmation popup instead of deleting immediately
+    setDeleteType('comment');
+    setDeleteIds({commentId});
+    setShowDeleteConfirmation(true);
   };
 
   const handleDeleteReply = async (commentId: string, replyId: string) => {
+    // Show confirmation popup instead of deleting immediately
+    setDeleteType('reply');
+    setDeleteIds({commentId, replyId});
+    setShowDeleteConfirmation(true);
+  };
+
+  // Add this new function to perform the actual deletion after confirmation
+  const confirmDelete = async () => {
+    const {commentId, replyId} = deleteIds;
+    
+    // Set loading state
+    setIsDeleting(true);
+    
     // Get userId from state or try to get it from localStorage if missing
     let currentUserId = userId;
     let currentBlogId = blogId;
@@ -1211,7 +1201,7 @@ const BlogPost = ({
           const userData = JSON.parse(storedUserData);
           currentUserId = (userData.id || userData.user_id)?.toString();
           if (currentUserId) {
-            setUserId(currentUserId); // Update state for future requests
+            setUserId(currentUserId);
           }
         }
       } catch (error) {
@@ -1219,46 +1209,94 @@ const BlogPost = ({
       }
     }
 
-    // Get blogId if missing by fetching from API
-    // if (!currentBlogId) {
-    //   try {
-    //     const blog = await fetchBlogBySlug(slug);
-    //     if (blog && blog.id) {
-    //       currentBlogId = blog.id;
-    //       setBlogId(currentBlogId); // Update state for future requests
-    //     }
-    //   } catch (error) {
-    //     // Error fetching blog ID
-    //   }
-    // }
-
     // Make sure we have blog ID
     if (!currentBlogId) {
+      setIsDeleting(false);
+      setShowDeleteConfirmation(false);
       return;
     }
 
-    // First update the UI optimistically
-    const updatedComments = comments.map(comment => {
-      if (comment.id === commentId && comment.replies) {
-        const updatedReplies = comment.replies.filter(reply => reply.id !== replyId);
-        return { ...comment, replies: updatedReplies };
-      }
-      return comment;
-    });
-    setComments(updatedComments);
+    if (deleteType === 'comment') {
+      // First update the UI optimistically
+      const updatedComments = comments.filter(comment => comment.id !== commentId);
+      setComments(updatedComments);
 
-    try {
-      // Call API to delete the reply
-      const response = await deleteReply(currentBlogId, commentId, replyId);
+      try {
+        // Call API to delete the comment
+        const response = await deleteComment(currentBlogId, commentId);
 
-      if (!response.success) {
+        if (!response.success) {
+          // Revert the optimistic update
+          setComments(comments);
+          
+          // Show error notification
+          setNotificationType("error");
+          setNotificationMessage("Failed to delete comment. Please try again.");
+          setShowNotification(true);
+          setTimeout(() => setShowNotification(false), 3000);
+        } else {
+          // Show success notification
+          setNotificationType("success");
+          setNotificationMessage("Comment deleted successfully!");
+          setShowNotification(true);
+          setTimeout(() => setShowNotification(false), 3000);
+        }
+      } catch (error) {
         // Revert the optimistic update
         setComments(comments);
+        
+        // Show error notification
+        setNotificationType("error");
+        setNotificationMessage("Error deleting comment. Please try again.");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
       }
-    } catch (error) {
-      // Revert the optimistic update
-      setComments(comments);
+    } else if (deleteType === 'reply' && replyId) {
+      // First update the UI optimistically
+      const updatedComments = comments.map(comment => {
+        if (comment.id === commentId && comment.replies) {
+          const updatedReplies = comment.replies.filter(reply => reply.id !== replyId);
+          return { ...comment, replies: updatedReplies };
+        }
+        return comment;
+      });
+      setComments(updatedComments);
+
+      try {
+        // Call API to delete the reply
+        const response = await deleteReply(currentBlogId, commentId, replyId);
+
+        if (!response.success) {
+          // Revert the optimistic update
+          setComments(comments);
+          
+          // Show error notification
+          setNotificationType("error");
+          setNotificationMessage("Failed to delete reply. Please try again.");
+          setShowNotification(true);
+          setTimeout(() => setShowNotification(false), 3000);
+        } else {
+          // Show success notification
+          setNotificationType("success");
+          setNotificationMessage("Reply deleted successfully!");
+          setShowNotification(true);
+          setTimeout(() => setShowNotification(false), 3000);
+        }
+      } catch (error) {
+        // Revert the optimistic update
+        setComments(comments);
+        
+        // Show error notification
+        setNotificationType("error");
+        setNotificationMessage("Error deleting reply. Please try again.");
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 3000);
+      }
     }
+    
+    // Reset states
+    setIsDeleting(false);
+    setShowDeleteConfirmation(false);
   };
 
   return (
@@ -1951,6 +1989,57 @@ const BlogPost = ({
               )}
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirmation && (
+          <motion.div
+            className="fixed inset-0 bg-transparent bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteConfirmation(false)}
+          >
+            <motion.div 
+              className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {deleteType === 'comment' ? 'Delete Comment' : 'Delete Reply'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this {deleteType}? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowDeleteConfirmation(false)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-colors"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors flex items-center justify-center min-w-[80px]"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
