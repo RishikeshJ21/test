@@ -9,6 +9,7 @@ import CommentItem from "./CommentItem";
 import RelatedArticles from "./Most_View";
 import MetricsGraph from "./MetricsGraph";
 import { formatTimeAgo } from "./utils";
+import { Helmet } from "react-helmet-async";
 
 import { fetchRelatedBlogs, RelatedPost } from "./api";
 import {
@@ -144,7 +145,7 @@ const BlogPost = ({
     const getInitialComments = async () => {
       // Don't proceed if any of these conditions are true
       // Wait for userId to be loaded before fetching comments
-      if (!blogId || !userId || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
+      if (!blogId  || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
         return;
       }
 
@@ -388,11 +389,7 @@ const BlogPost = ({
                   date: r.created_at || new Date().toISOString(),
                   likes: r.likes_count || 0,
                   isLiked: Array.isArray(r.likes) && userId
-                    ? r.likes.some((like: any) =>
-                      like.user_id?.toString() === userId ||
-                      like.user_id === userId ||
-                      like.username === userId
-                    )
+                    ? r.likes.some((like: any) => like.user_id?.toString() === userId)
                     : false
                 }))
                 : [];
@@ -404,11 +401,7 @@ const BlogPost = ({
                 date: c.created_at || new Date().toISOString(),
                 likes: c.likes_count || 0,
                 isLiked: Array.isArray(c.likes) && userId
-                  ? c.likes.some((like: any) =>
-                    like.user_id?.toString() === userId ||
-                    like.user_id === userId ||
-                    like.username === userId
-                  )
+                  ? c.likes.some((like: any) => like.user_id?.toString() === userId)
                   : false,
                 showReplies: true,
                 replies
@@ -468,11 +461,7 @@ const BlogPost = ({
               date: r.created_at || new Date().toISOString(),
               likes: r.likes_count || 0,
               isLiked: Array.isArray(r.likes) && userId
-                ? r.likes.some((like: any) =>
-                  like.user_id?.toString() === userId ||
-                  like.user_id === userId ||
-                  like.username === userId
-                )
+                ? r.likes.some((like: any) => like.user_id?.toString() === userId)
                 : false
             }))
             : [];
@@ -484,11 +473,7 @@ const BlogPost = ({
             date: c.created_at || new Date().toISOString(),
             likes: c.likes_count || 0,
             isLiked: Array.isArray(c.likes) && userId
-              ? c.likes.some((like: any) =>
-                like.user_id?.toString() === userId ||
-                like.user_id === userId ||
-                like.username === userId
-              )
+              ? c.likes.some((like: any) => like.user_id?.toString() === userId)
               : false,
             showReplies: true,
             replies
@@ -703,7 +688,7 @@ const BlogPost = ({
       }
     }
 
- 
+
     try {
       if (!currentUserId || !currentBlogId) {
         // If we're missing user ID, prompt sign in
@@ -950,7 +935,7 @@ const BlogPost = ({
         const formattedReply: Reply = {
           id: apiReply.id?.toString() || tempId,
           author: {
-            name:  userName,
+            name: userName,
             image: apiReply.user?.avatar || userAvatar,
             username: apiReply.user?.username || userName,
             user_id: apiReply.user?.id?.toString() || currentUserId
@@ -1264,8 +1249,72 @@ const BlogPost = ({
     setShowDeleteConfirmation(false);
   };
 
+  // --- SEO Helper Functions ---
+
+  // Function to generate meta description (extracts text from first paragraph)
+  const generateMetaDescription = (htmlContent: string[]): string => {
+    if (!htmlContent || htmlContent.length === 0) {
+      return "Read this blog post."; // Fallback description
+    }
+    // Create a temporary div to parse the HTML of the first paragraph
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent[0];
+    // Extract text content and limit length
+    const text = tempDiv.textContent || tempDiv.innerText || "";
+    return text.substring(0, 160).trim() + (text.length > 160 ? "..." : "");
+  };
+
+  // Function to generate JSON-LD structured data
+  const generateStructuredData = () => {
+    const metaDescription = generateMetaDescription(content);
+    // Define the base structure with required fields
+    const baseData: any = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": title,
+      "description": metaDescription,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        // Use the constructed canonical base URL
+        "@id": canonicalUrl
+      }
+    };
+
+    // Add optional properties conditionally
+    if (imageSrc) {
+      baseData.image = imageSrc;
+    }
+
+
+
+    return JSON.stringify(baseData);
+  };
+
+  // Construct canonical URL (replace 'https://yourwebsite.com' with your actual domain)
+  const baseUrl = "https://yourwebsite.com"; // <<<--- IMPORTANT: Replace with your actual base URL
+  const canonicalUrl = `${baseUrl}/blog/${slug}`; // Assuming blog posts are under /blog/
+
+  // --- End SEO Helper Functions ---
+
   return (
     <div className="bg-white relative w-full">
+      {/* --- SEO Head Section --- */}
+      <Helmet>
+        <title>{`${title} `}</title> {/* <<<--- Replace 'Your Site Name' */}
+        <meta name="description" content={generateMetaDescription(content)} />
+        <link rel="canonical" href={canonicalUrl} />
+        <script type="application/ld+json">
+          {generateStructuredData()}
+        </script>
+        {/* Add other meta tags if needed (e.g., Open Graph for social sharing) */}
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={generateMetaDescription(content)} />
+        {imageSrc && <meta property="og:image" content={imageSrc} />}
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="article" />
+      </Helmet>
+      {/* --- End SEO Head Section --- */}
+
       <style dangerouslySetInnerHTML={{ __html: blogContentStyles }} />
       {/* Notification Popup */}
       <AnimatePresence>
