@@ -20,7 +20,7 @@ import {
   toggleLikeComment,
   toggleLikeReply,
   createOrUpdateBlogUser,
-  fetchBlogBySlug
+
 } from "../../utils/apiClient";
 
 // Add a style block at the top level of the component
@@ -57,8 +57,7 @@ const BlogPost = ({
   const [isAddingReply, setIsAddingReply] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [activeTocId, setActiveTocId] = useState<string | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
-  const [isLoadingRelated, setIsLoadingRelated] = useState(true);
+
   const [userAvatar, setUserAvatar] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
@@ -71,12 +70,11 @@ const BlogPost = ({
   const [notificationType, setNotificationType] = useState<"success" | "error">("success");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
-  const [visibleCommentCount, setVisibleCommentCount] = useState(3);
   const [totalCommentsAvailable, setTotalCommentsAvailable] = useState(0);
   const [recommendedPosts, setRecommendedPosts] = useState<RelatedPost[]>([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteType, setDeleteType] = useState<'comment' | 'reply'>('comment');
-  const [deleteIds, setDeleteIds] = useState<{commentId: string, replyId?: string}>({commentId: ''});
+  const [deleteIds, setDeleteIds] = useState<{ commentId: string, replyId?: string }>({ commentId: '' });
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Use refs to prevent duplicate API calls
@@ -124,6 +122,7 @@ const BlogPost = ({
             if (userData.avatar) setUserAvatar(userData.avatar);
 
             // For user_id, we need the numeric ID from the API response, not the username
+            // Ensure userId is always stored as a string
             if (userData.id) {
               setUserId(userData.id.toString());
             } else if (userData.user_id) {
@@ -131,7 +130,9 @@ const BlogPost = ({
             }
           }
         } catch (error) {
-          // Error parsing user data - unable to set user data
+          console.error("Error parsing user data from localStorage:", error);
+          // Optionally clear potentially corrupted data
+          // localStorage.removeItem("blog-user-data");
         }
       }
     };
@@ -139,10 +140,11 @@ const BlogPost = ({
     // Load user data
     loadUserData();
 
-    // Only fetch initial comments (with limit) if we have a blog ID
+    // Only fetch initial comments (with limit) if we have a blog ID and userId
     const getInitialComments = async () => {
       // Don't proceed if any of these conditions are true
-      if (!blogId || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
+      // Wait for userId to be loaded before fetching comments
+      if (!blogId || !userId || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
         return;
       }
 
@@ -158,6 +160,7 @@ const BlogPost = ({
         if (response.success && response.data) {
           // Make sure we handle the response format correctly
           const commentsData = Array.isArray(response.data) ? response.data : [];
+
 
           // Map API response to Comment interface format with safety checks
           const formattedComments = commentsData.map((c: any) => {
@@ -180,13 +183,10 @@ const BlogPost = ({
                 text: r.content || "",
                 date: r.created_at || new Date().toISOString(),
                 likes: r.likes_count || 0,
-                isLiked: Array.isArray(r.likes) && userId 
-                  ? r.likes.some((like: any) => 
-                      like.user_id?.toString() === userId || 
-                      like.user_id === userId ||
-                      like.username === userId
-                    )
-                  : false
+                isLiked: Array.isArray(r.likes) && userId
+                  ? r.likes.some((like: any) => like.user_id?.toString() === userId)
+                  : false,
+                isLoading: false
               }))
               : [];
 
@@ -196,15 +196,11 @@ const BlogPost = ({
               text: c.content || "",
               date: c.created_at || new Date().toISOString(),
               likes: c.likes_count || 0,
-              isLiked: Array.isArray(c.likes) && userId 
-                ? c.likes.some((like: any) => 
-                    like.user_id?.toString() === userId || 
-                    like.user_id === userId ||
-                    like.username === userId
-                  )
+              isLiked: Array.isArray(c.likes) && userId
+                ? c.likes.some((like: any) => like.user_id?.toString() === userId)
                 : false,
-              showReplies: true,
-              replies
+              replies,
+              showReplies: false,
             };
           });
 
@@ -224,8 +220,11 @@ const BlogPost = ({
       }
     };
 
+    // Call getInitialComments when blogId or userId changes and is available
     getInitialComments();
-  }, [blogId, initialComments, userId]);
+
+    // Add blogId and userId to dependency array
+  }, [blogId, userId]); // Ensure effect runs when blogId or userId is set/updated
 
   // Reset loaded flags when the slug changes
   useEffect(() => {
@@ -375,6 +374,7 @@ const BlogPost = ({
                 user_id: c.user?.id?.toString() || ""
               };
 
+
               const replies = Array.isArray(c.replies)
                 ? c.replies.map((r: any) => ({
                   id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
@@ -387,12 +387,12 @@ const BlogPost = ({
                   text: r.content || "",
                   date: r.created_at || new Date().toISOString(),
                   likes: r.likes_count || 0,
-                  isLiked: Array.isArray(r.likes) && userId 
-                    ? r.likes.some((like: any) => 
-                        like.user_id?.toString() === userId || 
-                        like.user_id === userId ||
-                        like.username === userId
-                      )
+                  isLiked: Array.isArray(r.likes) && userId
+                    ? r.likes.some((like: any) =>
+                      like.user_id?.toString() === userId ||
+                      like.user_id === userId ||
+                      like.username === userId
+                    )
                     : false
                 }))
                 : [];
@@ -403,12 +403,12 @@ const BlogPost = ({
                 text: c.content || "",
                 date: c.created_at || new Date().toISOString(),
                 likes: c.likes_count || 0,
-                isLiked: Array.isArray(c.likes) && userId 
-                  ? c.likes.some((like: any) => 
-                      like.user_id?.toString() === userId || 
-                      like.user_id === userId ||
-                      like.username === userId
-                    )
+                isLiked: Array.isArray(c.likes) && userId
+                  ? c.likes.some((like: any) =>
+                    like.user_id?.toString() === userId ||
+                    like.user_id === userId ||
+                    like.username === userId
+                  )
                   : false,
                 showReplies: true,
                 replies
@@ -467,12 +467,12 @@ const BlogPost = ({
               text: r.content || "",
               date: r.created_at || new Date().toISOString(),
               likes: r.likes_count || 0,
-              isLiked: Array.isArray(r.likes) && userId 
-                ? r.likes.some((like: any) => 
-                    like.user_id?.toString() === userId || 
-                    like.user_id === userId ||
-                    like.username === userId
-                  )
+              isLiked: Array.isArray(r.likes) && userId
+                ? r.likes.some((like: any) =>
+                  like.user_id?.toString() === userId ||
+                  like.user_id === userId ||
+                  like.username === userId
+                )
                 : false
             }))
             : [];
@@ -483,12 +483,12 @@ const BlogPost = ({
             text: c.content || "",
             date: c.created_at || new Date().toISOString(),
             likes: c.likes_count || 0,
-            isLiked: Array.isArray(c.likes) && userId 
-              ? c.likes.some((like: any) => 
-                  like.user_id?.toString() === userId || 
-                  like.user_id === userId ||
-                  like.username === userId
-                )
+            isLiked: Array.isArray(c.likes) && userId
+              ? c.likes.some((like: any) =>
+                like.user_id?.toString() === userId ||
+                like.user_id === userId ||
+                like.username === userId
+              )
               : false,
             showReplies: true,
             replies
@@ -703,20 +703,7 @@ const BlogPost = ({
       }
     }
 
-    // Get blogId if missing by fetching from API
-    // if (!currentBlogId) {
-    //   try {
-    //     const blog = await fetchBlogBySlug(slug);
-    //     if (blog && blog.id) {
-    //       currentBlogId = blog.id;
-    //       setBlogId(currentBlogId); // Update state for future requests
-    //     }
-    //   } catch (error) {
-    //     // Error fetching blog ID
-    //   }
-    // }
-
-    // Then update the server
+ 
     try {
       if (!currentUserId || !currentBlogId) {
         // If we're missing user ID, prompt sign in
@@ -776,18 +763,7 @@ const BlogPost = ({
       }
     }
 
-    // Get blogId if missing by fetching from API
-    // if (!currentBlogId) {
-    //   try {
-    //     const blog = await fetchBlogBySlug(slug);
-    //     if (blog && blog.id) {
-    //       currentBlogId = blog.id;
-    //       setBlogId(currentBlogId); // Update state for future requests
-    //     }
-    //   } catch (error) {
-    //     // Error fetching blog ID
-    //   }
-    // }
+
 
     // Then update the server
     try {
@@ -895,18 +871,7 @@ const BlogPost = ({
       }
     }
 
-    // Get blogId if missing by fetching from API
-    // if (!currentBlogId) {
-    //   try {
-    //     const blog = await fetchBlogBySlug(slug);
-    //     if (blog && blog.id) {
-    //       currentBlogId = blog.id;
-    //       setBlogId(currentBlogId); // Update state for future requests
-    //     }
-    //   } catch (error) {
-    //     // Error fetching blog ID
-    //   }
-    // }
+
 
     // Final check if we have the required IDs
     if (!currentUserId || !currentBlogId) {
@@ -980,12 +945,12 @@ const BlogPost = ({
       if (response.success && response.data) {
         // Format the API response to match the Reply interface
         const apiReply = response.data;
-
+        console.log("apiReply", apiReply);
         // Create a properly formatted reply object
         const formattedReply: Reply = {
           id: apiReply.id?.toString() || tempId,
           author: {
-            name: apiReply.user?.username || userName,
+            name:  userName,
             image: apiReply.user?.avatar || userAvatar,
             username: apiReply.user?.username || userName,
             user_id: apiReply.user?.id?.toString() || currentUserId
@@ -996,7 +961,7 @@ const BlogPost = ({
           isLiked: false,
           isLoading: false
         };
-
+        console.log("formattedReply", formattedReply);
         // Replace the temporary reply with the properly formatted one from the server
         // Using the current state to avoid stale references
         setComments(prevComments => {
@@ -1172,24 +1137,24 @@ const BlogPost = ({
   const handleDeleteComment = async (commentId: string) => {
     // Show confirmation popup instead of deleting immediately
     setDeleteType('comment');
-    setDeleteIds({commentId});
+    setDeleteIds({ commentId });
     setShowDeleteConfirmation(true);
   };
 
   const handleDeleteReply = async (commentId: string, replyId: string) => {
     // Show confirmation popup instead of deleting immediately
     setDeleteType('reply');
-    setDeleteIds({commentId, replyId});
+    setDeleteIds({ commentId, replyId });
     setShowDeleteConfirmation(true);
   };
 
   // Add this new function to perform the actual deletion after confirmation
   const confirmDelete = async () => {
-    const {commentId, replyId} = deleteIds;
-    
+    const { commentId, replyId } = deleteIds;
+
     // Set loading state
     setIsDeleting(true);
-    
+
     // Get userId from state or try to get it from localStorage if missing
     let currentUserId = userId;
     let currentBlogId = blogId;
@@ -1228,7 +1193,7 @@ const BlogPost = ({
         if (!response.success) {
           // Revert the optimistic update
           setComments(comments);
-          
+
           // Show error notification
           setNotificationType("error");
           setNotificationMessage("Failed to delete comment. Please try again.");
@@ -1244,7 +1209,7 @@ const BlogPost = ({
       } catch (error) {
         // Revert the optimistic update
         setComments(comments);
-        
+
         // Show error notification
         setNotificationType("error");
         setNotificationMessage("Error deleting comment. Please try again.");
@@ -1269,7 +1234,7 @@ const BlogPost = ({
         if (!response.success) {
           // Revert the optimistic update
           setComments(comments);
-          
+
           // Show error notification
           setNotificationType("error");
           setNotificationMessage("Failed to delete reply. Please try again.");
@@ -1285,7 +1250,7 @@ const BlogPost = ({
       } catch (error) {
         // Revert the optimistic update
         setComments(comments);
-        
+
         // Show error notification
         setNotificationType("error");
         setNotificationMessage("Error deleting reply. Please try again.");
@@ -1293,7 +1258,7 @@ const BlogPost = ({
         setTimeout(() => setShowNotification(false), 3000);
       }
     }
-    
+
     // Reset states
     setIsDeleting(false);
     setShowDeleteConfirmation(false);
@@ -1503,15 +1468,15 @@ const BlogPost = ({
             <div className="lg:hidden mt-10 mx-0 sm:mx-0 px-4 sm:px-6">
               <MetricsGraph postTags={tags} slug={slug} />
 
-              {isLoadingRelated ? (
+              {!recommendedPosts.length ? (
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-center items-center mt-6" style={{ minHeight: "100px" }}>
                   <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-600"></div>
                 </div>
-              ) : relatedPosts.length > 0 ? (
+              ) : recommendedPosts.length > 0 ? (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Related Articles</h3>
                   <div className="space-y-4">
-                    {relatedPosts.slice(0, 3).map((post) => (
+                    {recommendedPosts.slice(0, 3).map((post) => (
                       <Link
                         key={post.id || post.slug}
                         to={`/blog/${post.slug}`}
@@ -2002,7 +1967,7 @@ const BlogPost = ({
             exit={{ opacity: 0 }}
             onClick={() => setShowDeleteConfirmation(false)}
           >
-            <motion.div 
+            <motion.div
               className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
