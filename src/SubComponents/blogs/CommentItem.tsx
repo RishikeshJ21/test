@@ -42,7 +42,7 @@ const CommentItem = ({
   const [showCommentMenu, setShowCommentMenu] = useState(false);
   const [showReplyMenu, setShowReplyMenu] = useState<string | null>(null);
   const commentMenuRef = useRef<HTMLDivElement>(null);
-  const replyMenuRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
+  const replyMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -51,7 +51,7 @@ const CommentItem = ({
       if (commentMenuRef.current && !commentMenuRef.current.contains(event.target as Node)) {
         setShowCommentMenu(false);
       }
-      
+
       // Handle reply menus
       if (showReplyMenu) {
         const replyMenuRef = replyMenuRefs.current[showReplyMenu];
@@ -71,16 +71,17 @@ const CommentItem = ({
   if (!comment || !comment.author) {
     return <div className="py-2 text-gray-500">Comment data is missing</div>;
   }
-  
+
   // Ensure author properties exist
   const author = {
     name: comment.author.name || "Anonymous",
     image: comment.author.image || "/testimonial/1.webp"
   };
-  
+
   // Ensure replies array exists
   const replies = Array.isArray(comment.replies) ? comment.replies : [];
-  
+
+
   // Check if current user is the author of the comment
   const isCommentOwner = currentUserId && comment.author.user_id === currentUserId;
 
@@ -112,7 +113,7 @@ const CommentItem = ({
             </div>
           )}
         </div>
-        
+
         <div className="flex-grow">
           <div className="flex justify-between">
             <div className="flex flex-col">
@@ -120,7 +121,7 @@ const CommentItem = ({
               <span className="text-gray-500 text-sm">{formatTimeAgo(comment.date || new Date().toISOString())}</span>
             </div>
             <div className="relative" ref={commentMenuRef}>
-              <button 
+              <button
                 className="text-gray-400 hover:text-gray-600 h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100"
                 onClick={() => setShowCommentMenu(!showCommentMenu)}
               >
@@ -128,7 +129,7 @@ const CommentItem = ({
               </button>
               {showCommentMenu && isCommentOwner && (
                 <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg z-50 py-1 border border-gray-200">
-                  <button 
+                  <button
                     className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                     onClick={() => {
                       handleDeleteComment(comment.id);
@@ -142,10 +143,10 @@ const CommentItem = ({
               )}
             </div>
           </div>
-          
+
           <div className="mt-3">
             <p className="text-gray-800 whitespace-pre-wrap">{comment.text || ""}</p>
-            
+
             <div className="flex items-center gap-4 mt-4">
               <button
                 onClick={() => handleLikeComment(comment.id)}
@@ -199,7 +200,7 @@ const CommentItem = ({
                 Reply
               </button>
             </div>
-            
+
             {replyingTo === comment.id && (
               <div className="mt-4">
                 <div className="flex gap-3">
@@ -234,11 +235,10 @@ const CommentItem = ({
                       <button
                         onClick={handleAddReply}
                         disabled={!replyText.trim() || isSubmittingReply}
-                        className={`px-4 py-1.5 rounded-full text-white text-sm font-medium ${
-                          !replyText.trim() || isSubmittingReply 
-                            ? 'bg-purple-300 cursor-not-allowed' 
-                            : 'bg-purple-600 hover:bg-purple-700'
-                        }`}
+                        className={`px-4 py-1.5 rounded-full text-white text-sm font-medium ${!replyText.trim() || isSubmittingReply
+                          ? 'bg-purple-300 cursor-not-allowed'
+                          : 'bg-purple-600 hover:bg-purple-700'
+                          }`}
                       >
                         {isSubmittingReply ? (
                           <div className="flex items-center justify-center">
@@ -254,25 +254,26 @@ const CommentItem = ({
                 </div>
               </div>
             )}
-            
+
             {comment.showReplies && replies.length > 0 && (
               <div className="mt-6 pt-4 border-t border-gray-100">
                 <div className="space-y-5">
+
                   {replies.map((reply) => {
                     // Skip invalid replies
                     if (!reply || !reply.author) {
                       return null;
                     }
-                    
+
                     // Ensure reply author properties exist
                     const replyAuthor = {
                       name: reply.author.name || "Anonymous",
                       image: reply.author.image || "/testimonial/1.webp"
                     };
-                    
+
                     // Check if current user is the author of this reply
                     const isReplyOwner = currentUserId && reply.author.user_id === currentUserId;
-                    
+
                     return (
                       <div key={reply.id} className="flex gap-3">
                         <div className="flex-shrink-0">
@@ -299,27 +300,27 @@ const CommentItem = ({
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="flex-grow">
                           <div className="flex justify-between items-center mb-1">
                             <div className="flex items-center">
                               <h4 className="font-medium text-gray-900 text-sm mr-2">{replyAuthor.name}</h4>
                               <span className="text-gray-500 text-xs">{formatTimeAgo(reply.date || new Date().toISOString())}</span>
                             </div>
-                            
+
                             <div className="relative" ref={(el) => replyMenuRefs.current[reply.id] = el}>
                               {isReplyOwner && !reply.isLoading && (
-                                <button 
+                                <button
                                   className="text-gray-400 hover:text-gray-600 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-100"
                                   onClick={() => setShowReplyMenu(showReplyMenu === reply.id ? null : reply.id)}
                                 >
                                   <MoreHorizontal size={14} />
                                 </button>
                               )}
-                              
+
                               {showReplyMenu === reply.id && (
                                 <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg z-50 py-1 border border-gray-200">
-                                  <button 
+                                  <button
                                     className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                                     onClick={() => {
                                       handleDeleteReply(comment.id, reply.id);
@@ -333,7 +334,7 @@ const CommentItem = ({
                               )}
                             </div>
                           </div>
-                          
+
                           {reply.isLoading ? (
                             <div className="flex items-center text-gray-600 py-2">
                               <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500 border-t-transparent mr-2"></div>
@@ -342,7 +343,7 @@ const CommentItem = ({
                           ) : (
                             <>
                               <p className="text-gray-800 text-sm whitespace-pre-wrap mb-2">{reply.text || ""}</p>
-                              
+
                               <div className="flex items-center gap-4">
                                 <button
                                   onClick={() => handleLikeReply(comment.id, reply.id)}
