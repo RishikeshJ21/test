@@ -1,84 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
-import type { Plugin } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    // Add PWA support for better performance and offline capabilities
-    VitePWA({
-      registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
-      manifest: {
-        name: "Createathon",
-        short_name: "Createathon",
-        description: "Level up your content creation journey",
-        theme_color: "#ffffff",
-        start_url: "/",
-        icons: [
-          {
-            src: "/Logotype.svg",
-            sizes: "192x192",
-            type: "image/svg+xml",
-          },
-        ],
-      },
-      workbox: {
-        sourcemap: true,
-        runtimeCaching: [
-          {
-            urlPattern: /\.(png|jpg|jpeg|svg|gif|webp)$/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "images-cache",
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-              },
-            },
-          },
-          {
-            urlPattern: /\.(js|css|json)$/,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "static-resources",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60, // 24 hours
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "google-fonts-stylesheets",
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-webfonts",
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-              },
-            },
-          },
-        ],
-      },
-    }),
-    // Add bundle visualization for debugging bundle sizes
-    visualizer({
-      filename: "stats.html",
-      open: false,
-      gzipSize: true,
-    }) as Plugin,
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),

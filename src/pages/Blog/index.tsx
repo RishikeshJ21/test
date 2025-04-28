@@ -280,7 +280,7 @@ export default function BlogPage() {
 
           {/* Main content */}
           <div className="relative max-w-9xl mx-auto flex flex-col items-center text-center w-full z-10">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-tight mb-8 max-w-5xl mt-18">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-tight mb-8 max-w-5xl mt-28">
               <div className="whitespace-nowrap">
                 <span className="text-black">Stay </span>
                 <span className="text-[#4e1f88]">Inspired, </span>
