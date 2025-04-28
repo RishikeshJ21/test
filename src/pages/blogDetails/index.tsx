@@ -624,13 +624,7 @@ const BlogDetails = () => {
           animate={{ y: showNavbar ? '0%' : '-100%' }}
           transition={{ duration: 0.3 }}
         >
-          <NavigationSection
-            navItems={[
-              { title: 'Blog', href: '/blog', active: true, offset: 0 },
-              { title: 'Home', href: '/', active: false, offset: 0 },
-              { title: 'Join Us', href: '/blog#CTA', active: false, offset: -10 },
-            ]}
-          />
+          <NavigationSection/>
         </motion.div>
         <BlogDetailsSkeleton />
       </>
@@ -647,13 +641,7 @@ const BlogDetails = () => {
           animate={{ y: showNavbar ? '0%' : '-100%' }}
           transition={{ duration: 0.3 }}
         >
-          <NavigationSection
-            navItems={[
-              { title: 'Blog', href: '/blog', active: true, offset: 0 },
-              { title: 'Home', href: '/', active: false, offset: 0 },
-              { title: 'Join Us', href: '/blog#CTA', active: false, offset: -10 },
-            ]}
-          />
+          <NavigationSection/>
         </motion.div>
         <div className="min-h-screen flex flex-col items-center justify-center pt-20">
           <p className="text-red-500 mb-4">{error}</p>
@@ -681,13 +669,7 @@ const BlogDetails = () => {
         animate={{ y: showNavbar ? '0%' : '-100%' }}
         transition={{ duration: 0.3 }}
       >
-        <NavigationSection
-          navItems={[
-            { title: 'Blog', href: '/blog', active: true, offset: 0 },
-            { title: 'Home', href: '/', active: false, offset: 0 },
-            { title: 'Join Us', href: '/blog#CTA', active: false, offset: -10 },
-          ]}
-        />
+        <NavigationSection />
       </motion.div>
 
       <UsernameModal
