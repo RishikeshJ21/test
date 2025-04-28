@@ -30,7 +30,7 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
   return (
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-3">Share</h3>
-      <div className="flex items-center space-x-7 mb-6 relative">
+      <div className="flex items-center space-x-5 mb-6 relative">
         {/* X (Twitter) */}
         <motion.a
           href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
@@ -38,7 +38,7 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
           rel="noopener noreferrer"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-purple-600 rounded-xl w-12 h-12 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all hover:bg-purple-700"
+          className="bg-purple-600 rounded-xl w-14 h-14 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all hover:bg-purple-700"
           aria-label="Share on X (Twitter)"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -56,7 +56,7 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
           rel="noopener noreferrer"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-purple-600 rounded-xl w-12 h-12 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all hover:bg-purple-700"
+          className="bg-purple-600 rounded-xl w-14 h-14 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all hover:bg-purple-700"
           aria-label="Share on Facebook"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -74,7 +74,7 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
           rel="noopener noreferrer"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-purple-600 rounded-xl w-12 h-12 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all hover:bg-purple-700"
+          className="bg-purple-600 rounded-xl w-14 h-14 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all hover:bg-purple-700"
           aria-label="Share on LinkedIn"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -90,7 +90,7 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
           onClick={copyToClipboard}
           whileHover={{ scale: 1.05, backgroundColor: "#9333ea" }}
           whileTap={{ scale: 0.95 }}
-          className="bg-purple-600 rounded-xl w-12 h-12 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all"
+          className="bg-purple-600 rounded-xl w-14 h-14 flex items-center justify-center text-white shadow-sm hover:shadow-md transition-all"
           aria-label="Copy link"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

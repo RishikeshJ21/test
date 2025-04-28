@@ -251,7 +251,13 @@ export default function BlogPage() {
         animate={{ y: showNavbar ? '0%' : '-100%' }}
         transition={{ duration: 0.3 }}
       >
-        <NavigationSection/>
+        <NavigationSection
+          navItems={[
+            { title: 'Blog', href: '#', active: true, offset: 0 },
+            { title: 'Home', href: '/', active: false, offset: 0 },
+            { title: 'Join Us', href: '#CTA', active: false, offset: -10 },
+          ]}
+        />
       </motion.div>
 
       <div className="pt-16 lg:pt-10">
