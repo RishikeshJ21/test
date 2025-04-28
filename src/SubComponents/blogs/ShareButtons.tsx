@@ -13,31 +13,6 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
 
-  // Check if Web Share API is supported
-  const isWebShareSupported = typeof navigator !== 'undefined' && navigator.share;
-
-  // Handle native device sharing
-  const handleNativeShare = async () => {
-    try {
-      await navigator.share({
-        title: title,
-        text: `Check out this article: ${title}`,
-        url: url
-      });
-      setShareStatus('Shared successfully!');
-    } catch (error) {
-      console.error('Error sharing:', error);
-      // Fallback to clipboard copy
-      try {
-        await navigator.clipboard.writeText(url);
-        setShareStatus('Link copied to clipboard!');
-      } catch (clipboardError) {
-        setShareStatus('Sharing failed, please try again');
-      }
-    } finally {
-      setTimeout(() => setShareStatus(null), 2000);
-    }
-  };
 
   // Copy link to clipboard
   const copyToClipboard = async () => {
@@ -94,7 +69,7 @@ const ShareButtons = ({ title, url }: ShareButtonsProps) => {
 
         {/* LinkedIn */}
         <motion.a
-          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
+          href={`https://www.linkedin.com/feed/?linkOrigin=LI_BADGE&shareActive=true&shareUrl=${encodedUrl}`}
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ scale: 1.05 }}

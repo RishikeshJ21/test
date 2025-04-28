@@ -1333,8 +1333,11 @@ const BlogPost = ({
   };
 
   // Construct canonical URL (replace 'https://yourwebsite.com' with your actual domain)
-  const baseUrl = "https://yourwebsite.com"; // <<<--- IMPORTANT: Replace with your actual base URL
-  const canonicalUrl = `${baseUrl}/blog/${slug}`; // Assuming blog posts are under /blog/
+  const baseUrl = "https://createathon.co"; // <<<--- IMPORTANT: Replace with your actual base URL
+  const canonicalUrl = `${baseUrl}/blog/${slug}?id=${blogId}`; // Assuming blog posts are under /blog/
+  
+  // Create a URL for sharing that includes the blog ID
+  const shareUrl = `${baseUrl}/blog/${slug}?id=${blogId}`;
 
   // --- End SEO Helper Functions ---
 
@@ -1537,10 +1540,10 @@ const BlogPost = ({
           </div>
 
           {/* Right sidebar - show collapsible on mobile, below content */}
-          <div className="lg:col-span-3 lg:sticky lg:top-28 h-fit lg:max-h-[calc(100vh-200px)] lg:self-start lg:pl-5 lg:pr-4">
+          <div className="lg:col-span-3 lg:sticky lg:top-28 h-fit lg:max-h-[calc(100vh-60px)] lg:self-start lg:pl-5 lg:pr-4">
             <div className="hidden lg:block space-y-6">
               {/* Share buttons above MetricsGraph */}
-              <ShareButtons title={title} url={canonicalUrl} />
+              <ShareButtons title={title} url={shareUrl} />
 
               <MetricsGraph postTags={tags} slug={slug} />
 
@@ -1559,7 +1562,7 @@ const BlogPost = ({
             {/* Mobile version of Share buttons and Related Articles - show below content */}
             <div className="lg:hidden mt-10 mx-0 sm:mx-0 px-4 sm:px-6">
               {/* Share buttons for mobile */}
-              <ShareButtons title={title} url={canonicalUrl} />
+              <ShareButtons title={title} url={shareUrl} />
 
               <MetricsGraph postTags={tags} slug={slug} />
 
@@ -1709,7 +1712,7 @@ const BlogPost = ({
                     ))} */}
                   </AnimatePresence>
 
-                  {comments.length > 3 && (
+                  {comments.length > 1 && (
                     <div className="relative mt-10">
                       <div className="h-20"></div>
                       <div
@@ -1726,7 +1729,7 @@ const BlogPost = ({
                             handleLoadAllComments();
                             if (onToggleComments) onToggleComments(true);
                           }}
-                          className="bg-white border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:bg-purple-50 transition-colors font-medium shadow-sm"
+                          className="bg-gradient-to-r from-white to-purple-50 border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:from-purple-50 hover:to-purple-100 transition-all duration-300 font-medium shadow-sm"
                           disabled={isLoadingComments}
                         >
                           {isLoadingComments ? (
