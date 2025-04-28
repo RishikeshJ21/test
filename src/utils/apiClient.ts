@@ -51,6 +51,8 @@ export async function makeApiRequest(
 ) {
   const url = `${API_BASE_URL}${endpoint}`;
   const internalController = new AbortController();
+  
+  // Set up timeout
   const timeoutId = setTimeout(() => {
     console.warn(
       `[API Client] Request timed out after ${REQUEST_TIMEOUT / 1000}s: ${
@@ -60,9 +62,10 @@ export async function makeApiRequest(
     internalController.abort();
   }, REQUEST_TIMEOUT);
 
-  const combinedSignal = options.signal
-    ? AbortSignal.any([options.signal, internalController.signal])
-    : internalController.signal;
+  // Handle external abort signal
+  if (options.signal) {
+    options.signal.addEventListener('abort', () => internalController.abort());
+  }
 
   try {
     console.log(`[API Client] Attempt 1: ${options.method || "POST"} ${url}`);
@@ -76,7 +79,7 @@ export async function makeApiRequest(
       credentials: "include",
       mode: "cors",
       body: options.method === "GET" ? undefined : JSON.stringify(data),
-      signal: combinedSignal,
+      signal: internalController.signal,
     });
 
     clearTimeout(timeoutId);

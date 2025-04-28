@@ -173,6 +173,7 @@ export default function BlogSection() {
           {currentPosts.map((post: any, index: number) => (
             <BlogCard
               key={post.id}
+              id={post.id}
               title={post.title}
               excerpt={post.excerpt}
               imageSrc={post.imageSrc}
