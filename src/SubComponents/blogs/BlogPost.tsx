@@ -10,6 +10,8 @@ import RelatedArticles from "./Most_View";
 import MetricsGraph from "./MetricsGraph";
 import { formatTimeAgo } from "./utils";
 import { Helmet } from "react-helmet-async";
+import ShareButtons from "./ShareButtons";
+import RecommendedArticles from "./RecommendedArticles";
 
 import { fetchRelatedBlogs, RelatedPost } from "./api";
 import {
@@ -62,7 +64,6 @@ const BlogPost = ({
   const [userAvatar, setUserAvatar] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
-  // const [blogId, setBlogId] = useState<number | null>(null);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [hasLoadedAllComments, setHasLoadedAllComments] = useState(false);
   const [isRespondAnimating, setIsRespondAnimating] = useState(false);
@@ -77,6 +78,7 @@ const BlogPost = ({
   const [deleteType, setDeleteType] = useState<'comment' | 'reply'>('comment');
   const [deleteIds, setDeleteIds] = useState<{ commentId: string, replyId?: string }>({ commentId: '' });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [latestArticles, setLatestArticles] = useState<RelatedPost[]>([]);
 
   // Use refs to prevent duplicate API calls
   const commentsLoadedRef = useRef(false);
@@ -335,16 +337,43 @@ const BlogPost = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [tocSections]);
 
-  // Fetch Related/Recommended Posts
+  // Fetch Related/Recommended Posts - Updated logic
   useEffect(() => {
     const getPosts = async () => {
-
-
-      // Fetch recommended posts (different category or any) for the bottom section
       try {
-        // Try fetching different category first, limit 3
-        const recommended = await fetchRelatedBlogs(slug, currentCategory, 4, true);
-        setRecommendedPosts(recommended);
+        // First try to fetch posts with the same category
+        if (currentCategory) {
+          const sameCategoryPosts = await fetchRelatedBlogs(slug, currentCategory, 6, false);
+          
+          if (sameCategoryPosts.length > 0) {
+            setRecommendedPosts(sameCategoryPosts);
+          } else {
+            // If no posts with same category, fall back to different categories
+            const differentCategoryPosts = await fetchRelatedBlogs(slug, currentCategory, 6, true);
+            setRecommendedPosts(differentCategoryPosts);
+          }
+        } else {
+          // If no category is specified, just get any related posts
+          const anyRelatedPosts = await fetchRelatedBlogs(slug, undefined, 6, false);
+          setRecommendedPosts(anyRelatedPosts);
+        }
+
+        // Use the same data source for latestArticles (bottom section)
+        // Instead of making a separate API call, use the first 5 items from recommendedPosts
+        // or shuffle them to show different ones if there are enough
+        if (recommendedPosts.length > 0) {
+          // Create a copy of the array to avoid modifying the original
+          const shuffledPosts = [...recommendedPosts];
+          // Simple shuffle algorithm
+          for (let i = shuffledPosts.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledPosts[i], shuffledPosts[j]] = [shuffledPosts[j], shuffledPosts[i]];
+          }
+          setLatestArticles(shuffledPosts.slice(0, 5));
+        } else {
+          // If we somehow don't have recommendedPosts yet, we'll wait for them to be set
+          // and use the useEffect below to set latestArticles
+        }
       } catch (error) {
         // Error handled in API client
       }
@@ -352,6 +381,19 @@ const BlogPost = ({
 
     getPosts();
   }, [slug, currentCategory]);
+
+  // Additional useEffect to ensure latestArticles is set when recommendedPosts changes
+  useEffect(() => {
+    if (recommendedPosts.length > 0 && latestArticles.length === 0) {
+      // If we have recommendedPosts but no latestArticles yet, set them
+      const shuffledPosts = [...recommendedPosts];
+      for (let i = shuffledPosts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledPosts[i], shuffledPosts[j]] = [shuffledPosts[j], shuffledPosts[i]];
+      }
+      setLatestArticles(shuffledPosts.slice(0, 5));
+    }
+  }, [recommendedPosts, latestArticles]);
 
   // Check for preloaded comments in localStorage when comments section is opened
   useEffect(() => {
@@ -1300,7 +1342,7 @@ const BlogPost = ({
     <div className="bg-white relative w-full">
       {/* --- SEO Head Section --- */}
       <Helmet>
-        <title>{`${title} `}</title> {/* <<<--- Replace 'Your Site Name' */}
+        <title>{`${title} `}</title>
         <meta name="description" content={generateMetaDescription(content)} />
         <link rel="canonical" href={canonicalUrl} />
         <script type="application/ld+json">
@@ -1344,7 +1386,8 @@ const BlogPost = ({
             <div className="mb-6 pl-0">
               <Link
                 to="/blog"
-                className="flex items-center text-purple-600 hover:text-purple-800 transition-colors text-base font-medium"
+                className="flex items-center text-purple-600 hover:text-purple-700 transition-colors text-base font-medium"
+                aria-label="Back to Blog Home"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -1496,25 +1539,28 @@ const BlogPost = ({
           {/* Right sidebar - show collapsible on mobile, below content */}
           <div className="lg:col-span-3 lg:sticky lg:top-28 h-fit lg:max-h-[calc(100vh-200px)] lg:self-start lg:pl-5 lg:pr-4">
             <div className="hidden lg:block space-y-6">
+              {/* Share buttons above MetricsGraph */}
+              <ShareButtons title={title} url={canonicalUrl} />
+              
               <MetricsGraph postTags={tags} slug={slug} />
 
-
-              {/* --- ADD RECOMMENDED READS SIDEBAR SECTION HERE --- */}
+              {/* --- RECOMMENDED READS SIDEBAR SECTION --- */}
               {recommendedPosts.length > 0 && (
-                <div> {/* Added a wrapping div for spacing */}
-                  {/* We can reuse the RelatedArticles component, passing recommendedPosts */}
+                <div className="mt-6">
                   <RelatedArticles
                     relatedPosts={recommendedPosts}
-                    currentCategory={undefined} // No specific category context needed here 
+                    currentCategory={currentCategory}
                   />
                 </div>
               )}
               {/* --- RECOMMENDED READS SIDEBAR SECTION END --- */}
-
             </div>
 
-            {/* Mobile version of Related Articles - show below content */}
+            {/* Mobile version of Share buttons and Related Articles - show below content */}
             <div className="lg:hidden mt-10 mx-0 sm:mx-0 px-4 sm:px-6">
+              {/* Share buttons for mobile */}
+              <ShareButtons title={title} url={canonicalUrl} />
+              
               <MetricsGraph postTags={tags} slug={slug} />
 
               {!recommendedPosts.length ? (
@@ -1559,16 +1605,12 @@ const BlogPost = ({
 
       {/* Responses section - full width */}
       <div className="w-full pt-10 border-t border-gray-200 bg-white">
-        <div className="container   px-4 md:px-6 lg:px-8">
+        <div className="container px-4 md:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl md:text-3xl text-gray-900 font-semibold">
                 Comments
               </h2>
-              {/* <span className="text-gray-500 text-sm">
-                  {comments.length}{" "}
-                  {comments.length === 1 ? "response" : "responses"}
-                </span> */}
             </div>
 
             <div className="mb-12">
@@ -1713,6 +1755,16 @@ const BlogPost = ({
           </div>
         </div>
       </div>
+
+      {/* Recommended Articles Section - Below Comments */}
+      {latestArticles.length > 0 && (
+        <div className="border-t border-gray-200 bg-gray-50">
+          <RecommendedArticles 
+            articles={latestArticles} 
+            title="More Articles You Might Like" 
+          />
+        </div>
+      )}
 
       {/* Modals */}
       <AnimatePresence>

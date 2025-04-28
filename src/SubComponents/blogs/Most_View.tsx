@@ -71,7 +71,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
         {currentPosts.map((post) => (
           <Link
             key={post.id || post.slug}
-            to={`/blog/${post.slug}`}
+            to={`/blog/${post.slug}${post.id ? `?id=${post.id}` : ''}`}
             className="flex items-start space-x-4 group py-2 hover:bg-gray-50 rounded-md px-2"
           >
             <div className="relative flex-shrink-0">
