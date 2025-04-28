@@ -5,12 +5,38 @@ import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
 import { resolve } from "path";
 import type { Plugin } from "vite";
+import viteCompression from "vite-plugin-compression";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      babel: {
+        babelrc: false,
+        configFile: "./babel.config.cjs",
+        plugins: [
+          ["@babel/plugin-transform-runtime", {
+            corejs: {
+              version: 3,
+              proposals: true
+            },
+            helpers: true,
+            regenerator: true,
+            useESModules: true
+          }]
+        ]
+      }
+    }),
     tailwindcss(),
+    // Add compression plugin for better performance
+    viteCompression({
+      algorithm: 'gzip',
+      threshold: 10240, // Only compress files larger than 10KB
+    }),
+    viteCompression({
+      algorithm: 'brotliCompress',
+      threshold: 10240,
+    }),
     // Add PWA support for better performance and offline capabilities
     VitePWA({
       registerType: "autoUpdate",
@@ -94,10 +120,20 @@ export default defineConfig({
     assetsDir: "assets",
     minify: "terser",
     cssMinify: true,
+    sourcemap: false, // Disable sourcemaps in production for smaller bundles
     terserOptions: {
       compress: {
         drop_console: true,
         dead_code: true,
+        drop_debugger: true,
+        booleans_as_integers: true,
+        passes: 2,
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
       },
     },
     rollupOptions: {
@@ -109,6 +145,7 @@ export default defineConfig({
             if (id.includes("react-router")) return "vendor-react-router";
             if (id.includes("react-toastify")) return "vendor-react-toastify";
             if (id.includes("react")) return "vendor-react";
+            if (id.includes("lodash")) return "vendor-lodash";
             return "vendor"; // all other vendor modules
           }
           if (id.includes("Components")) return "components";
@@ -131,12 +168,20 @@ export default defineConfig({
   },
   // Enable performance optimizations
   optimizeDeps: {
-    include: ["react", "react-dom", "react-router-dom", "framer-motion"],
+    include: ["react", "react-dom", "react-router-dom", "framer-motion", "lodash"],
+    esbuildOptions: {
+      target: "es2015",
+      treeShaking: true,
+    },
   },
   // Configure server options
   server: {
     open: true,
     cors: true,
+    // Enable build optimization during development
+    hmr: {
+      overlay: true,
+    },
   },
   // Configure preview options
   preview: {
