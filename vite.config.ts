@@ -90,12 +90,6 @@ export default defineConfig({
     assetsDir: "assets",
     minify: "esbuild",
     cssMinify: true,
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        dead_code: true,
-      },
-    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {
