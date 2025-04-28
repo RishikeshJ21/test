@@ -84,7 +84,7 @@ const UsernameModal = ({ isOpen, onClose, onSubmit }: UsernameModalProps) => {
 
         // Generate username from email (remove domain part)
         const username = googleUser.email.split('@')[0];
-
+        console.log(googleUser);
         // Save user data to backend
         const userData = {
           username,

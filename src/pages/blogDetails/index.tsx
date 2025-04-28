@@ -5,6 +5,7 @@ import { blogPosts } from "../../data/blog";
 import { BlogAPIResponse, fetchBlogBySlugName } from "../../SubComponents/blogs/api";
 import { fetchCommentsByBlogId, fetchBlogById, toggleLikeBlog, fetchLikesForBlog } from "../../utils/apiClient";
 import Loader from "../../SubComponents/Loader";
+import BlogDetailsSkeleton from '../../SubComponents/BlogDetailsSkeleton';
 import { NavigationSection } from "../../Components/NavigationSection/NavigationSection";
 import { motion } from "framer-motion";
 import { Share, Heart, MessageCircle } from "lucide-react";
@@ -50,10 +51,10 @@ const BlogDetails = () => {
     commentsLoaded.current = false;
     blogDataLoaded.current = false;
     likesLoaded.current = false;
-    
+
     // Remove specific localStorage item as requested
     localStorage.removeItem('blog-designing-for-accessibility-inclusive-ux-likes');
-    
+
     // Clean up any potential stale data for this blog
     if (slug) {
       // We only remove like counts, but keep the like status
@@ -106,21 +107,55 @@ const BlogDetails = () => {
 
   // Main data fetch effect - STRICTLY controlled
   useEffect(() => {
+    // ---> RESET STATE ON ID CHANGE <---
+    console.log(`[Blog] ID Change Detected. Resetting state for ID: ${blogIdFromParams}`);
+    setIsLoading(true);
+    setBlogData(null);
+    setError(null);
+    // Reset fetch control flags for the new ID
+    fetchInitiated.current = false;
+    commentsLoaded.current = false;
+    blogDataLoaded.current = false;
+    likesLoaded.current = false;
+    // Reset like/comment counts
+    setLikes(0);
+    setCommentsCount(0);
+    setIsLiked(false); // Reset like status until fetched
+
+    // Load like status from localStorage for immediate UI feedback *after* reset
+    if (slug) {
+      const storedLikeStatus = localStorage.getItem(`blog-${slug}-liked`);
+      if (storedLikeStatus) setIsLiked(storedLikeStatus === "true");
+    }
+    // ---> END RESET <---
+
     console.log(`[Blog] Main Fetch Effect Triggered. blogId: ${blogIdFromParams}, fetchInitiated: ${fetchInitiated.current}`);
 
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Primary Guard: Only run if we have an ID and haven't started fetching for this ID yet.
-    if (!blogIdFromParams || fetchInitiated.current) {
-      console.log(`[Blog] Skipping main fetch (no ID or already initiated).`);
+    // Primary Guard: Only run if we have an ID.
+    // fetchInitiated check is removed from here as we reset it above.
+    if (!blogIdFromParams) {
+      console.log(`[Blog] Skipping main fetch (no ID).`);
+      setIsLoading(false); // Ensure loading stops if there's no ID
+      setError("Blog ID is missing."); // Provide a specific error
+      return;
+    }
+
+    // Check if fetch has already been initiated *for this specific render cycle*
+    // This prevents re-fetching if another state update triggers a re-render
+    // before the ID actually changes.
+    if (fetchInitiated.current) {
+      console.log(`[Blog] Skipping main fetch (already initiated for this ID cycle).`);
+      // Keep isLoading true if already initiated
       return;
     }
 
     const fetchBlogData = async () => {
       // Mark fetch as initiated *immediately* for this ID
       fetchInitiated.current = true;
-      setIsLoading(true);
+      // setIsLoading(true); // Already set at the beginning of the effect
       console.log(`⚡ [Blog] STARTING blog fetch for ID: ${blogIdFromParams}`);
 
       try {
@@ -141,7 +176,7 @@ const BlogDetails = () => {
           if (blogResponse.likes_count !== undefined) {
             setLikes(blogResponse.likes_count);
           }
-          
+
           if (blogResponse.comments_count !== undefined) {
             setCommentsCount(blogResponse.comments_count);
           }
@@ -192,16 +227,16 @@ const BlogDetails = () => {
                 console.log(`✅ [Blog] Fallback fetch by SLUG succeeded.`);
                 setBlogData(fallbackResponse);
                 blogDataLoaded.current = true;
-                
+
                 // Set likes and comments counts from the fallback response
                 if (fallbackResponse.likes_count !== undefined) {
                   setLikes(fallbackResponse.likes_count);
                 }
-                
+
                 if (fallbackResponse.comments_count !== undefined) {
                   setCommentsCount(fallbackResponse.comments_count);
                 }
-                
+
                 // Only check likes status for logged-in users
                 if (fallbackResponse.id && userData?.id && !likesLoaded.current) {
                   // Similar logic for fetching user-specific like status
@@ -242,10 +277,14 @@ const BlogDetails = () => {
     return () => {
       console.log("[Blog] Cleanup: Aborting controller for main fetch.");
       controller.abort();
+      // Optional: Reset state on unmount *if* desired,
+      // but the reset at the start of the effect is usually sufficient
+      // setIsLoading(true);
+      // setBlogData(null);
     };
 
     // DEPENDENCIES: Only re-run if the ID we intend to fetch changes.
-  }, [blogIdFromParams]);
+  }, [blogIdFromParams, slug, navigate]); // Added slug and navigate for safety, though ID is primary driver
 
   // Separate Effect for Likes triggered by User Change (if blog data already loaded)
   useEffect(() => {
@@ -266,7 +305,7 @@ const BlogDetails = () => {
           if (likesResponse.success) {
             console.log(`✅ [Blog] <-- fetchLikesForBlog SUCCESS (User Effect)`);
             const likesData = likesResponse.data;
-            
+
             // Only update the likes count if it's present in the response and not 0
             // This prevents overriding the blog API likes_count with 0
             // @ts-ignore
@@ -274,7 +313,7 @@ const BlogDetails = () => {
               // @ts-ignore
               setLikes(likesData.total_likes);
             }
-            
+
             let userLiked = false;
             // @ts-ignore
             if (Array.isArray(likesData)) {
@@ -286,7 +325,10 @@ const BlogDetails = () => {
               userLiked = likesData.user_likes.some((like: { user_id: string | number }) => like.user_id === userData.id);
             }
             setIsLiked(userLiked);
-            localStorage.setItem(`blog-${slug}-liked`, String(userLiked));
+            // Only update localStorage if slug exists
+            if (slug) {
+              localStorage.setItem(`blog-${slug}-liked`, String(userLiked));
+            }
           } else {
             console.error(`❌ [Blog] Failed to fetch likes (User Effect): ${likesResponse.error}`);
           }
@@ -325,7 +367,10 @@ const BlogDetails = () => {
     const newLikeCount = newLikeStatus ? likes + 1 : Math.max(0, likes - 1); // Ensure we don't go below 0
     setIsLiked(newLikeStatus);
     setLikes(newLikeCount);
-    localStorage.setItem(`blog-${slug}-liked`, String(newLikeStatus));
+    // Only update localStorage if slug exists
+    if (slug) {
+      localStorage.setItem(`blog-${slug}-liked`, String(newLikeStatus));
+    }
     // No longer storing likes count in localStorage
 
     try {
@@ -338,14 +383,20 @@ const BlogDetails = () => {
         console.error(`❌ [Blog] Failed to toggle like:`, response.error);
         setIsLiked(!newLikeStatus);
         setLikes(newLikeStatus ? newLikeCount - 1 : newLikeCount + 1);
-        localStorage.setItem(`blog-${slug}-liked`, String(!newLikeStatus));
+        // Only update localStorage if slug exists
+        if (slug) {
+          localStorage.setItem(`blog-${slug}-liked`, String(!newLikeStatus));
+        }
       }
     } catch (error) {
       console.error(`❌ [Blog] Error toggling like:`, error);
       // Revert optimistic updates on error
       setIsLiked(!newLikeStatus);
       setLikes(newLikeStatus ? newLikeCount - 1 : newLikeCount + 1);
-      localStorage.setItem(`blog-${slug}-liked`, String(!newLikeStatus));
+      // Only update localStorage if slug exists
+      if (slug) {
+        localStorage.setItem(`blog-${slug}-liked`, String(!newLikeStatus));
+      }
     }
   };
 
@@ -402,7 +453,7 @@ const BlogDetails = () => {
               // But we'll store the full comments data for display
 
               // Store the full comments data in localStorage to be used by the BlogPost component
-              if (blogData) {
+              if (blogData && slug) {
                 // This allows the BlogPost component to access the full comments data
                 localStorage.setItem(`blog-${slug}-comments`, JSON.stringify(commentsData));
                 console.log(`✅ [Blog] Processed ${commentsData.length} comments for display`);
@@ -430,7 +481,7 @@ const BlogDetails = () => {
     // Prevent multiple executions
     if (loginProcessingRef.current) return;
     loginProcessingRef.current = true;
-    
+
     console.log(`[Blog] User logged in: ${name}`);
     const storedUserData = localStorage.getItem("blog-user-data");
     if (storedUserData) {
@@ -442,7 +493,7 @@ const BlogDetails = () => {
         console.error("Error parsing user data after login:", error);
       }
     }
-    
+
     // Reset the flag after a short delay to prevent any race conditions
     setTimeout(() => {
       loginProcessingRef.current = false;
@@ -581,9 +632,7 @@ const BlogDetails = () => {
             ]}
           />
         </motion.div>
-        <div className="min-h-screen flex items-center justify-center pt-20">
-          <Loader />
-        </div>
+        <BlogDetailsSkeleton />
       </>
     );
   }

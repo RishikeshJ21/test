@@ -43,7 +43,6 @@ const CommentItem = ({
   const [showReplyMenu, setShowReplyMenu] = useState<string | null>(null);
   const commentMenuRef = useRef<HTMLDivElement>(null);
   const replyMenuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
   // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -93,6 +92,7 @@ const CommentItem = ({
       exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
+
       <div className="flex gap-4">
         <div className="flex-shrink-0">
           {author.image ? (
