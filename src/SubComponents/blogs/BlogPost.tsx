@@ -87,7 +87,7 @@ const BlogPost = ({
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const commentTextAreaRef = useRef<HTMLTextAreaElement>(null);
-  const replyTextAreaRef = useRef<HTMLTextAreaElement>(null!);
+  const replyTextAreaRef = useRef<HTMLTextAreaElement>(null);
   const commentsRefLg = useRef<HTMLDivElement>(null);
   const commentsRefMobile = useRef<HTMLDivElement>(null);
 
@@ -146,8 +146,9 @@ const BlogPost = ({
     // Only fetch initial comments (with limit) if we have a blog ID and userId
     const getInitialComments = async () => {
       // Don't proceed if any of these conditions are true
-      // Wait for userId to be loaded before fetching comments
-      if (!blogId  || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
+      // Wait for blogId AND userId to be loaded before fetching comments
+      if (!blogId || !userId || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
+        console.log(`[BlogPost] Skipping initial comments fetch. blogId: ${blogId}, userId: ${userId}, loading: ${isLoadingComments}, loaded: ${commentsLoadedRef.current}`);
         return;
       }
 
@@ -188,8 +189,7 @@ const BlogPost = ({
                 likes: r.likes_count || 0,
                 isLiked: Array.isArray(r.likes) && userId
                   ? r.likes.some((like: any) => like.user_id?.toString() === userId)
-                  : false,
-                isLoading: false
+                  : false
               }))
               : [];
 
@@ -202,8 +202,8 @@ const BlogPost = ({
               isLiked: Array.isArray(c.likes) && userId
                 ? c.likes.some((like: any) => like.user_id?.toString() === userId)
                 : false,
-              replies,
-              showReplies: false,
+              showReplies: true,
+              replies
             };
           });
 
@@ -340,64 +340,135 @@ const BlogPost = ({
   // Fetch Related/Recommended Posts - Updated logic
   useEffect(() => {
     const getPosts = async () => {
+      const TARGET_POST_COUNT = 3;
       try {
+        let primaryPosts: RelatedPost[] = [];
+        let fallbackPosts: RelatedPost[] = [];
+
         // First try to fetch posts with the same category
         if (currentCategory) {
-          const sameCategoryPosts = await fetchRelatedBlogs(slug, currentCategory, 6, false);
-          
-          if (sameCategoryPosts.length > 0) {
-            setRecommendedPosts(sameCategoryPosts);
-          } else {
-            // If no posts with same category, fall back to different categories
-            const differentCategoryPosts = await fetchRelatedBlogs(slug, currentCategory, 6, true);
-            setRecommendedPosts(differentCategoryPosts);
-          }
+          primaryPosts = await fetchRelatedBlogs(slug, currentCategory, TARGET_POST_COUNT, false);
         } else {
           // If no category is specified, just get any related posts
-          const anyRelatedPosts = await fetchRelatedBlogs(slug, undefined, 6, false);
-          setRecommendedPosts(anyRelatedPosts);
+          primaryPosts = await fetchRelatedBlogs(slug, undefined, TARGET_POST_COUNT, false);
         }
 
-        // Use the same data source for latestArticles (bottom section)
-        // Instead of making a separate API call, use the first 5 items from recommendedPosts
-        // or shuffle them to show different ones if there are enough
-        if (recommendedPosts.length > 0) {
-          // Create a copy of the array to avoid modifying the original
-          const shuffledPosts = [...recommendedPosts];
-          // Simple shuffle algorithm
-          for (let i = shuffledPosts.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffledPosts[i], shuffledPosts[j]] = [shuffledPosts[j], shuffledPosts[i]];
-          }
-          setLatestArticles(shuffledPosts.slice(0, 5));
-        } else {
-          // If we somehow don't have recommendedPosts yet, we'll wait for them to be set
-          // and use the useEffect below to set latestArticles
+        // If we don't have enough posts, fetch fallback posts (different category or any)
+        const neededFallbackCount = TARGET_POST_COUNT - primaryPosts.length;
+        if (neededFallbackCount > 0) {
+          // Fetch posts *excluding* the current category, or just any if no category
+          fallbackPosts = await fetchRelatedBlogs(
+            slug,
+            currentCategory, // Pass category to exclude it
+            neededFallbackCount, // Fetch only the number needed
+            true // Exclude the current category
+          );
         }
+
+        // Combine primary and fallback, removing duplicates
+        const combinedPostsMap = new Map<string, RelatedPost>();
+        primaryPosts.forEach(post => post.slug && combinedPostsMap.set(post.slug, post));
+        fallbackPosts.forEach(post => post.slug && combinedPostsMap.set(post.slug, post));
+
+        let finalPosts = Array.from(combinedPostsMap.values());
+
+        // Shuffle the combined list slightly for variety
+        finalPosts.sort(() => 0.5 - Math.random());
+
+        // Ensure we have exactly TARGET_POST_COUNT posts if possible
+        finalPosts = finalPosts.slice(0, TARGET_POST_COUNT);
+
+        setRecommendedPosts(finalPosts);
+
+        // Note: latestArticles will be updated by the subsequent useEffect
+
       } catch (error) {
         // Error handled in API client
+        console.error("[BlogPost] Error fetching related posts:", error);
       }
     };
 
     getPosts();
-  }, [slug, currentCategory]);
+  }, [slug, currentCategory]); // Dependencies remain the same
 
   // Additional useEffect to ensure latestArticles is set when recommendedPosts changes
   useEffect(() => {
-    if (recommendedPosts.length > 0 && latestArticles.length === 0) {
-      // If we have recommendedPosts but no latestArticles yet, set them
-      const shuffledPosts = [...recommendedPosts];
-      for (let i = shuffledPosts.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledPosts[i], shuffledPosts[j]] = [shuffledPosts[j], shuffledPosts[i]];
-      }
-      setLatestArticles(shuffledPosts.slice(0, 5));
+    if (recommendedPosts.length > 0) { // Removed check for latestArticles.length === 0 to always update
+      // If we have recommendedPosts, set latestArticles based on them
+      // Use slice to ensure we don't exceed the number available
+      setLatestArticles(recommendedPosts.slice(0, 5)); // Keep showing up to 5 in the bottom section
     }
-  }, [recommendedPosts, latestArticles]);
+  }, [recommendedPosts]); // Run whenever recommendedPosts changes
+
+  // Function to load all comments when "See more responses" is clicked
+  // Defined after the useEffect that might call it
+  const handleLoadAllComments = async () => {
+    if (!blogId || isLoadingComments || hasLoadedAllComments) return;
+
+    setIsLoadingComments(true);
+
+    try {
+      // Fetch all comments without limit
+      const response = await fetchCommentsByBlogId(blogId.toString());
+
+      if (response.success && response.data) {
+        // Format comments as before
+        const commentsData = Array.isArray(response.data) ? response.data : [];
+
+        const formattedComments = commentsData.map((c: any) => {
+          const author = {
+            name: c.user?.username || "Anonymous",
+            image: c.user?.avatar || "/testimonial/1.webp",
+            username: c.user?.username || "",
+            user_id: c.user?.id?.toString() || ""
+          };
+
+          const replies = Array.isArray(c.replies)
+            ? c.replies.map((r: any) => ({
+              id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
+              author: {
+                name: r.user?.username || "Anonymous",
+                image: r.user?.avatar || "/testimonial/1.webp",
+                username: r.user?.username || "",
+                user_id: r.user?.id?.toString() || ""
+              },
+              text: r.content || "",
+              date: r.created_at || new Date().toISOString(),
+              likes: r.likes_count || 0,
+              isLiked: Array.isArray(r.likes) && userId
+                ? r.likes.some((like: any) => like.user_id?.toString() === userId)
+                : false
+            }))
+            : [];
+
+          return {
+            id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
+            author,
+            text: c.content || "",
+            date: c.created_at || new Date().toISOString(),
+            likes: c.likes_count || 0,
+            isLiked: Array.isArray(c.likes) && userId
+              ? c.likes.some((like: any) => like.user_id?.toString() === userId)
+              : false,
+            showReplies: true,
+            replies
+          };
+        });
+
+        setComments(formattedComments);
+        setHasLoadedAllComments(true);
+      }
+    } catch (error) {
+      // Error is already handled by API client
+      console.error("[BlogPost] Error fetching all comments:", error);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
 
   // Check for preloaded comments in localStorage when comments section is opened
   useEffect(() => {
-    if (isCommentsOpen && blogId && !hasLoadedAllComments && !isLoadingComments) {
+    if (isCommentsOpen && blogId && slug && !hasLoadedAllComments && !isLoadingComments) { // Added slug check
       // Check if there are preloaded comments in localStorage
       const storedComments = localStorage.getItem(`blog-${slug}-comments`);
 
@@ -466,71 +537,7 @@ const BlogPost = ({
       // If no stored comments or error parsing, fall back to loading all comments
       handleLoadAllComments();
     }
-  }, [isCommentsOpen, blogId, slug, userId, hasLoadedAllComments, isLoadingComments]);
-
-  // Function to load all comments when "See more responses" is clicked
-  const handleLoadAllComments = async () => {
-    if (!blogId || isLoadingComments || hasLoadedAllComments) return;
-
-    setIsLoadingComments(true);
-
-    try {
-      // Fetch all comments without limit
-      const response = await fetchCommentsByBlogId(blogId.toString());
-
-      if (response.success && response.data) {
-        // Format comments as before
-        const commentsData = Array.isArray(response.data) ? response.data : [];
-
-        const formattedComments = commentsData.map((c: any) => {
-          const author = {
-            name: c.user?.username || "Anonymous",
-            image: c.user?.avatar || "/testimonial/1.webp",
-            username: c.user?.username || "",
-            user_id: c.user?.id?.toString() || ""
-          };
-
-          const replies = Array.isArray(c.replies)
-            ? c.replies.map((r: any) => ({
-              id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
-              author: {
-                name: r.user?.username || "Anonymous",
-                image: r.user?.avatar || "/testimonial/1.webp",
-                username: r.user?.username || "",
-                user_id: r.user?.id?.toString() || ""
-              },
-              text: r.content || "",
-              date: r.created_at || new Date().toISOString(),
-              likes: r.likes_count || 0,
-              isLiked: Array.isArray(r.likes) && userId
-                ? r.likes.some((like: any) => like.user_id?.toString() === userId)
-                : false
-            }))
-            : [];
-
-          return {
-            id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
-            author,
-            text: c.content || "",
-            date: c.created_at || new Date().toISOString(),
-            likes: c.likes_count || 0,
-            isLiked: Array.isArray(c.likes) && userId
-              ? c.likes.some((like: any) => like.user_id?.toString() === userId)
-              : false,
-            showReplies: true,
-            replies
-          };
-        });
-
-        setComments(formattedComments);
-        setHasLoadedAllComments(true);
-      }
-    } catch (error) {
-      // Error is already handled by API client
-    } finally {
-      setIsLoadingComments(false);
-    }
-  };
+  }, [isCommentsOpen, blogId, slug, userId, hasLoadedAllComments, isLoadingComments]); // handleLoadAllComments is intentionally omitted
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
@@ -666,7 +673,7 @@ const BlogPost = ({
                 : comment
             )
           );
-        }, 2000);
+        }, 2000); // Animation duration
 
         // Show success notification
         setNotificationType("success");
@@ -1333,8 +1340,8 @@ const BlogPost = ({
   };
 
   // Construct canonical URL (replace 'https://yourwebsite.com' with your actual domain)
-  const baseUrl = "https://yourwebsite.com"; // <<<--- IMPORTANT: Replace with your actual base URL
-  const canonicalUrl = `${baseUrl}/blog/${slug}`; // Assuming blog posts are under /blog/
+
+  const canonicalUrl = window.location.href;
 
   // --- End SEO Helper Functions ---
 
@@ -1541,7 +1548,7 @@ const BlogPost = ({
             <div className="hidden lg:block space-y-6">
               {/* Share buttons above MetricsGraph */}
               <ShareButtons title={title} url={canonicalUrl} />
-              
+
               <MetricsGraph postTags={tags} slug={slug} />
 
               {/* --- RECOMMENDED READS SIDEBAR SECTION --- */}
@@ -1560,7 +1567,7 @@ const BlogPost = ({
             <div className="lg:hidden mt-10 mx-0 sm:mx-0 px-4 sm:px-6">
               {/* Share buttons for mobile */}
               <ShareButtons title={title} url={canonicalUrl} />
-              
+
               <MetricsGraph postTags={tags} slug={slug} />
 
               {!recommendedPosts.length ? (
@@ -1759,9 +1766,9 @@ const BlogPost = ({
       {/* Recommended Articles Section - Below Comments */}
       {latestArticles.length > 0 && (
         <div className="border-t border-gray-200 bg-gray-50">
-          <RecommendedArticles 
-            articles={latestArticles} 
-            title="More Articles You Might Like" 
+          <RecommendedArticles
+            articles={latestArticles}
+            title="More Articles You Might Like"
           />
         </div>
       )}
@@ -2113,3 +2120,27 @@ const BlogPost = ({
 };
 
 export default BlogPost;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
