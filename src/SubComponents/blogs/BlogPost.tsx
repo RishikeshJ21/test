@@ -158,24 +158,15 @@ const BlogPost = ({
       try {
         // Fetch 4 comments initially
         const response = await fetchCommentsByBlogId(blogId.toString(), 4);
-   
+
         // Check if component is still mounted before updating state
         if (!isMountedRef.current) return;
-         const userData = JSON.parse(localStorage.getItem("blog-user-data") || '{}');
-         setUserId(userData.id);
+
         if (response.success && response.data) {
-           
-       
-        
           // Format comments as before
           console.log("response.data", response.data);
-          console.log("userId", userData.id);
-          const isLiked = response.data.some((comment: any) => {
-            return comment.likes.some((users: any) => users.user_id === userData.id )
-          });
-          console.log("userId", isLiked);
           const commentsData = Array.isArray(response.data) ? response.data : [];
-console.log("commentsData", commentsData);
+
           const formattedComments = commentsData.map((c: any) => {
             const author = {
               name: c.user?.username || "Anonymous",
@@ -186,7 +177,6 @@ console.log("commentsData", commentsData);
 
             const replies = Array.isArray(c.replies)
               ? c.replies.map((r: any) => ({
-              
                 id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
                 author: {
                   name: r.user?.username || "Anonymous",
@@ -197,28 +187,25 @@ console.log("commentsData", commentsData);
                 text: r.content || "",
                 date: r.created_at || new Date().toISOString(),
                 likes: r.likes_count || 0,
-                
-                isLiked: Array.isArray(r.likes) && userData.id 
-                  ? r.likes.some((users: any) => users.user_id === userData.id )
+                isLiked: Array.isArray(r.likes) && userId
+                  ? r.likes.some((like: any) => like.user_id?.toString() === userId)
                   : false
               }))
               : [];
 
             return {
-              
               id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
               author,
               text: c.content || "",
               date: c.created_at || new Date().toISOString(),
               likes: c.likes_count || 0,
-              isLiked: Array.isArray(c.likes) && userData.id 
-                ? c.likes.some((users: any) => users.user_id === userData.id )
+              isLiked: Array.isArray(c.likes) && userId
+                ? c.likes.some((like: any) => like.user_id?.toString() === userId)
                 : false,
               showReplies: true,
               replies
             };
           });
-          console.log("formattedComments", formattedComments);
 
           setComments(formattedComments);
         }
@@ -230,7 +217,7 @@ console.log("commentsData", commentsData);
         }
       }
     };
-    loadUserData();
+
     // Call getInitialComments when blogId or userId changes and is available
     getInitialComments();
 

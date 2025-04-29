@@ -27,6 +27,8 @@ export default defineConfig({
                             return "vendor-react-toastify";
                         if (id.includes("react"))
                             return "vendor-react";
+                        if (id.includes("lodash"))
+                            return "vendor-lodash";
                         return "vendor"; // all other vendor modules
                     }
                     if (id.includes("Components"))
@@ -50,11 +52,19 @@ export default defineConfig({
         },
     },
     optimizeDeps: {
-        include: ["react", "react-dom", "react-router-dom", "framer-motion"],
+        include: ["react", "react-dom", "react-router-dom", "framer-motion", "lodash"],
+        esbuildOptions: {
+            target: "es2015",
+            treeShaking: true,
+        },
     },
     server: {
         open: true,
         cors: true,
+        // Enable build optimization during development
+        hmr: {
+            overlay: true,
+        },
     },
     preview: {
         port: 3000,

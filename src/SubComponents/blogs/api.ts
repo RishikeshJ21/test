@@ -129,11 +129,29 @@ export async function fetchRelatedBlogs(
     // Filter out current blog if needed
     let filteredPosts = Array.isArray(relatedPosts)
       ? relatedPosts.filter((post) => {
-          // We need to check slug if available, otherwise just keep all posts
-          if (post.slug) {
-            return post.slug !== currentSlug;
+          // We need to check for both slug and ID to ensure we don't include the current post
+          // First check by slug (string comparison)
+          if (post.slug && currentSlug) {
+            if (post.slug === currentSlug) {
+              return false; // Filter out if slug matches
+            }
           }
-          return true;
+
+          // Also check by ID if both are available (numeric comparison)
+          if (post.id && currentSlug.includes("?id=")) {
+            const currentIdMatch = currentSlug.match(/\?id=(\d+)/);
+            if (currentIdMatch && currentIdMatch[1]) {
+              const currentId = parseInt(currentIdMatch[1], 10);
+              if (
+                post.id === currentId ||
+                post.id.toString() === currentIdMatch[1]
+              ) {
+                return false; // Filter out if ID matches
+              }
+            }
+          }
+
+          return true; // Include post if neither slug nor ID match
         })
       : [];
 
