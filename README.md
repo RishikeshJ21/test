@@ -1,93 +1,157 @@
 # Createathon React Application
 
-This is the frontend for the Createathon platform, built with React, TypeScript, and Vite.
+A modern React application built with TypeScript, Vite, and TailwindCSS. This project provides a robust foundation for building scalable web applications with modern best practices.
 
-## Getting Started
+## 🚀 Features
+
+- ⚡️ **Lightning Fast** - Built with Vite for rapid development and optimized builds
+- 🎯 **Type Safe** - Written in TypeScript for better developer experience
+- 🎨 **Modern UI** - Styled with TailwindCSS and Radix UI components
+- 📱 **Responsive** - Mobile-first design approach
+- ♿️ **Accessible** - ARIA-compliant components and keyboard navigation
+- 🔒 **Secure** - Built-in security best practices
+- 🧪 **Testable** - Set up for unit and integration testing
+- 📦 **Optimized** - Code splitting and performance optimizations
+
+## 📚 Documentation
+
+- [Architecture Documentation](./docs/ARCHITECTURE.md)
+- [Development Guide](./docs/DEVELOPMENT.md)
+- [API Reference](./docs/API.md)
+- [IIS Deployment Guide](./IIS-DEPLOYMENT.md)
+- [CI/CD Setup Guide](./CICD-SETUP.md)
+
+## 🛠 Getting Started
 
 ### Prerequisites
 
-- Node.js (version 18.x or later)
-- npm or yarn
+- Node.js (version 18.0.0 or higher)
+- npm (comes with Node.js)
+- Git
 
-### Installation
+### Quick Start
 
-```bash
-# Clone the repository
-git clone https://github.com/your-username/createathon-react.git
-cd createathon-react
+1. Clone the repository:
+   ```bash
+   git clone [repository-url]
+   cd createathon-react
+   ```
 
-# Install dependencies
-npm install
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+Visit `http://localhost:5173` to see your application.
+
+## 📦 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests (when configured)
+
+## 🏗 Project Structure
+
+```
+createathon-react/
+├── src/
+│   ├── Components/     # Reusable UI components
+│   ├── SubComponents/ # Smaller component pieces
+│   ├── assets/       # Static assets
+│   ├── data/        # Static data and constants
+│   ├── lib/         # Utility functions and hooks
+│   ├── pages/       # Page components
+│   ├── utils/       # Utility functions
+│   ├── App.tsx      # Main application component
+│   └── main.tsx     # Application entry point
+├── public/          # Static files
+├── docs/           # Documentation
+├── tests/         # Test files
+└── [config files] # Various configuration files
 ```
 
-### Development
+## 🔧 Configuration
 
-```bash
-# Start development server
-npm run dev
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+VITE_API_BASE_URL=your_api_url
+VITE_RECAPTCHA_SITE_KEY=your_recaptcha_key
 ```
 
-### Building for Production
+### TailwindCSS
+
+Customize the theme in `tailwind.config.js`:
+
+```javascript
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: {...},
+        secondary: {...}
+      }
+    }
+  }
+}
+```
+
+## 🚀 Deployment
+
+### Production Build
 
 ```bash
-# Create production build
 npm run build
 ```
 
-## Deployment Options
+This creates an optimized build in the `dist/` directory.
 
-### IIS Deployment
+### Deployment Options
 
-This application can be deployed to IIS. See the [IIS-DEPLOYMENT.md](./IIS-DEPLOYMENT.md) file for detailed instructions.
+- **IIS**: Follow the [IIS Deployment Guide](./IIS-DEPLOYMENT.md)
+- **CI/CD**: Configure using [CI/CD Setup Guide](./CICD-SETUP.md)
+- **Static Hosting**: Deploy the `dist/` directory to any static hosting service
 
-### CI/CD Pipelines
+## 🧪 Testing
 
-This project includes GitHub Actions workflows for continuous integration and deployment:
-
-- **CI Pipeline**: Builds and tests the application on every push and pull request
-- **CD Pipeline**: Automatically deploys to production when changes are pushed to the main branch
-- **Staging Pipeline**: Deploys to staging environments for testing
-
-For detailed setup instructions, see the [CICD-SETUP.md](./CICD-SETUP.md) file.
-
-## Environment Configuration
-
-Environment variables are used for configuration and can be set in the following files:
-
-- `.env` - Development environment
-- `.env.production` - Production environment
-
-Key environment variables:
-
-```
-VITE_API_BASE_URL=https://api.createathon.co
-VITE_RECAPTCHA_SITE_KEY=your-recaptcha-site-key
+```bash
+npm run test        # Run all tests
+npm run test:watch  # Run tests in watch mode
+npm run test:coverage # Generate coverage report
 ```
 
-## Project Structure
+## 📝 Contributing
 
-```
-/src
-  /Components       # Reusable UI components
-  /SubComponents    # Smaller component units
-  /assets           # Static assets
-  /lib              # Utility functions and helpers
-  /data             # Static data and constants
-  App.tsx           # Main application component
-  main.tsx          # Application entry point
-  config.ts         # Configuration and environment variables
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Contributing
+## 📄 License
 
-1. Create a feature branch: `git checkout -b feature/my-feature`
-2. Commit your changes: `git commit -m 'Add some feature'`
-3. Push to the branch: `git push origin feature/my-feature`
-4. Submit a pull request
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## License
+## 🤝 Support
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+For support, email [support@example.com](mailto:support@example.com) or join our Slack channel.
+
+## 🙏 Acknowledgments
+
+- [Vite](https://vitejs.dev/)
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/)
 
 # React + TypeScript + Vite
 
