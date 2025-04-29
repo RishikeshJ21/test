@@ -99,52 +99,62 @@ export async function fetchRelatedBlogs(
   console.log(
     `@@@ fetchRelatedBlogs called for slug: ${currentSlug}, category: ${category}`
   );
+
   try {
-    // Get all blogs
-    const allBlogs = await fetchBlogs();
+    // Use the new API endpoint for related posts
+    const API_BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-    // Filter out current blog
-    let potentialBlogs = allBlogs.filter(
-      (blog) => blog.slug !== currentSlug && blog.image
-    );
+    // Only use category filter if we have a category and are not excluding it
+    let endpoint = `${API_BASE_URL}/v0/api/blog/relatedPosts`;
 
-    // Apply category filter (or exclusion)
-    if (category) {
-      potentialBlogs = potentialBlogs.filter((blog) =>
-        excludeCurrentCategory
-          ? blog.category?.toLowerCase() !== category.toLowerCase()
-          : blog.category?.toLowerCase() === category.toLowerCase()
-      );
+    if (category && !excludeCurrentCategory) {
+      endpoint += `?mainTag=${encodeURIComponent(category)}`;
     }
 
-    // If no matching blogs, return empty array
-    if (potentialBlogs.length === 0) {
-      // Optional: If excluding category returned nothing, try fetching *any* other posts as fallback
-      if (excludeCurrentCategory) {
-        potentialBlogs = allBlogs.filter(
-          (blog) => blog.slug !== currentSlug && blog.image
-        );
-      }
-      if (potentialBlogs.length === 0) {
-        return [];
-      }
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch related posts: ${response.status}`);
     }
 
-    // Limit to requested number
-    const limitedBlogs = potentialBlogs.slice(0, limit);
+    const relatedPosts = await response.json();
 
-    // Map to the required format
-    return limitedBlogs.map((blog) => ({
-      id: blog.id.toString(),
-      title: blog.title,
-      slug: blog.slug,
-      date: new Date(blog.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      category: blog.category,
-      image: blog.image,
+    // Filter out current blog if needed
+    let filteredPosts = Array.isArray(relatedPosts)
+      ? relatedPosts.filter((post) => {
+          // We need to check slug if available, otherwise just keep all posts
+          if (post.slug) {
+            return post.slug !== currentSlug;
+          }
+          return true;
+        })
+      : [];
+
+    // Apply limit
+    filteredPosts = filteredPosts.slice(0, limit);
+
+    // Map API response to RelatedPost format
+    return filteredPosts.map((post) => ({
+      id: post.id?.toString(),
+      title: post.title || "Untitled",
+      slug: post.slug || `blog-${post.id}`, // Generate a slug if none exists
+      date: post.created_date
+        ? new Date(post.created_date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : "Unknown date",
+      excerpt: post.excerpt,
+      image: post.image,
+      category: category, // Use the category passed to the function
     }));
   } catch (error) {
     console.error("Error fetching related blogs:", error);

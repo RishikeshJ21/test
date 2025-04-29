@@ -89,7 +89,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="max-w-[1800px] mx-auto px-4 md:px-8 relative z-10 h-full flex flex-col">
+      <div className="max-w-[1800px] mx-auto    relative z-10 h-full flex flex-col">
         <motion.div
           className="text-start mb-6"
           initial={{ opacity: 0, y: 30 }}

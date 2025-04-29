@@ -84,6 +84,7 @@ const BlogPost = ({
   const commentsLoadedRef = useRef(false);
   const blogIdLoadedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const initialCommentsLoadedRef = useRef(false); // Add this new ref to track initial comments loading
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const commentTextAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -143,30 +144,38 @@ const BlogPost = ({
     // Load user data
     loadUserData();
 
-    // Only fetch initial comments (with limit) if we have a blog ID and userId
+    // Only fetch initial comments (with limit) if we have a blog ID
     const getInitialComments = async () => {
       // Don't proceed if any of these conditions are true
-      // Wait for blogId AND userId to be loaded before fetching comments
-      if (!blogId || !userId || isLoadingComments || commentsLoadedRef.current || !isMountedRef.current) {
-        console.log(`[BlogPost] Skipping initial comments fetch. blogId: ${blogId}, userId: ${userId}, loading: ${isLoadingComments}, loaded: ${commentsLoadedRef.current}`);
+      // Only wait for blogId to be loaded before fetching comments (removed userId requirement)
+      if (!blogId || isLoadingComments || commentsLoadedRef.current || initialCommentsLoadedRef.current || !isMountedRef.current) {
+        console.log(`[BlogPost] Skipping initial comments fetch. blogId: ${blogId}, loading: ${isLoadingComments}, loaded: ${commentsLoadedRef.current}, initialLoaded: ${initialCommentsLoadedRef.current}`);
         return;
       }
 
-      setIsLoadingComments(true);
+      initialCommentsLoadedRef.current = true; // Mark that initial comments are being loaded
 
       try {
-        // Fetch only 3 comments initially
+        // Fetch 4 comments initially
         const response = await fetchCommentsByBlogId(blogId.toString(), 4);
-
+   
         // Check if component is still mounted before updating state
         if (!isMountedRef.current) return;
-
+         const userData = JSON.parse(localStorage.getItem("blog-user-data") || '{}');
+         setUserId(userData.id);
         if (response.success && response.data) {
-          // Make sure we handle the response format correctly
+           
+       
+        
+          // Format comments as before
+          console.log("response.data", response.data);
+          console.log("userId", userData.id);
+          const isLiked = response.data.some((comment: any) => {
+            return comment.likes.some((users: any) => users.user_id === userData.id )
+          });
+          console.log("userId", isLiked);
           const commentsData = Array.isArray(response.data) ? response.data : [];
-
-
-          // Map API response to Comment interface format with safety checks
+console.log("commentsData", commentsData);
           const formattedComments = commentsData.map((c: any) => {
             const author = {
               name: c.user?.username || "Anonymous",
@@ -177,6 +186,7 @@ const BlogPost = ({
 
             const replies = Array.isArray(c.replies)
               ? c.replies.map((r: any) => ({
+              
                 id: r.id?.toString() || `reply-${Date.now()}-${Math.random()}`,
                 author: {
                   name: r.user?.username || "Anonymous",
@@ -187,32 +197,30 @@ const BlogPost = ({
                 text: r.content || "",
                 date: r.created_at || new Date().toISOString(),
                 likes: r.likes_count || 0,
-                isLiked: Array.isArray(r.likes) && userId
-                  ? r.likes.some((like: any) => like.user_id?.toString() === userId)
+                
+                isLiked: Array.isArray(r.likes) && userData.id 
+                  ? r.likes.some((users: any) => users.user_id === userData.id )
                   : false
               }))
               : [];
 
             return {
+              
               id: c.id?.toString() || `comment-${Date.now()}-${Math.random()}`,
               author,
               text: c.content || "",
               date: c.created_at || new Date().toISOString(),
               likes: c.likes_count || 0,
-              isLiked: Array.isArray(c.likes) && userId
-                ? c.likes.some((like: any) => like.user_id?.toString() === userId)
+              isLiked: Array.isArray(c.likes) && userData.id 
+                ? c.likes.some((users: any) => users.user_id === userData.id )
                 : false,
               showReplies: true,
               replies
             };
           });
+          console.log("formattedComments", formattedComments);
 
           setComments(formattedComments);
-
-          // Mark comments as loaded
-          commentsLoadedRef.current = true;
-        } else {
-          setComments(initialComments);
         }
       } catch (error) {
         setComments(initialComments);
@@ -222,7 +230,7 @@ const BlogPost = ({
         }
       }
     };
-
+    loadUserData();
     // Call getInitialComments when blogId or userId changes and is available
     getInitialComments();
 
@@ -234,6 +242,7 @@ const BlogPost = ({
     return () => {
       commentsLoadedRef.current = false;
       blogIdLoadedRef.current = false;
+      initialCommentsLoadedRef.current = false; // Reset this flag too
     };
   }, [slug]);
 
@@ -265,26 +274,32 @@ const BlogPost = ({
 
       const target = event.target as Node;
 
+      // Check if the click is inside the comments panel
       const isOutsideLg =
         commentsRefLg.current && !commentsRefLg.current.contains(target);
       const isOutsideMobile =
         commentsRefMobile.current &&
         !commentsRefMobile.current.contains(target);
 
+      // Check if the click is on the comment button
       const commentButton = document.querySelector(
         '[aria-label="Show comments"]'
       );
       const isOutsideCommentButton =
         !commentButton || !commentButton.contains(target);
 
+      // Only close if clicking outside both the panel and the button
       if (isOutsideLg && isOutsideMobile && isOutsideCommentButton) {
+        event.preventDefault();
+        event.stopPropagation();
         if (onToggleComments) onToggleComments(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    // Add the event listener
+    document.addEventListener("mousedown", handleClickOutside, true);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside, true);
     };
   }, [isCommentsOpen, onToggleComments]);
 
@@ -398,6 +413,12 @@ const BlogPost = ({
   // Check for preloaded comments in localStorage when comments section is opened
   useEffect(() => {
     if (isCommentsOpen && blogId && !hasLoadedAllComments && !isLoadingComments) {
+      // Skip if comments are already loaded
+      if (commentsLoadedRef.current) {
+        console.log("[BlogPost] Skipping localStorage check - comments already loaded");
+        return;
+      }
+
       // Check if there are preloaded comments in localStorage
       const storedComments = localStorage.getItem(`blog-${slug}-comments`);
 
@@ -453,6 +474,7 @@ const BlogPost = ({
             setComments(formattedComments);
             setTotalCommentsAvailable(commentsData.length);
             setHasLoadedAllComments(true);
+            commentsLoadedRef.current = true; // Mark comments as loaded
 
             // Remove from localStorage after using to avoid stale data
             localStorage.removeItem(`blog-${slug}-comments`);
@@ -470,9 +492,13 @@ const BlogPost = ({
 
   // Function to load all comments when "See more responses" is clicked
   const handleLoadAllComments = async () => {
-    if (!blogId || isLoadingComments || hasLoadedAllComments) return;
+    if (!blogId || isLoadingComments || hasLoadedAllComments || commentsLoadedRef.current) {
+      console.log(`[BlogPost] Skipping handleLoadAllComments. blogId: ${blogId}, loading: ${isLoadingComments}, allLoaded: ${hasLoadedAllComments}, commentsLoaded: ${commentsLoadedRef.current}`);
+      return;
+    }
 
     setIsLoadingComments(true);
+    commentsLoadedRef.current = true; // Mark as loaded before making the API call
 
     try {
       // Fetch all comments without limit
@@ -527,6 +553,7 @@ const BlogPost = ({
       }
     } catch (error) {
       // Error is already handled by API client
+      commentsLoadedRef.current = false; // Reset flag if there was an error
     } finally {
       setIsLoadingComments(false);
     }
@@ -1335,7 +1362,7 @@ const BlogPost = ({
   // Construct canonical URL (replace 'https://yourwebsite.com' with your actual domain)
   const baseUrl = "https://createathon.co"; // <<<--- IMPORTANT: Replace with your actual base URL
   const canonicalUrl = `${baseUrl}/blog/${slug}?id=${blogId}`; // Assuming blog posts are under /blog/
-  
+
   // Create a URL for sharing that includes the blog ID
   const shareUrl = `${baseUrl}/blog/${slug}?id=${blogId}`;
 
@@ -1571,7 +1598,7 @@ const BlogPost = ({
                   <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-600"></div>
                 </div>
               ) : recommendedPosts.length > 0 ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
+                <div className="bg-white hidden md:block rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Related Articles</h3>
                   <div className="space-y-4">
                     {recommendedPosts.slice(0, 3).map((post) => (
@@ -1690,7 +1717,7 @@ const BlogPost = ({
               {comments.length > 0 && (
                 <div className="space-y-6">
                   <AnimatePresence>
-                    {/* {comments.slice(0, 3).map((comment) => (
+                    {comments.slice(0, 4).map((comment) => (
                       <CommentItem
                         key={comment.id}
                         comment={comment}
@@ -1709,41 +1736,41 @@ const BlogPost = ({
                         currentUserId={userId}
                         isSubmittingReply={isSubmittingReply}
                       />
-                    ))} */}
+                    ))}
                   </AnimatePresence>
 
-                  {comments.length > 1 && (
-                    <div className="relative mt-10">
-                      <div className="h-20"></div>
-                      <div
-                        className="absolute inset-0 bg-gradient-to-b from-transparent to-white"
-                        style={{
-                          background:
-                            "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,1) 100%)",
-                        }}
-                      ></div>
+                  {/* Show "See All Comments" button for all users, not just when comments.length > 1 */}
+                  <div className="relative mt-10">
+                    <div className="h-20"></div>
+                    <div
+                      className="absolute inset-0 bg-gradient-to-b from-transparent to-white"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,1) 100%)",
+                      }}
+                    ></div>
 
-                      <div className="absolute bottom-0 left-0 right-0 flex justify-start pb-4">
-                        <button
-                          onClick={() => {
-                            handleLoadAllComments();
-                            if (onToggleComments) onToggleComments(true);
-                          }}
-                          className="bg-gradient-to-r from-white to-purple-50 border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:from-purple-50 hover:to-purple-100 transition-all duration-300 font-medium shadow-sm"
-                          disabled={isLoadingComments}
-                        >
-                          {isLoadingComments ? (
-                            <div className="flex items-center">
-                              <div className="animate-spin h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
-                              Loading...
-                            </div>
-                          ) : (
-                            "See All Comments"
-                          )}
-                        </button>
-                      </div>
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-start pb-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Stop event propagation
+                          handleLoadAllComments();
+                          if (onToggleComments) onToggleComments(true);
+                        }}
+                        className="bg-gradient-to-r from-white to-purple-50 border border-purple-600 text-purple-600 px-6 py-2 rounded-full hover:from-purple-50 hover:to-purple-100 transition-all duration-300 font-medium shadow-sm"
+                        disabled={isLoadingComments}
+                      >
+                        {isLoadingComments ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+                            Loading...
+                          </div>
+                        ) : (
+                          "See All Comments"
+                        )}
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 
@@ -1764,7 +1791,7 @@ const BlogPost = ({
         <div className="border-t border-gray-200 bg-gray-50">
           <RecommendedArticles
             articles={latestArticles}
-            title="More Articles You Might Like"
+            title="Related Articles"
           />
         </div>
       )}
@@ -1791,19 +1818,22 @@ const BlogPost = ({
           <>
             <motion.div
               ref={commentsRefLg}
-              className="fixed top-0 right-0  bottom-0 w-[450px] bg-white shadow-lg hidden lg:flex flex-col z-99 border-l border-gray-200 overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-[450px] bg-white shadow-lg hidden lg:flex flex-col z-[100] border-l border-gray-200 overflow-hidden"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center text-black p-5 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <div className="flex justify-between items-center text-black p-5 border-b border-gray-200 sticky top-0 bg-white z-10" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-xl font-semibold">
                   Comments ({comments.length})
                 </h2>
                 <button
-                  onClick={handleCloseComments}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseComments();
+                  }}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
                   aria-label="Close comments"
                 >
@@ -1811,7 +1841,7 @@ const BlogPost = ({
                 </button>
               </div>
 
-              <div className="p-5 border-b border-gray-200">
+              <div className="p-5 border-b border-gray-200" onClick={(e) => e.stopPropagation()}>
                 {!replyingTo ? (
                   <>
                     <div className="flex items-center mb-3">
@@ -1885,26 +1915,43 @@ const BlogPost = ({
                 )}
               </div>
 
-              <div className="px-5 flex-grow overflow-y-auto">
+              <div className="px-5 py-2 flex-grow overflow-y-auto overflow-x-hidden" onClick={(e) => e.stopPropagation()}>
                 {comments.length > 0 ? (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-gray-100" onClick={(e) => e.stopPropagation()}>
                     <AnimatePresence>
                       {comments.map((comment) => (
                         <CommentItem
                           key={comment.id}
                           comment={comment}
-                          handleLikeComment={handleLikeComment}
-                          handleLikeReply={handleLikeReply}
-                          toggleShowReplies={toggleShowReplies}
-                          handleReplyComment={handleReplyComment}
+                          handleLikeComment={(commentId) => {
+                            handleLikeComment(commentId);
+                          }}
+                          handleLikeReply={(commentId, replyId) => {
+                            handleLikeReply(commentId, replyId);
+                          }}
+                          toggleShowReplies={(commentId) => {
+                            toggleShowReplies(commentId);
+                          }}
+                          handleReplyComment={(commentId) => {
+                            handleReplyComment(commentId);
+                          }}
                           replyingTo={replyingTo}
                           replyText={replyText}
-                          handleReplyTextareaInput={handleReplyTextareaInput}
-                          handleAddReply={handleAddReply}
+                          handleReplyTextareaInput={(e) => {
+                            e.stopPropagation();
+                            handleReplyTextareaInput(e);
+                          }}
+                          handleAddReply={() => {
+                            handleAddReply();
+                          }}
                           replyTextAreaRef={replyTextAreaRef}
                           formatTimeAgo={formatTimeAgo}
-                          handleDeleteComment={handleDeleteComment}
-                          handleDeleteReply={handleDeleteReply}
+                          handleDeleteComment={(commentId) => {
+                            handleDeleteComment(commentId);
+                          }}
+                          handleDeleteReply={(commentId, replyId) => {
+                            handleDeleteReply(commentId, replyId);
+                          }}
                           currentUserId={userId}
                           isSubmittingReply={isSubmittingReply}
                         />
@@ -1912,7 +1959,7 @@ const BlogPost = ({
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500 min-h-[200px]">
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500 min-h-[200px]" onClick={(e) => e.stopPropagation()}>
                     <MessageCircle size={40} className="mb-4 text-gray-400" />
                     <p className="mb-1 font-semibold">No responses yet.</p>
                     <p>Be the first to share your thoughts!</p>
@@ -1921,9 +1968,13 @@ const BlogPost = ({
               </div>
             </motion.div>
 
+            {/* Add semi-transparent overlay that's clickable */}
             <div
-              className="fixed inset-0 bg-transparent z-30 hidden lg:block"
-              onClick={() => handleCloseComments()}
+              className="fixed inset-0 bg-black bg-opacity-20 z-[99] hidden lg:block"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseComments();
+              }}
             ></div>
 
             <motion.div
@@ -1932,15 +1983,18 @@ const BlogPost = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-white z-50 lg:hidden flex flex-col"
+              className="fixed inset-0 bg-white z-[100] lg:hidden flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0">
+              <div className="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0 sticky top-0 bg-white z-10" onClick={(e) => e.stopPropagation()}>
                 <h2 className="text-xl text-black font-semibold">
                   Responses ({comments.length})
                 </h2>
                 <button
-                  onClick={handleCloseComments}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseComments();
+                  }}
                   className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100"
                   aria-label="Close comments"
                 >
@@ -1948,26 +2002,43 @@ const BlogPost = ({
                 </button>
               </div>
 
-              <div className="overflow-y-auto flex-grow p-4">
+              <div className="overflow-y-auto flex-grow p-4 overflow-x-hidden" onClick={(e) => e.stopPropagation()}>
                 {comments.length > 0 ? (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-gray-100" onClick={(e) => e.stopPropagation()}>
                     <AnimatePresence>
                       {comments.map((comment) => (
                         <CommentItem
                           key={comment.id}
                           comment={comment}
-                          handleLikeComment={handleLikeComment}
-                          handleLikeReply={handleLikeReply}
-                          toggleShowReplies={toggleShowReplies}
-                          handleReplyComment={handleReplyComment}
+                          handleLikeComment={(commentId) => {
+                            handleLikeComment(commentId);
+                          }}
+                          handleLikeReply={(commentId, replyId) => {
+                            handleLikeReply(commentId, replyId);
+                          }}
+                          toggleShowReplies={(commentId) => {
+                            toggleShowReplies(commentId);
+                          }}
+                          handleReplyComment={(commentId) => {
+                            handleReplyComment(commentId);
+                          }}
                           replyingTo={replyingTo}
                           replyText={replyText}
-                          handleReplyTextareaInput={handleReplyTextareaInput}
-                          handleAddReply={handleAddReply}
+                          handleReplyTextareaInput={(e) => {
+                            e.stopPropagation();
+                            handleReplyTextareaInput(e);
+                          }}
+                          handleAddReply={() => {
+                            handleAddReply();
+                          }}
                           replyTextAreaRef={replyTextAreaRef}
                           formatTimeAgo={formatTimeAgo}
-                          handleDeleteComment={handleDeleteComment}
-                          handleDeleteReply={handleDeleteReply}
+                          handleDeleteComment={(commentId) => {
+                            handleDeleteComment(commentId);
+                          }}
+                          handleDeleteReply={(commentId, replyId) => {
+                            handleDeleteReply(commentId, replyId);
+                          }}
                           currentUserId={userId}
                           isSubmittingReply={isSubmittingReply}
                         />
@@ -1975,7 +2046,7 @@ const BlogPost = ({
                     </AnimatePresence>
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500">
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-500" onClick={(e) => e.stopPropagation()}>
                     <MessageCircle size={40} className="mb-4 text-gray-400" />
                     <p className="mb-1 font-semibold">No responses yet.</p>
                     <p>Be the first to share your thoughts!</p>
@@ -1984,8 +2055,8 @@ const BlogPost = ({
               </div>
 
               {!replyingTo && (
-                <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
-                  <div className="flex items-start mb-2">
+                <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-start mb-2" onClick={(e) => e.stopPropagation()}>
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-1">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -2004,11 +2075,14 @@ const BlogPost = ({
                   </div>
 
                   {userName ? (
-                    <div className="pl-13">
+                    <div className="pl-13" onClick={(e) => e.stopPropagation()}>
                       <textarea
                         ref={commentTextAreaRef}
                         value={commentText}
-                        onChange={handleTextareaInput}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleTextareaInput(e);
+                        }}
                         placeholder="What are your thoughts?"
                         className="w-full p-3 bg-gray-50 rounded-md border border-gray-200 resize-none focus:ring-1 focus:ring-gray-300 focus:outline-none text-black"
                         rows={1}
@@ -2016,7 +2090,10 @@ const BlogPost = ({
                       />
                       <div className="flex justify-end mt-2">
                         <Button
-                          onClick={handleAddComment}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddComment();
+                          }}
                           disabled={!commentText.trim() || isSubmittingComment}
                           className="bg-purple-600 hover:bg-purple-700 text-white disabled:bg-purple-300 disabled:cursor-not-allowed"
                         >
@@ -2032,9 +2109,12 @@ const BlogPost = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-2 pl-13 flex justify-start">
+                    <div className="mt-2 pl-13 flex justify-start" onClick={(e) => e.stopPropagation()}>
                       <Button
-                        onClick={() => setShowUsernameModal(true)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowUsernameModal(true);
+                        }}
                         className="bg-purple-600 hover:bg-purple-700 text-white"
                         disabled={isSubmittingComment}
                       >
@@ -2052,7 +2132,7 @@ const BlogPost = ({
                 </div>
               )}
               {replyingTo && (
-                <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0 text-sm text-gray-500">
+                <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0 text-sm text-gray-500" onClick={(e) => e.stopPropagation()}>
                   Replying in thread...
                 </div>
               )}

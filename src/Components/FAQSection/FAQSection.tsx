@@ -156,9 +156,9 @@ export const FAQSection = (): JSX.Element => {
 
   return (
     <section id="FAQs" className="w-full overflow-hidden ">
-      <div className={`max-w-7xl lg:max-w-[98%]   mx-auto px-6 md:px-27 3xl:px-29 3xl:pl-20 md:py-10 w-full`}>
+      <div className={`max-w-8xl   mx-auto px-6 md:px-27   md:py-10 w-full`}>
         {/* Header - Same structure as TrustByCreatorSection */}
-        <div className="mb-1 md:mb-8 3xl:pl-28">
+        <div className="mb-1 md:mb-8 3xl:pl-2">
           <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
             Frequently Asked  <span className=" bg-clip-text text-[#4e1f88] ">Questions</span>
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
