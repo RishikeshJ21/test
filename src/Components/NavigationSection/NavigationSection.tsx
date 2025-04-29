@@ -27,13 +27,13 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
 
   // Navigation menu items data
   const defaultNavItems: NavItem[] = [
-    { title: "Home", href: "/", active: true, offset: 0 }, // Changed href to / for home
-    { title: "Blog", href: "/blog", active: false, offset: 0 },
-    { title: "How it Works", href: "#how-it-works", active: false, offset: 30 },
-    { title: "Why Choose Us", href: "#why-choose-us", active: false, offset: 15 },
-    { title: "Testimonials", href: "#Testimonials", active: false, offset: 40 },
-    { title: "FAQs", href: "#FAQs", active: false, offset: 40 },
-    { title: "Join Us", href: "#ready-to-grow", active: false, offset: -10 },
+    { title: "Home", href: "/", active: true, offset: 0 },
+    ...(window.location.pathname !== '/blog' ? [{ title: "Blog", href: "/blog", active: false, offset: 0 }] : []),
+    { title: "How it Works", href: "/#how-it-works", active: false, offset: 30 },
+    { title: "Why Choose Us", href: "/#why-choose-us", active: false, offset: 15 },
+    { title: "Testimonials", href: "/#Testimonials", active: false, offset: 40 },
+    { title: "FAQs", href: "/#FAQs", active: false, offset: 40 },
+    { title: "Join Us", href: "/#ready-to-grow", active: false, offset: -10 },
   ];
   const navItems = customNavItems ?? defaultNavItems;
 
@@ -46,10 +46,40 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
       label: title
     });
 
-    // Only prevent default for hash links
-    if (href.startsWith('#') && href !== '#') {
-      e.preventDefault(); // Prevent default only for hash links to allow smooth scroll logic
-      const targetId = href.substring(1); // Remove the # character
+    // Handle hash links (both direct #hash and /#hash format)
+    if (href.includes('#') && href !== '#') {
+      e.preventDefault(); // Prevent default to allow our custom scroll logic
+
+      let targetId: string;
+      let shouldNavigateHome = false;
+
+      // Check if it's a format like "/#section-id" (home page with hash)
+      if (href.startsWith('/#')) {
+        targetId = href.substring(2); // Remove the /# characters
+        shouldNavigateHome = true;
+      } else if (href.startsWith('#')) {
+        targetId = href.substring(1); // Remove just the # character
+      } else {
+        // For other URLs with hash somewhere in the middle
+        const hashIndex = href.indexOf('#');
+        targetId = href.substring(hashIndex + 1);
+      }
+
+      // Check if we need to navigate to home first - we need to go home if not currently on home page
+      // This fixes the issue when on /blog or other non-home routes
+      shouldNavigateHome = window.location.pathname !== '/';
+
+      // If we're not on the home page and need to go there first
+      if (shouldNavigateHome) {
+        // Store the target in sessionStorage
+        sessionStorage.setItem('scrollToElementId', targetId);
+        sessionStorage.setItem('scrollToElementOffset', offset.toString());
+        // Navigate to home page
+        window.location.href = '/';
+        return;
+      }
+
+      // We're already on the right page, just scroll
       const targetElement = document.getElementById(targetId);
 
       if (targetElement) {
@@ -93,18 +123,49 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
           }
         }, 1000); // Wait for initial scroll to complete
       }
-    } else if (!href.startsWith('#')) {
-      // For non-hash links, let react-router handle navigation
-      // Close mobile menu if open before navigating
+    } else {
+      // For non-hash links like "/blog", let react-router handle navigation
       if (isMenuOpen) {
         setIsMenuOpen(false);
       }
-      // Note: The actual navigation is handled by the Link component's 'to' prop.
-      // This onClick handler is now primarily for tracking and hash link scrolling.
-      // If you needed programmatic navigation for non-hash links, you'd use:
-      // navigate(href);
+      // The Link component will handle the actual navigation
     }
   };
+
+  // Add an effect to handle scrolling when coming from another page
+  useEffect(() => {
+    // Check if we have a stored element ID to scroll to
+    const scrollToElementId = sessionStorage.getItem('scrollToElementId');
+    const storedOffset = sessionStorage.getItem('scrollToElementOffset');
+    const offset = storedOffset ? parseInt(storedOffset, 10) : 0;
+
+    if (scrollToElementId) {
+      // Clear the stored values
+      sessionStorage.removeItem('scrollToElementId');
+      sessionStorage.removeItem('scrollToElementOffset');
+
+      // Wait for the page to fully render
+      setTimeout(() => {
+        const targetElement = document.getElementById(scrollToElementId);
+        if (targetElement) {
+          // Get header height to offset scrolling
+          const headerHeight = headerRef.current ? headerRef.current.offsetHeight : 80;
+          const isLargeScreen = window.innerWidth >= 1024;
+
+          // Calculate position
+          const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+          const additionalOffset = isLargeScreen ? offset : 0;
+          const offsetPosition = elementPosition - headerHeight + additionalOffset;
+
+          // Scroll
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }, 500); // Small delay to ensure DOM is ready
+    }
+  }, []);
 
   const handleGetStartedClick = () => {
     trackEvent({
@@ -139,13 +200,13 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
             transition={{ duration: 0.9, delay: 0.2 }}
             className="flex items-center"
           >
-             {/* Use Link for the logo to navigate home */}
-             <Link to="/" className="flex items-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center bg-transparent justify-center font-bold shadow-md">
+            {/* Use Link for the logo to navigate home */}
+            <Link to="/" className="flex items-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center bg-transparent justify-center font-bold shadow-md">
                 <img src="/Logotype.svg" className="bg-transparent text-transparent" alt="Logo icon" width={30} height={30} />
-                </div>
-                <span className="font-['Instrument_Sans'] font-bold text-lg sm:text-xl text-[#111111] ml-2">Createathon</span>
-             </Link>
+              </div>
+              <span className="font-['Instrument_Sans'] font-bold text-lg sm:text-xl text-[#111111] ml-2">Createathon</span>
+            </Link>
           </motion.div>
 
           {/* Mobile menu button */}

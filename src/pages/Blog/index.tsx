@@ -538,7 +538,7 @@ export default function BlogPage() {
           </div>
         </div>
 
-        <div id="CTA" className={`scroll-mt-16 px-4 sm:px-6 lg:px-8 sm:max-w-[98%] max-w-[97%] ${window.innerWidth < 1600 ? "lg:max-w-[88%]" : "lg:max-w-[94%] "} mx-auto  `}>
+        <div id="CTA" className={`scroll-mt-16 w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-32 mt-10 md:mt-0    `}>
           <div className="mt-0 flex flex-col sm:flex-row items-center justify-center gap-8 bg-gray-900 rounded-xl p-8 border border-gray-800 shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 opacity-20 rounded-full transform translate-x-1/2 -translate-y-1/2" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500 opacity-15 rounded-full transform -translate-x-1/3 translate-y-1/3" />
@@ -687,7 +687,7 @@ export default function BlogPage() {
           </div>
         )}
 
-        <div className={`${window.innerWidth < 1750 ? "ml-4" : "ml-15"} mt-10`}>
+        <div className={`${window.innerWidth < 1750 ? "md:ml-4" : "ml-15"} w-full max-w-9xl  mx-auto  sm:px-  lg:px-28`}>
           <Footer />
         </div>
       </div>

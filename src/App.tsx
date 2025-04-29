@@ -123,7 +123,7 @@ const HomePage = () => {
           <div
             ref={howItWorksRef}
             id="how-it-works"
-            className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-1 lg:px-23 scroll-mt-24"
+            className="hidden lg:block w-full max-w-8xl mx-auto px-4 max-h-[810px] sm:px-6 md:mt-1 lg:px-28 scroll-mt-24"
           >
             <motion.section
               initial={{ x: 100, y: 20, opacity: 0 }}
@@ -146,7 +146,7 @@ const HomePage = () => {
             <WhyChooseUsSection />
           </section>
 
-          <section id="Testimonials" className="w-full max-w-8xl overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1 scroll-mt-20">
+          <section id="Testimonials" className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-28 overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1 scroll-mt-20">
             <TrustByCreatorSection />
           </section>
 
@@ -156,11 +156,11 @@ const HomePage = () => {
           </div>
 
           {/* FAQ Section */}
-          <div id="FAQs" className="w-full px-1 mt-10 md:mt-0 scroll-mt-28">
+          <div id="FAQs" className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-28 mt-10 md:mt-0 scroll-mt-28">
             <FAQSection />
           </div>
 
-          <div className="w-full">
+          <div className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-28">
             <Footer />
           </div>
         </div>

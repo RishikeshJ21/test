@@ -133,13 +133,13 @@ export const TrustByCreatorSection = (): JSX.Element => {
       {/* Header with animated underline on hover */}
 
 
-      <div className="max-w-8xl mx-auto lg:px-29 px-8 w-full">
+      <div className="  mx-auto lg:px-29 px-4 w-full align-middle">
         <div className="mb-1 md:mb-1">
           {/* <div className="inline-block px-4 py-1 bg-purple-100 rounded-full text-purple-600 text-sm font-medium mb-4">
             FAQ
           </div> */}
           <h2 className="group font-[&apos;Instrument_Sans&apos;,Helvetica] font-bold text-gray-900 text-3xl sm:text-4xl md:text-5xl lg:text-[56px] leading-tight inline-block">
-            Trusted by      <span className=" bg-clip-text text-[#4e1f88] ">Creators</span>
+            Trusted by <span className=" bg-clip-text text-[#4e1f88] ">Creators</span>
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-gradient-to-r from-purple-600 to-blue-500"></span>
           </h2>
           <p className="mt-4 text-gray-600 max-w-full text-lg">
@@ -164,8 +164,8 @@ export const TrustByCreatorSection = (): JSX.Element => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="max-w-[1600px] mx-auto px-4"> {/* Increased max width for wider screens */}
-          <div className="relative h-[360px] overflow-visible">
+        <div className="max-w-[1600px] mx-auto  px-4"> {/* Increased max width for wider screens */}
+          <div className="relative h-[360px]  overflow-visible">
             {hasMounted.current && (
               <AnimatePresence
                 mode="popLayout"

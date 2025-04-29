@@ -51,7 +51,7 @@ export async function makeApiRequest(
 ) {
   const url = `${API_BASE_URL}${endpoint}`;
   const internalController = new AbortController();
-  
+
   // Set up timeout
   const timeoutId = setTimeout(() => {
     console.warn(
@@ -64,7 +64,7 @@ export async function makeApiRequest(
 
   // Handle external abort signal
   if (options.signal) {
-    options.signal.addEventListener('abort', () => internalController.abort());
+    options.signal.addEventListener("abort", () => internalController.abort());
   }
 
   try {
