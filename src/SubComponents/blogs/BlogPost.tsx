@@ -105,7 +105,7 @@ const BlogPost = ({
     };
   }, []);
 
-
+console.log("BlogPost component mounted", {recommendedPosts, latestArticles});
   // Then use that ID to fetch comments and load user data
   useEffect(() => {
     // This function handles user data loading
@@ -1745,7 +1745,7 @@ const BlogPost = ({
               {comments.length > 0 && (
                 <div className="space-y-6">
                   <AnimatePresence>
-                    {comments.slice(0, 4).map((comment) => (
+                    {comments.slice(0, 3).map((comment) => (
                       <CommentItem
                         key={comment.id}
                         comment={comment}

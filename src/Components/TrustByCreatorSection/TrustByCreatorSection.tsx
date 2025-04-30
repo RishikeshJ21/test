@@ -17,7 +17,6 @@ const animatedTestimonialsData = testimonials.map((item) => ({
 
 // Customizable card positioning
 
-
 export const TrustByCreatorSection = (): JSX.Element => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
