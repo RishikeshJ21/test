@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface RelatedPost {
-  id?: string;
+  id?: number;
   title: string;
   slug: string;
   date: string;

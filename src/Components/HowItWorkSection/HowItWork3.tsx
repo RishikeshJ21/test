@@ -118,7 +118,7 @@ export const HowItWorkSection3 = (): JSX.Element => {
             transition={{ duration: 0.2, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <div className="space-y-6 w-full max-w-sm">
+            <div className="space-y-6 w-full ">
               {stepCards.map((card, index) => (
                 <motion.button
                   key={index}
@@ -127,13 +127,13 @@ export const HowItWorkSection3 = (): JSX.Element => {
                   onMouseLeave={() => setIsHovering(false)}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full text-left p-4 rounded-xl transition-all flex items-center gap-4 ${activeCard === index
+                  className={`w-full text-left p-4 ml-2 rounded-xl transition-all flex items-center gap-4 ${activeCard === index
                     ? "bg-gradient-to-r from-purple-100 to-purple-50 border-l-4 border-purple-600 shadow-md"
-                    : "bg-white/80 backdrop-blur-sm border-l-4 border-transparent hover:border-purple-300"
+                    : "bg-white/80 backdrop-blur-sm border-l-4 border-transparent hover:border-purple-300 hover:w-18"
                     }`}
                 >
                   <motion.div
-                    className={`w-12 h-10 rounded-lg flex items-center justify-center ${activeCard === index ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-500"
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${activeCard === index ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-500"
                       }`}
                     animate={activeCard === index ? {
                       scale: [1, 1.1, 1],

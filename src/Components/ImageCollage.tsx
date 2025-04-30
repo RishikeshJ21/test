@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { creators } from "../data/imageCollage";
 
 // Optimized ImageCollage component for standard React
-export default function ImageCollage() {
+export default function rImageCollage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [screenWidth, setScreenWidth] = useState(1200); // Default or initial estimate

@@ -293,6 +293,7 @@ const BlogPost = ({
       document.removeEventListener("mousedown", handleClickOutside, true);
     };
   }, [isCommentsOpen, onToggleComments]);
+  console.log("comments", userAvatar);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1708,6 +1709,7 @@ useEffect(() => {
                 Comments
               </h2>
             </div>
+      
 
             <div className="mb-12">
               <div className="flex gap-4 mb-10">

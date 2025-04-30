@@ -39,7 +39,7 @@ const CommentItem = ({
   currentUserId,
   isSubmittingReply = false
 }: CommentItemProps) => {
-  console.log(comment);
+  console.log("comment", comment);
   const [showCommentMenu, setShowCommentMenu] = useState(false);
   const [showReplyMenu, setShowReplyMenu] = useState<string | null>(null);
   const commentMenuRef = useRef<HTMLDivElement>(null);

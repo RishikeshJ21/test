@@ -160,7 +160,7 @@ const HomePage = () => {
             <FAQSection />
           </div>
 
-          <div className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-28">
+          <div className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-32">
             <Footer />
           </div>
         </div>
