@@ -28,7 +28,7 @@ export const NavigationSection = ({ navItems: customNavItems }: NavigationSectio
   // Navigation menu items data
   const defaultNavItems: NavItem[] = [
     { title: "Home", href: "/", active: true, offset: 0 },
-    ...(window.location.pathname !== '/blog' ? [{ title: "Blog", href: "/blog", active: false, offset: 0 }] : []),
+    { title: "Blog", href: "/blog", active: false, offset: 0 },
     { title: "How it Works", href: "/#how-it-works", active: false, offset: 30 },
     { title: "Why Choose Us", href: "/#why-choose-us", active: false, offset: 15 },
     { title: "Testimonials", href: "/#Testimonials", active: false, offset: 40 },

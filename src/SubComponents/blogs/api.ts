@@ -158,6 +158,9 @@ export async function fetchRelatedBlogs(
     // Apply limit
     filteredPosts = filteredPosts.slice(0, limit);
 
+    filteredPosts = filteredPosts.filter((post) => post.title.toLowerCase().replace(/ /g, "-") !== currentSlug);
+    console.log("filteredPosts", filteredPosts);
+
     // Map API response to RelatedPost format
     return filteredPosts.map((post) => ({
       id: post.id?.toString(),
@@ -172,7 +175,7 @@ export async function fetchRelatedBlogs(
         : "Unknown date",
       excerpt: post.excerpt,
       image: post.image,
-      category: category, // Use the category passed to the function
+      category: post.category, // Use the category passed to the function
     }));
   } catch (error) {
     console.error("Error fetching related blogs:", error);

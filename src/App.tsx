@@ -116,7 +116,7 @@ const HomePage = () => {
           />
 
           {/* Image Collage with explicit height */}
-          <div className="w-full mx-auto px-1 max-h-[320px] md:max-h-[500px] sm:px-3 lg:px-23">
+          <div className="w-full mx-auto px-1 max-h-[320px] md:max-h-[500px] sm:px-3 lg:px-28">
             <ImageCollage />
           </div>
 

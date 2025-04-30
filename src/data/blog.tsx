@@ -163,7 +163,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Diversification and Analysis",
         des: [
-          "Furthermore, diversifying your content formats (e.g., video, podcasts, written articles) and exploring different platforms can significantly widen your reach and attract different segments of your target audience. Remember to analyze your performance metrics regularly to understand what resonates most and refine your approach."
+      "Furthermore, diversifying your content formats (e.g., video, podcasts, written articles) and exploring different platforms can significantly widen your reach and attract different segments of your target audience. Remember to analyze your performance metrics regularly to understand what resonates most and refine your approach."
         ]
       }
     ]
@@ -234,7 +234,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Driving Action and Building Trust",
         des: [
-          "Don't forget clear calls-to-action (CTAs). Guide your audience on what to do next, whether it's subscribing, visiting a link, making a purchase, or leaving a comment. Consistency in quality and publishing schedule also builds trust and keeps your audience coming back."
+      "Don't forget clear calls-to-action (CTAs). Guide your audience on what to do next, whether it's subscribing, visiting a link, making a purchase, or leaving a comment. Consistency in quality and publishing schedule also builds trust and keeps your audience coming back."
         ]
       }
     ]
@@ -268,7 +268,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Affiliate Marketing and Services",
         des: [
-          "Affiliate marketing, where you earn commissions promoting other companies' products, is another popular option. Selling physical merchandise related to your brand or offering consulting/coaching services can also be lucrative avenues to explore."
+      "Affiliate marketing, where you earn commissions promoting other companies' products, is another popular option. Selling physical merchandise related to your brand or offering consulting/coaching services can also be lucrative avenues to explore."
         ]
       }
     ]
@@ -302,7 +302,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Engagement and Value Delivery",
         des: [
-          "Engage genuinely with your community, share your story (including struggles and successes), and consistently deliver value. A strong personal brand builds trust, loyalty, and attracts opportunities."
+      "Engage genuinely with your community, share your story (including struggles and successes), and consistently deliver value. A strong personal brand builds trust, loyalty, and attracts opportunities."
         ]
       }
     ]
@@ -336,7 +336,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Storytelling and Ease of Sharing",
         des: [
-          "Stories are powerful sharing mechanisms. Content that is surprising, features compelling narratives, or taps into current trends or social issues also has a higher potential to spread rapidly. Make it easy to share with prominent social sharing buttons."
+      "Stories are powerful sharing mechanisms. Content that is surprising, features compelling narratives, or taps into current trends or social issues also has a higher potential to spread rapidly. Make it easy to share with prominent social sharing buttons."
         ]
       }
     ]
@@ -370,7 +370,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Building Security: Emergency Fund and Investments",
         des: [
-          "Build an emergency fund covering 3-6 months of expenses to weather the income fluctuations common in creator businesses. As your income grows, diversify your investments beyond just reinvesting in your business to build long-term wealth and security."
+      "Build an emergency fund covering 3-6 months of expenses to weather the income fluctuations common in creator businesses. As your income grows, diversify your investments beyond just reinvesting in your business to build long-term wealth and security."
         ]
       }
     ]
@@ -438,7 +438,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Staying Informed and Consistent",
         des: [
-          "Stay informed about platform trends without overreacting to every update. Focus on consistent quality and genuine engagement rather than chasing short-term hacks. Remember that platforms ultimately want engaging content that keeps users on their sites - aligning your goals with platform incentives provides the best long-term strategy."
+      "Stay informed about platform trends without overreacting to every update. Focus on consistent quality and genuine engagement rather than chasing short-term hacks. Remember that platforms ultimately want engaging content that keeps users on their sites - aligning your goals with platform incentives provides the best long-term strategy."
         ]
       }
     ]
@@ -472,7 +472,7 @@ export const blogPosts: BlogPost[] = [
       {
         sub_title: "Value Creation",
         des: [
-          "Focus on creating genuine value before asking for anything in return. When introducing new paid offerings, ensure they truly solve problems for your audience or enhance their experience with your content. The most sustainable creator businesses prioritize audience needs alongside revenue goals."
+      "Focus on creating genuine value before asking for anything in return. When introducing new paid offerings, ensure they truly solve problems for your audience or enhance their experience with your content. The most sustainable creator businesses prioritize audience needs alongside revenue goals."
         ]
       }
     ]

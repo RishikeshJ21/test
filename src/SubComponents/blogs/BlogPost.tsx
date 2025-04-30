@@ -13,7 +13,7 @@ import { Helmet } from "react-helmet-async";
 import ShareButtons from "./ShareButtons";
 import RecommendedArticles from "./RecommendedArticles";
 
-import { fetchRelatedBlogs, RelatedPost } from "./api";
+import { fetchRelatedBlogs, RelatedPost, fetchBlogs, BlogAPIResponse } from "./api";
 import {
   fetchCommentsByBlogId,
   addCommentToBlog,
@@ -74,11 +74,13 @@ const BlogPost = ({
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [totalCommentsAvailable, setTotalCommentsAvailable] = useState(0);
   const [recommendedPosts, setRecommendedPosts] = useState<RelatedPost[]>([]);
+  const [latestPosts, setLatestPosts] = useState<BlogAPIResponse[]>([]); // New state for latest posts
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [isLoadingLatest, setIsLoadingLatest] = useState(true); // Loading state for latest posts
   const [deleteType, setDeleteType] = useState<'comment' | 'reply'>('comment');
   const [deleteIds, setDeleteIds] = useState<{ commentId: string, replyId?: string }>({ commentId: '' });
   const [isDeleting, setIsDeleting] = useState(false);
-  const [latestArticles, setLatestArticles] = useState<RelatedPost[]>([]);
+  const [relatedArticles, setRelatedArticles] = useState<RelatedPost[]>([]);
 
   // Use refs to prevent duplicate API calls
   const commentsLoadedRef = useRef(false);
@@ -165,6 +167,7 @@ const BlogPost = ({
         if (response.success && response.data) {
           // Format comments as before
           console.log("response.data", response.data);
+          const userID = JSON.parse(localStorage.getItem("blog-user-data") || "{}").user_id;
           const commentsData = Array.isArray(response.data) ? response.data : [];
 
           const formattedComments = commentsData.map((c: any) => {
@@ -187,8 +190,8 @@ const BlogPost = ({
                 text: r.content || "",
                 date: r.created_at || new Date().toISOString(),
                 likes: r.likes_count || 0,
-                isLiked: Array.isArray(r.likes) && userId
-                  ? r.likes.some((like: any) => like.user_id?.toString() === userId)
+                isLiked: Array.isArray(r.likes) && userID
+                  ? r.likes.some((like: any) => like.user_id === userID)
                   : false
               }))
               : [];
@@ -199,8 +202,8 @@ const BlogPost = ({
               text: c.content || "",
               date: c.created_at || new Date().toISOString(),
               likes: c.likes_count || 0,
-              isLiked: Array.isArray(c.likes) && userId
-                ? c.likes.some((like: any) => like.user_id?.toString() === userId)
+              isLiked: Array.isArray(c.likes) && userID
+                ? c.likes.some((like: any) => like.user_id === userID)
                 : false,
               showReplies: true,
               replies
@@ -360,7 +363,7 @@ const BlogPost = ({
           setRecommendedPosts(anyRelatedPosts);
         }
 
-        // Use the same data source for latestArticles (bottom section)
+        // Use the same data source for relatedArticles (bottom section)
         // Instead of making a separate API call, use the first 5 items from recommendedPosts
         // or shuffle them to show different ones if there are enough
         if (recommendedPosts.length > 0) {
@@ -371,10 +374,10 @@ const BlogPost = ({
             const j = Math.floor(Math.random() * (i + 1));
             [shuffledPosts[i], shuffledPosts[j]] = [shuffledPosts[j], shuffledPosts[i]];
           }
-          setLatestArticles(shuffledPosts.slice(0, 6));
+          setRelatedArticles(shuffledPosts.slice(0, 6));
         } else {
           // If we somehow don't have recommendedPosts yet, we'll wait for them to be set
-          // and use the useEffect below to set latestArticles
+          // and use the useEffect below to set relatedArticles
         }
       } catch (error) {
         // Error handled in API client
@@ -384,18 +387,18 @@ const BlogPost = ({
     getPosts();
   }, [slug, currentCategory]);
 
-  // Additional useEffect to ensure latestArticles is set when recommendedPosts changes
+  // Additional useEffect to ensure relatedArticles is set when recommendedPosts changes
   useEffect(() => {
-    if (recommendedPosts.length > 0 && latestArticles.length === 0) {
-      // If we have recommendedPosts but no latestArticles yet, set them
+    if (recommendedPosts.length > 0 && relatedArticles.length === 0) {
+      // If we have recommendedPosts but no relatedArticles yet, set them
       const shuffledPosts = [...recommendedPosts];
       for (let i = shuffledPosts.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledPosts[i], shuffledPosts[j]] = [shuffledPosts[j], shuffledPosts[i]];
       }
-      setLatestArticles(shuffledPosts.slice(0, 5));
+      setRelatedArticles(shuffledPosts.slice(0, 5));
     }
-  }, [recommendedPosts, latestArticles]);
+  }, [recommendedPosts, relatedArticles]);
 
   // Check for preloaded comments in localStorage when comments section is opened
   useEffect(() => {
@@ -1355,6 +1358,39 @@ const BlogPost = ({
 
   // --- End SEO Helper Functions ---
 
+  // Add new useEffect to fetch latest blogs around line 348 (after existing getPosts useEffect)
+  // Effect to fetch LATEST posts
+  useEffect(() => {
+    const fetchLatestBlogs = async () => {
+      setIsLoadingLatest(true);
+      try {
+        // Fetch all blogs
+        const allBlogs = await fetchBlogs();
+
+        // Sort by date descending (newest first)
+        const sortedBlogs = allBlogs.sort((a: BlogAPIResponse, b: BlogAPIResponse) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        // Filter out the current blog post and take the top 4
+        const currentBlogIdStr = String(blogId);
+        const latestFiltered = sortedBlogs
+          .filter((post: BlogAPIResponse) => String(post.id) !== currentBlogIdStr) // Filter out current post
+          .slice(0, 4); // Get the latest 4
+
+        setLatestPosts(latestFiltered);
+      } catch (error) {
+        console.error("Error fetching latest blogs:", error);
+      } finally {
+        setIsLoadingLatest(false);
+      }
+    };
+
+    if (blogId) { // Only fetch if we have the current blog ID
+      fetchLatestBlogs();
+    }
+  }, [blogId]); // Re-run if the blogId changes
+
   return (
     <div className="bg-white relative w-full">
       {/* --- SEO Head Section --- */}
@@ -1580,32 +1616,37 @@ const BlogPost = ({
 
               <MetricsGraph postTags={tags} slug={slug} />
 
-              {!recommendedPosts.length ? (
+              {isLoadingLatest ? (
                 <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-center items-center mt-6" style={{ minHeight: "100px" }}>
                   <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-600"></div>
                 </div>
-              ) : recommendedPosts.length > 0 ? (
-                <div className="bg-white hidden md:block rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Related Articles</h3>
+              ) : latestPosts.length > 0 ? (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Latest Articles</h3>
                   <div className="space-y-4">
-                    {recommendedPosts.slice(0, 3).map((post) => (
+                    {latestPosts.map((post) => (
                       <Link
                         key={post.id || post.slug}
                         to={`/blog/${post.slug}`}
+                        state={{ id: post.id }} // Pass ID in state
                         className="flex items-start space-x-3 group"
+                        onClick={() => window.scrollTo(0, 0)} // Scroll to top on click
                       >
                         <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden">
                           <img
                             src={post.image || '/placeholder-image.jpg'}
                             alt={post.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" // Add hover effect
+                            onError={(e) => (e.currentTarget.src = '/placeholder-image.jpg')} // Fallback
                           />
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
                             {post.title}
                           </h4>
-                          <p className="text-xs text-gray-500 mt-1">{post.date}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </p>
                         </div>
                       </Link>
                     ))}
@@ -1774,11 +1815,11 @@ const BlogPost = ({
       </div>
 
       {/* Recommended Articles Section - Below Comments */}
-      {latestArticles.length > 0 && (
+      {relatedArticles.length > 0 && (
         <div className="border-t border-gray-200 bg-gray-50">
           <RecommendedArticles
-            articles={latestArticles}
-            title="Related Articles"
+            articles={relatedArticles}
+            title="You Might Also Like"
           />
         </div>
       )}
