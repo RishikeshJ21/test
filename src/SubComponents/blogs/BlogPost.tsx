@@ -106,7 +106,6 @@ const BlogPost = ({
     };
   }, []);
 
-console.log("BlogPost component mounted", {recommendedPosts, latestArticles});
   // Then use that ID to fetch comments and load user data
   useEffect(() => {
     // This function handles user data loading
