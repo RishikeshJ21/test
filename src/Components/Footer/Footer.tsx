@@ -232,7 +232,7 @@ export const Footer = (): JSX.Element => {
       />
 
       <footer id="Footer" className="w-full border-t border-gray-200">
-        <div className="max-w-8xl mx-auto md:px-29 px-6 pt-12 pb-4 w-full">
+        <div className="max-w-8xl mx-auto md:px-2 px-6 pt-12 pb-4 w-full">
           <div className="xl:grid xl:grid-cols-3 xl:gap-8">
             <div className="space-y-8 xl:col-span-1">
               <div className="flex">

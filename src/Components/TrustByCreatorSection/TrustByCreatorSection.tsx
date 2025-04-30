@@ -16,12 +16,6 @@ const animatedTestimonialsData = testimonials.map((item) => ({
 }));
 
 // Customizable card positioning
-const cardPositions = {
-  first: { x: 100, y: 0 },
-  second: { x: 500, y: 40 },
-  third: { x: 900, y: 40 },
-  fourth: { x: 1300, y: 40 }, // Better spacing for fourth card
-};
 
 export const TrustByCreatorSection = (): JSX.Element => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -32,7 +26,12 @@ export const TrustByCreatorSection = (): JSX.Element => {
   // Initialize with 0 for server rendering, then update on client
   const [screenWidth, setScreenWidth] = useState(0);
   const hasMounted = useRef(false);
-
+  const cardPositions = {
+    first: screenWidth > 1800 ? { x: 100, y: 0 } : { x: 0, y: 0 },
+    second: screenWidth > 1800 ? { x: 570, y: 40 } : { x: 460, y: 40 },
+    third: screenWidth > 1800 ? { x: 970, y: 40 } : { x: 860, y: 40 },
+    fourth: screenWidth > 1800 ? { x: 1360, y: 40 } : { x: 1260, y: 40 }, // Better spacing for fourth card
+  };
   // Determine how many cards to show based on screen width
   const cardsToShow = screenWidth > 1300 ? 4 : screenWidth > 1024 ? 3 : 2;
 

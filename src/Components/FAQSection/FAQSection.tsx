@@ -266,7 +266,7 @@ export const FAQSection = (): JSX.Element => {
             </motion.div>
           ))}
         </motion.div>
-{/* 
+        {/* 
        
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-8 bg-gray-900 rounded-xl p-8 border border-gray-800 shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 opacity-20 rounded-full transform translate-x-1/2 -translate-y-1/2" />
@@ -287,16 +287,16 @@ export const FAQSection = (): JSX.Element => {
         </div>
       </div> */}
 
-      {/* Contact Form Modal */}
+        {/* Contact Form Modal */}
 
 
 
-       {/* Contact CTA with updated onClick */}
-       <div className="mt-12 relative">
+        {/* Contact CTA with updated onClick */}
+        <div className="mt-12 relative">
           <div className="absolute inset-0 bg-transparent rounded-3xl transform -rotate-1 scale-[1.03] blur-[20px] -z-10"></div>
           <div className="bg-gray-100 rounded-3xl shadow-xl border border-purple-100 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
-              
+
               <div className="col-span-1 lg:col-span-8 p-8 lg:p-12">
                 <div className="max-w-2xl">
                   <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500">
@@ -305,7 +305,7 @@ export const FAQSection = (): JSX.Element => {
                   <p className="mt-4 text-gray-600 text-lg">
                     Our team of experts is ready to answer your questions and help you get started with Createathon.
                   </p>
-                  
+
                   <div className="mt-8 flex flex-wrap gap-4">
                     <button
                       onClick={() => setShowContactForm(true)}
@@ -314,14 +314,14 @@ export const FAQSection = (): JSX.Element => {
                       <Mail className="h-5 w-5" />
                       Contact Support
                     </button>
-                    
+
                     <a href="#FAQs" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-100 text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300">
                       Browse all FAQs
                     </a>
                   </div>
                 </div>
               </div>
-             
+
               <div className="hidden lg:block lg:col-span-4 bg-gradient-to-br from-purple-500 to-blue-500 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-white"></div>
