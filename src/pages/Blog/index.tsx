@@ -582,9 +582,9 @@ export default function BlogPage() {
                   <div className="flex items-center justify-center h-12 px-5 border-r border-purple-100 font-medium bg-white">
                     <div className="inline-flex items-center">
                       <input
-                        type="number"
-                        min="1"
-                        max={totalPages}
+                        type="text"
+                        // min="1"
+                        // max={totalPages}
                         value={currentPage}
                         onChange={(e) => {
                           const page = parseInt(e.target.value);
@@ -593,9 +593,12 @@ export default function BlogPage() {
                           }
                         }}
                         className="w-10 h-8 text-center focus:outline-none focus:ring-2 focus:ring-purple-500 border border-purple-200 rounded-md text-gray-800 font-semibold text-lg"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        
                       />
                       <span className="text-gray-600 mx-2 text-sm">of</span>
-                      <span className="text-purple-600 font-semibold">{totalPages}</span>
+                      <span className="text-purple-600 trxt-center font-semibold">{totalPages}</span>
                     </div>
                   </div>
 
@@ -638,7 +641,7 @@ export default function BlogPage() {
         </div>
 
 
-        {/* <div className="mt-5 relative max-w-8xl mx-auto lg:px-28 sm:px-12 md:px-16 px-4">
+        <div className="mt-5 relative max-w-8xl mx-auto lg:px-28 sm:px-12 md:px-16 px-4">
           <div className="absolute inset-0 bg-transparent rounded-3xl transform -rotate-1 scale-[1.03] blur-[20px] -z-10"></div>
           <div className="bg-gray-100 rounded-3xl shadow-xl border border-purple-100 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
@@ -682,8 +685,8 @@ export default function BlogPage() {
               </div>
             </div>
           </div>
-        </div> */}
-
+        </div>
+{/* 
 <div className="mt-5 relative max-w-8xl mx-auto lg:px-28 sm:px-12 md:px-16 px-4">
           <div className="absolute inset-0 bg-transparent rounded-3xl transform -rotate-1 scale-[1.03] blur-[20px] -z-10"></div>
           <div className="bg-gray-100 rounded-3xl shadow-xl border border-purple-100 overflow-hidden">
@@ -729,7 +732,7 @@ export default function BlogPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {showContactForm && (
           <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-[60] p-4">

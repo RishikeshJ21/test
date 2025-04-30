@@ -87,7 +87,7 @@ const RelatedArticles: React.FC<RelatedArticlesProps> = ({ relatedPosts, current
                   {post.category || 'General'}
                 </span>
                 <span className="text-gray-500 text-xs">
-                  {post.date}
+                  {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </span>
               </div>
               <h3 className="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors">

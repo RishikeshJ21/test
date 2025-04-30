@@ -93,6 +93,7 @@ const BlogPost = ({
   const replyTextAreaRef = useRef<HTMLTextAreaElement>(null!);
   const commentsRefLg = useRef<HTMLDivElement>(null);
   const commentsRefMobile = useRef<HTMLDivElement>(null);
+  {console.log("latestPosts", latestPosts)}
 
   const currentCategory = tags.length > 0 ? tags[0] : undefined;
 
@@ -1360,36 +1361,74 @@ console.log("BlogPost component mounted", {recommendedPosts, latestArticles});
 
   // Add new useEffect to fetch latest blogs around line 348 (after existing getPosts useEffect)
   // Effect to fetch LATEST posts
-  useEffect(() => {
-    const fetchLatestBlogs = async () => {
-      setIsLoadingLatest(true);
-      try {
-        // Fetch all blogs
-        const allBlogs = await fetchBlogs();
-
-        // Sort by date descending (newest first)
-        const sortedBlogs = allBlogs.sort((a: BlogAPIResponse, b: BlogAPIResponse) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-
-        // Filter out the current blog post and take the top 4
-        const currentBlogIdStr = String(blogId);
-        const latestFiltered = sortedBlogs
-          .filter((post: BlogAPIResponse) => String(post.id) !== currentBlogIdStr) // Filter out current post
-          .slice(0, 4); // Get the latest 4
-
-        setLatestPosts(latestFiltered);
-      } catch (error) {
-        console.error("Error fetching latest blogs:", error);
-      } finally {
-        setIsLoadingLatest(false);
+ // Effect to fetch LATEST posts
+useEffect(() => {
+  const fetchLatestBlogs = async () => {
+    setIsLoadingLatest(true);
+    try {
+      // Fetch all blogs
+      const allBlogs = await fetchBlogs();
+        
+      // Filter out the current blog post
+      const currentBlogIdStr = String(blogId);
+      const filteredBlogs = allBlogs.filter((post: BlogAPIResponse) => 
+        String(post.id) !== currentBlogIdStr
+      );
+      
+      // Get current post's category from tags (first tag is usually the category)
+      const currentCategory = tags.length > 0 ? tags[0].toLowerCase() : '';
+      
+      // Split posts into same category and different category
+      const sameCategoryPosts = filteredBlogs.filter((post: BlogAPIResponse) => 
+        post.category && post.category.toLowerCase() === currentCategory
+      );
+      
+      const otherCategoryPosts = filteredBlogs.filter((post: BlogAPIResponse) => 
+        !post.category || post.category.toLowerCase() !== currentCategory
+      );
+      
+      // Sort both arrays by date (newest first)
+      const sortedSameCategory = sameCategoryPosts.sort((a: BlogAPIResponse, b: BlogAPIResponse) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      const sortedOtherCategory = otherCategoryPosts.sort((a: BlogAPIResponse, b: BlogAPIResponse) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+      
+      let resultPosts: BlogAPIResponse[] = [];
+      
+      // If we have same-category posts, add up to 6 of them
+      if (sortedSameCategory.length > 0) {
+        resultPosts = sortedSameCategory.slice(0, 6);
       }
-    };
-
-    if (blogId) { // Only fetch if we have the current blog ID
-      fetchLatestBlogs();
+      
+      // If we have fewer than 6 same-category posts, add some from other categories
+      if (resultPosts.length < 6) {
+        const neededPosts = 6 - resultPosts.length;
+        resultPosts = [
+          ...resultPosts,
+          ...sortedOtherCategory.slice(0, neededPosts)
+        ];
+      }
+      
+      // Ensure we have at least 1 post (important!)
+      if (resultPosts.length === 0 && sortedOtherCategory.length > 0) {
+        resultPosts = [sortedOtherCategory[0]];
+      }
+      
+      setLatestPosts(resultPosts);
+    } catch (error) {
+      console.error("Error fetching latest blogs:", error);
+    } finally {
+      setIsLoadingLatest(false);
     }
-  }, [blogId]); // Re-run if the blogId changes
+  };
+
+  if (blogId) { // Only fetch if we have the current blog ID
+    fetchLatestBlogs();
+  }
+}, [blogId, tags]); // Added tags as a dependency since we use it to determine the current category
 
   return (
     <div className="bg-white relative w-full">
@@ -1596,12 +1635,11 @@ console.log("BlogPost component mounted", {recommendedPosts, latestArticles});
               <ShareButtons title={title} url={shareUrl} />
 
               <MetricsGraph postTags={tags} slug={slug} />
-
               {/* --- RECOMMENDED READS SIDEBAR SECTION --- */}
-              {recommendedPosts.length > 0 && (
+              {latestPosts.length > 0 && (
                 <div className="mt-6">
                   <RelatedArticles
-                    relatedPosts={recommendedPosts}
+                    relatedPosts={latestPosts}
                     currentCategory={currentCategory}
                   />
                 </div>
