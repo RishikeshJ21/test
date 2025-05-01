@@ -161,7 +161,6 @@ export const ContactForm = () => {
                 onChange={handleRecaptchaChange}
                 onErrored={handleCaptchaError}
                 onExpired={() => {
-                  console.log('reCAPTCHA expired');
                   setRecaptchaToken('');
                 }}
               />

@@ -2,80 +2,80 @@ export const creators = [
   {
     id: 1,
     name: 'Emma Rodriguez',
-    image: '/imageCollage/image1.webp',
+    image: '/imageCollage/image1.avif',
     description: 'Digital artist creating stunning concept art and illustrations for gaming industry.',
     followers: '1.2M',
     subscribers: '450K',
     likes: '12.5M',
     category: 'Digital Art',
-    background: '/imageCollage/image1.webp'
+    background: '/imageCollage/image1.avif'
   },
   {
     id: 2,
     name: 'Alex Chen',
-    image: '/imageCollage/image2.webp',
+    image: '/imageCollage/image2.avif',
     description: 'Adventurous traveler documenting journeys across the globe.',
     followers: '875K',
     subscribers: '1.1M',
     likes: '7.8M',
     category: 'Tech Reviews',
-    background: '/imageCollage/image2.webp'
+    background: '/imageCollage/image2.avif'
   },
   {
     id: 3,
     name: 'Arjun Patel',
-    image: '/imageCollage/image3.webp',
+    image: '/imageCollage/image3.avif',
     description: 'Culinary expert sharing gourmet recipes and cooking techniques.',
     followers: '950K',
     subscribers: '780K',
     likes: '15.2M',
     category: 'Food & Cooking',
-    background: '/imageCollage/image3.webp',
+    background: '/imageCollage/image3.avif',
 
   },
   {
     id: 4,
     name: 'Marcus Johnson',
-    image: '/imageCollage/image4.webp',
+    image: '/imageCollage/image4.avif',
     description: 'Fitness coach providing workout routines and nutrition advice.',
     followers: '750K',
     subscribers: '620K',
     likes: '8.9M',
     category: 'Fitness',
-    background:'/imageCollage/image4.webp'
+    background:'/imageCollage/image4.avif'
   },
   {
     id: 5,
     name: 'Jasmine Kim',
-    image: '/imageCollage/image5.webp',
+    image: '/imageCollage/image5.avif',
     description: 'Beauty influencer showcasing makeup tutorials and skincare reviews.',
     followers: '2M',
     subscribers: '1.8M',
     likes: '25.4M',
     category: 'Beauty',
-    background: '/imageCollage/image5.webp'
+    background: '/imageCollage/image5.avif'
   },
   {
     id: 6,
     name: 'Liam Brown',
-    image: '/imageCollage/image6.webp',
+    image: '/imageCollage/image6.avif',
     description: 'Travel vlogger exploring hidden gems and unique destinations.',
     followers: '1.5M',
     subscribers: '1.2M',
     likes: '18.3M',
     category: 'Travel',
-    background: '/imageCollage/image6.webp'
+    background: '/imageCollage/image6.avif'
   },
   {
     id: 7,
     name: 'Olivia Green',
-    image: '/imageCollage/image7.webp',
+    image: '/imageCollage/image7.avif',
     description: 'Lifestyle blogger sharing tips on minimalism and sustainable living.',
     followers: '980K',
     subscribers: '850K',
     likes: '10.7M',
     category: 'Lifestyle',
-    background: '/imageCollage/image7.webp'
+    background: '/imageCollage/image7.avif'
   },
   {
     id: 8,
@@ -91,23 +91,23 @@ export const creators = [
   {
     id: 9,
     name: 'Ava Martinez',
-    image: '/imageCollage/image9.webp',
+    image: '/imageCollage/image9.avif',
     description: 'Fashion designer sharing creative designs and styling tips.',
     followers: '1.8M',
     subscribers: '1.5M',
     likes: '20.1M',
     category: 'Fashion',
-    background: '/imageCollage/image9.webp'
+    background: '/imageCollage/image9.avif'
   },
   {
     id: 10,
     name: 'Noah Davis',
-    image: '/imageCollage/image10.webp',
+    image: '/imageCollage/image10.avif',
     description: 'Photographer capturing breathtaking landscapes and portraits.',
     followers: '1.1M',
     subscribers: '920K',
     likes: '13.4M',
     category: 'Photography',
-    background: '/imageCollage/image10.webp'
+    background: '/imageCollage/image10.avif'
   }
 ];

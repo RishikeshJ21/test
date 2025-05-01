@@ -2,45 +2,44 @@
 export const people = [
   {
     id: 1,
-    name: "John Doe",
+    name: "Arjun Patel",
     designation: "Software Engineer",
     image:
-      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80",
+      "/trustedby200creators/3.avif",
   },
   {
     id: 2,
-    name: "Robert Johnson",
+    name: "Vikram Sharma",
     designation: "Product Manager",
     image:
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+      "/trustedby200creators/2.avif",
   },
   {
     id: 3,
-    name: "Jane Smith",
+    name: "Priya Mehta",
     designation: "Data Scientist",
     image:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+      "/trustedby200creators/1.avif",
   },
   {
     id: 4,
-    name: "Emily Davis",
+    name: "Neha Gupta",
     designation: "UX Designer",
     image:
-      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGF2YXRhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
+      "/trustedby200creators/5.avif",
   },
   {
     id: 5,
-    name: "Tyler Durden",
-    designation: "Soap Developer",
+    name: "Raj Malhotra",
+    designation: "Content Creator",
     image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80",
+      "/trustedby200creators/4.avif",
   },
   {
     id: 6,
-    name: "Dora",
-    designation: "The Explorer",
+    name: "Ananya Singh",
+    designation: "Digital Marketer",
     image:
       "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3534&q=80",
   },
 ];
- 

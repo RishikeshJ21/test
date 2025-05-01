@@ -22,10 +22,6 @@ declare global {
 // Get environment variables
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
-// Debug info for environment variables (helps with troubleshooting)
-console.log("Environment:", import.meta.env.MODE);
-console.log("Using reCAPTCHA v2 'I'm not a robot' checkbox");
-console.log("reCAPTCHA Site Key:", RECAPTCHA_SITE_KEY ? RECAPTCHA_SITE_KEY.substring(0, 8) + "..." : "undefined");
 
 export const Footer = (): JSX.Element => {
   const [showForm, setShowForm] = useState(false);
@@ -446,7 +442,6 @@ export const Footer = (): JSX.Element => {
                             <ReCAPTCHA
                               sitekey={RECAPTCHA_SITE_KEY}
                               onChange={(token: string | null) => {
-                                console.log('reCAPTCHA token received:', token ? 'valid' : 'invalid');
                                 setCaptchaToken(token);
                                 if (token) {
                                   setError(''); // Clear any previous errors when captcha is completed
@@ -456,7 +451,6 @@ export const Footer = (): JSX.Element => {
                                 handleCaptchaError();
                               }}
                               onExpired={() => {
-                                console.log('reCAPTCHA expired');
                                 setCaptchaToken(null);
                               }}
                               theme="light"

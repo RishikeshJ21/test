@@ -40,26 +40,55 @@
     <title>
       Createathon - Creative Community & Support for Digital Creators
     </title>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/Logotype.svg" as="image" type="image/svg+xml" />
+    <link rel="preload" href="/src/main.tsx" as="script" type="module" />
+    <link rel="preload" href="/svg.svg" as="image" type="image/svg+xml" />
+
+    <!-- Preconnect to domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://www.google.com" crossorigin />
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-    <link
-      rel="preconnect"
-      href="https://www.googletagmanager.com"
-      crossorigin
-    />
+
+    <!-- Inline critical CSS -->
+    <style>
+      /* Critical CSS for immediate rendering */
+      body {
+        margin: 0;
+        font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+      }
+      .bg-gradient-to-b {
+        background-image: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.57),
+          #f8f5ff
+        );
+      }
+    </style>
+
+    <!-- Load Google Fonts with font-display:swap -->
     <link
       href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <!-- Fallback for fonts if JavaScript is disabled -->
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
 
-    <!-- Google tag (gtag.js) - Google Analytics 4 -->
-
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"
-    ></script>
+    <!-- Defer non-critical JavaScript -->
+    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag() {
@@ -67,43 +96,25 @@
       }
       gtag("js", new Date());
       // Initial config in HTML - will be reconfigured in React for SPA tracking
-      gtag("config", "G-KJ6R7GQLGJ");
-    </script>
+      gtag("config", "G-KJ6R7GQLGJ", { send_page_view: false });
 
-    <!-- Pre-load Google reCAPTCHA -->
-    <script>
-      // This helps load reCAPTCHA more reliably
-      function onRecaptchaError() {
-        console.error("reCAPTCHA failed to load");
-        // Notify components that might be waiting for reCAPTCHA
-        const event = new CustomEvent("recaptcha-load-error");
-        window.dispatchEvent(event);
-      }
-    </script>
-    <script
-      src="https://www.google.com/recaptcha/api.js"
-      async
-      defer
-      onerror="onRecaptchaError()"
-    ></script>
-
-    <!-- Temporarily commented out to resolve 500 error and ERR_BLOCKED_BY_CLIENT error
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-KJ6R7GQLGJ"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-      // Initial config in HTML - will be reconfigured in React for SPA tracking
-      gtag("config", "G-KJ6R7GQLGJ", {
-        send_page_view: false, // Disable automatic page views, we'll handle them in React
+      // Load analytics after page is interactive
+      window.addEventListener("load", function () {
+        // Delayed execution of non-critical operations
+        setTimeout(function () {
+          const analyticsScript = document.createElement("script");
+          analyticsScript.src = "https://www.google.com/recaptcha/api.js";
+          analyticsScript.async = true;
+          analyticsScript.defer = true;
+          analyticsScript.onerror = function () {
+            console.error("reCAPTCHA failed to load");
+            const event = new CustomEvent("recaptcha-load-error");
+            window.dispatchEvent(event);
+          };
+          document.head.appendChild(analyticsScript);
+        }, 1000);
       });
     </script>
-    -->
   </head>
   <body>
     <div id="root"></div>

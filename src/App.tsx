@@ -1,24 +1,26 @@
 import { useEffect, useState, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-
-import Hero from './Components/Hero';
-import { FAQSection } from './Components/FAQSection/FAQSection';
-import ImageCollage from './Components/ImageCollage';
-import { HowItWorkSection3 } from './Components/HowItWorkSection/HowItWork3';
-import HowItWorks from './Components/HowItWorkSection/HowItWorks';
-import { Footer } from './Components/Footer/Footer';
-import { NavigationSection } from './Components/NavigationSection/NavigationSection';
-import { WhyChooseUsSection } from './Components/WhyChooseUsSection/WhyChooseUsSection';
-import { TrustByCreatorSection } from './Components/TrustByCreatorSection/TrustByCreatorSection';
-import { ReadyToGrow2 } from './Components/ReadyToGrow/RTG2';
 import { motion } from 'framer-motion';
+import { lazyLoad } from './Components/LazyLoad';
+
+// Lazy load components
+const Hero = lazyLoad(() => import('./Components/Hero'));
+const FAQSection = lazyLoad(() => import('./Components/FAQSection/FAQSection').then(module => ({ default: module.FAQSection })));
+const ImageCollage = lazyLoad(() => import('./Components/ImageCollage'));
+const HowItWorkSection3 = lazyLoad(() => import('./Components/HowItWorkSection/HowItWork3').then(module => ({ default: module.HowItWorkSection3 })));
+const HowItWorks = lazyLoad(() => import('./Components/HowItWorkSection/HowItWorks'));
+const Footer = lazyLoad(() => import('./Components/Footer/Footer').then(module => ({ default: module.Footer })));
+const NavigationSection = lazyLoad(() => import('./Components/NavigationSection/NavigationSection').then(module => ({ default: module.NavigationSection })));
+const WhyChooseUsSection = lazyLoad(() => import('./Components/WhyChooseUsSection/WhyChooseUsSection').then(module => ({ default: module.WhyChooseUsSection })));
+const TrustByCreatorSection = lazyLoad(() => import('./Components/TrustByCreatorSection/TrustByCreatorSection').then(module => ({ default: module.TrustByCreatorSection })));
+const ReadyToGrow2 = lazyLoad(() => import('./Components/ReadyToGrow/RTG2').then(module => ({ default: module.ReadyToGrow2 })));
+const NotFound = lazyLoad(() => import('./Components/NotFound'));
+const SEO = lazyLoad(() => import('./Components/SEO'));
+const BlogPage = lazyLoad(() => import('./pages/Blog'));
+const BlogDetails = lazyLoad(() => import('./pages/blogDetails'));
 
 import { initGA, pageView } from './lib/analytics';
-import NotFound from './Components/NotFound';
-import SEO from './Components/SEO';
-import BlogPage from './pages/Blog';
-import BlogDetails from './pages/blogDetails';
 
 // Main homepage content component
 const HomePage = () => {
@@ -146,7 +148,7 @@ const HomePage = () => {
             <WhyChooseUsSection />
           </section>
 
-          <section id="Testimonials" className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-28 overflow-hidden md:mx-auto md:px-3 mb-2 md:mb-1 scroll-mt-20">
+          <section id="Testimonials" className="w-full max-w-8xl  mx-auto px-4 sm:px-6   lg:px-28 overflow-hidden md:mx-auto md:px-23 mb-6 md:mb-1 scroll-mt-20">
             <TrustByCreatorSection />
           </section>
 
@@ -156,11 +158,11 @@ const HomePage = () => {
           </div>
 
           {/* FAQ Section */}
-          <div id="FAQs" className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-28 mt-10 md:mt-0 scroll-mt-28">
+          <div id="FAQs" className="w-full max-w-8xl  mx-auto px-4 sm:px-6 md:px-10  lg:px-20 xl:px-28 mt-10 md:mt-0 scroll-mt-28">
             <FAQSection />
           </div>
 
-          <div className="w-full max-w-8xl  mx-auto px-4 sm:px-6  lg:px-32">
+          <div className="w-full max-w-8xl  mx-auto px-2 md:px-8 sm:px-6  lg:px-32">
             <Footer />
           </div>
         </div>
@@ -200,6 +202,9 @@ const ParameterRedirectHandler = () => {
   return null;
 };
 
+// Lazy load the HomePage component
+const LazyHomePage = lazyLoad(() => Promise.resolve({ default: HomePage }));
+
 export default function App() {
   return (
     <HelmetProvider>
@@ -214,7 +219,7 @@ export default function App() {
         <Route path="/" element={
           <>
             <ParameterRedirectHandler />
-            <HomePage />
+            <LazyHomePage />
           </>
         } />
 

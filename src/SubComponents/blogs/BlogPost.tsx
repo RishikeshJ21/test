@@ -1359,15 +1359,12 @@ const BlogPost = ({
   const shareUrl = `${baseUrl}/blog/${slug}?id=${blogId}`;
 
   // --- End SEO Helper Functions ---
+ 
 
-  // Add new useEffect to fetch latest blogs around line 348 (after existing getPosts useEffect)
-  // Effect to fetch LATEST posts
- // Effect to fetch LATEST posts
-useEffect(() => {
   const fetchLatestBlogs = async () => {
     setIsLoadingLatest(true);
     try {
-      // Fetch all blogs
+      
       const allBlogs = await fetchBlogs();
         
       // Filter out the current blog post
@@ -1426,10 +1423,14 @@ useEffect(() => {
     }
   };
 
-  if (blogId) { // Only fetch if we have the current blog ID
-    fetchLatestBlogs();
-  }
-}, [blogId, tags]); // Added tags as a dependency since we use it to determine the current category
+  useEffect(() => {
+    if (blogId && latestPosts.length === 0) { // Only fetch if we have the current blog ID
+      fetchLatestBlogs();
+    }
+  }, [blogId]); // Added tags as a dependency since we use it to determine the current category
+
+
+
 
   return (
     <div className="bg-white relative w-full">

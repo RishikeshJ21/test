@@ -642,6 +642,7 @@ export default function BlogPage() {
 
 
         <div className="mt-5 relative max-w-8xl mx-auto lg:px-28 sm:px-12 md:px-16 px-4">
+       
           <div className="absolute inset-0 bg-transparent rounded-3xl transform -rotate-1 scale-[1.03] blur-[20px] -z-10"></div>
           <div className="bg-gray-100 rounded-3xl shadow-xl border border-purple-100 overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
