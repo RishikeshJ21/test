@@ -151,7 +151,7 @@ export const HowItWorkSection = (): JSX.Element => {
 
   return (
     <section
-      className="w-full bg-gradient-to-b from-purple-50 to-purple-50 py-6 md:pt-10"
+      className="w-full bg-gradient-to-b from-purple-50 to-purple-50 py-6 md:pt-"
       id="how-it-works"
       ref={sectionRef}
       onMouseEnter={handleMouseEnter}
@@ -209,7 +209,7 @@ export const HowItWorkSection = (): JSX.Element => {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             {isMobileView ? (
-              <div className="px-1 relative">
+              <div className="px-1 mt-4 ">
                 <SwipeCards />
               </div>
             ) : (

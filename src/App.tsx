@@ -136,13 +136,13 @@ const HomePage = () => {
             </motion.section>
           </div>
 
-          <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 h-full min-h-[390px] max-h-[480px] mb-29 mt-10  sm:px-2 md:mt-18 lg:px-23 lg:py-29 scroll-mt-16">
+          <section id="how-it-works-mobile" className="w-full lg:hidden max-w-8xl mx-auto px-1 h-full mb-29 mt-24  sm:px-2 md:mt-18 lg:px-23 lg:py-29 scroll-mt-16">
             <HowItWorks />
           </section>
 
           {/* Why Choose Us Section with Card Hover Effect */}
           <section
-            className={`w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28  md:mt-14 mb-16 scroll-mt-24 ${window.innerWidth < 768 ?  window.innerWidth < 360 ? "mt-40" : "mt-12" : "mt-40"}`}
+            className={`w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28  md:mt-14 mb-16 scroll-mt-24 ${window.innerWidth < 768 ?  window.innerWidth < 360 ? "mt-44" : window.innerWidth < 450 ? "mt-20" : "mt-13" : "mt-40"}`}
             id="why-choose-us"
           >
             <WhyChooseUsSection />
