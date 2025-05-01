@@ -142,7 +142,7 @@ const HomePage = () => {
 
           {/* Why Choose Us Section with Card Hover Effect */}
           <section
-            className="w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28 mt-40 md:mt-14 mb-16 scroll-mt-24"
+            className={`w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-28  md:mt-14 mb-16 scroll-mt-24 ${window.innerWidth < 768 ?  window.innerWidth < 360 ? "mt-40" : "mt-12" : "mt-40"}`}
             id="why-choose-us"
           >
             <WhyChooseUsSection />

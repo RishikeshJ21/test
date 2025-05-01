@@ -59,7 +59,7 @@ export const SwipeCards = () => {
   };
 
   return (
-    <div className="relative w-full h-[380px] overflow-hidden rounded-2xl" aria-label="Interactive cards explaining how Createathon works">
+    <div className="relative w-full min-h-[300px] rounded-2xl" aria-label="Interactive cards explaining how Createathon works">
       {cards.map((card) => (
         <Card
           key={card.id}
@@ -103,7 +103,7 @@ const Card = ({
 
   return (
     <motion.div
-      className={`absolute top-0 left-0 w-full h-full ${title === "Connect with Your Tribe" ? "max-h-[380px]" : "max-h-[350px]"} ${bgColor} rounded-3xl shadow-lg border border-white/30`}
+      className={`absolute top-0 left-0 w-full ${bgColor} rounded-3xl shadow-lg border border-white/30`}
       style={{
         y,
         x,
@@ -128,33 +128,35 @@ const Card = ({
       role="article"
       aria-label={`${title} card - ${isFront ? 'Active' : 'Stacked'}`}
     >
-      <div className="p-6 md:p-8 gap-4 flex flex-col h-full">
-        <div className="flex gap-4">
-          <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg shadow-sm">
-            <img
-              className="w-6 h-6"
-              alt={`${title} icon`}
-              src={icon}
-              width={24}
-              height={24}
-              loading="eager"
-            />
+      <div className="p-6 md:p-8 flex flex-col justify-between h-full">
+        <div>
+          <div className="flex gap-4 mb-3">
+            <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg shadow-sm">
+              <img
+                className="w-6 h-6"
+                alt={`${title} icon`}
+                src={icon}
+                width={24}
+                height={24}
+                loading="eager"
+              />
+            </div>
+            <h3 className={`${title === "Fund Your Vibes" || title === "Level Up Your Skills" ? "pt-2" : ""} text-[20px] md:text-3xl font-bold text-black`}>
+              {title}
+            </h3>
           </div>
-          <h3 className={`${title === "Fund Your Vibes" || title === "Level Up Your Skills" ? "pt-2" : ""} text-[20px] md:text-3xl font-bold text-black`}>
-            {title}
-          </h3>
-        </div>
 
-        <p className="text-black text-base leading-relaxed">
-          {description}
-        </p>
+          <p className="text-black text-base leading-relaxed">
+            {description}
+          </p>
+        </div>
 
         {isFront && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: id === 4 ? 15 : 4, x: -15 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="absolute bottom-6 text-center text-sm text-gray-600 flex items-center justify-center ml-[25%]"
+            className="text-center text-sm text-gray-600 flex items-center justify-center w-full mt-4"
             aria-label="Swipe instruction"
           >
             <motion.svg
